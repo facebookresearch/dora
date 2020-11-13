@@ -1,0 +1,10 @@
+dora:
+  sig: dora
+  exclude: []
+  grid:
+
+test: 1
+
+hydra:
+  run:
+    dir: ./outputs/${dora.sig}
