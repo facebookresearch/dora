@@ -11,11 +11,11 @@ from pathlib import Path
 
 from setuptools import setup
 
-NAME = 'bm'
+NAME = 'dora'
 DESCRIPTION = (
-    'Deep meg encoder for faster experimental design and validation')
+    'Easy grid searches for ML')
 
-URL = 'https://github.com/kingjr/bm'
+URL = 'https://github.com/adefossez/dora'
 EMAIL = 'alexandre.defossez@gmail.com'
 AUTHOR = 'Alexandre Défossez'
 REQUIRES_PYTHON = '>=3.7.0'
@@ -41,9 +41,10 @@ setup(
     author_email=EMAIL,
     python_requires=REQUIRES_PYTHON,
     url=URL,
-    packages=['bm'],
+    packages=['dora'],
     install_requires=REQUIRED,
     include_package_data=True,
+    extras_require={'dev': ['coverage', 'pdoc3']},
     license='Creative Commons Attribution-NonCommercial 4.0 International',
     classifiers=[
         # Trove classifiers

@@ -1,7 +1,13 @@
 dora:
   sig: dora
+  from_sig:
   exclude: []
   grid:
+  history: history.json
+  checkpoint: checkpoint.th
+  best: best.th
+
+  restart: false
 
 test: 1
 

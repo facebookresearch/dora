@@ -1,0 +1,3 @@
+include docs/*/*.html
+include tests/*.py
+include bench/*.py
