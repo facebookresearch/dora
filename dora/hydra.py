@@ -130,14 +130,15 @@ class HydraSupport:
             cfg.hydra = OmegaConf.load(path / ".hydra/hydra.yaml").hydra
         return cfg
 
-    def get_overrides_from_sig(self, sig: str):
+    def get_overrides_from_sig(self, sig: str, exclude=True):
         cfg = self.get_config_from_sig(sig, return_hydra_config=True)
         path = Path(cfg.hydra.run.dir)
         if not path.is_dir():
             raise RuntimeError(f"Could not find experiment with signature {sig}")
         overrides = OmegaConf.load(path / ".hydra/overrides.yaml")
-        excluded = self._EXCLUDED + list(cfg.dora.exclude)
-        overrides = [o for o in overrides if not _is_excluded(o.split('=', 1)[0], excluded)]
+        if exclude:
+            excluded = self._EXCLUDED + list(cfg.dora.exclude)
+            overrides = [o for o in overrides if not _is_excluded(o.split('=', 1)[0], excluded)]
         return overrides
 
 

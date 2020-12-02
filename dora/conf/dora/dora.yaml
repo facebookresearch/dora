@@ -4,7 +4,7 @@ defaults:
 
 dora:
   dir: ./outputs
-  db: ${dora.dir}/dbs/
+  dbs: ${dora.dir}/dbs/
   sig: dora
   exclude: []
   history: history.json

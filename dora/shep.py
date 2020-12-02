@@ -70,6 +70,9 @@ class Shepherd:
     def __init__(self, hydra_support, module):
         self.hydra_support = hydra_support
         self.module = module
+        self.cfg = self.hydra_support.get_config(return_hydra_config=True)
+        self.dbs.mkdir(exist_ok=True, parents=True)
+        (self.dbs / "job_ids").mkdir(exist_ok=True)
 
     def get_sheep(self, overrides):
         cfg = self.hydra_support.get_config(overrides, return_hydra_config=True)
@@ -115,4 +118,19 @@ class Shepherd:
         logger.info(f'Scheduled using Submitit, Job ID: {job.job_id}')
         pickle.dump(job, open(sheep.job_file, "wb"))
         sheep.job = job
-        return job
+        link = self.dbs / "job_ids" / job.job_id
+        link = link
+        link.symlink_to(sheep.folder.resolve())
+
+    @property
+    def dbs(self):
+        return Path(self.cfg.dora.dbs)
+
+    def get_sheep_from_jid(self, job_id):
+        link = self.dbs / "job_ids" / job_id
+        if link.is_symlink():
+            sig = link.resolve().name
+            cfg = self.hydra_support.get_config_from_sig(sig, return_hydra_config=True)
+            overrides = self.hydra_support.get_overrides_from_sig(sig)
+            return Sheep(cfg, overrides)
+        return None

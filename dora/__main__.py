@@ -5,8 +5,9 @@ import os
 
 from .hydra import HydraSupport
 from .grid import grid_action
+from .info import info_action
 from .launch import launch_action
-from .log import fatal
+from .log import fatal, simple_log
 from .run import run_action
 
 
@@ -96,6 +97,11 @@ def get_parser():
     info = subparsers.add_parser("info")
     info.add_argument("-f", "--from_sig", help="Signature of job to use as baseline.")
     info.add_argument("-j", "--jid", help="Find job by job id.")
+    info.add_argument("-C", "--cancel", action="store_true", help="Cancel job")
+    info.add_argument("-l", "--log", action="store_true", help="Show entire log")
+    info.add_argument("-t", "--tail", action="store_true", help="Tail log")
+    info.add_argument("overrides", nargs='*')
+    info.set_defaults(action=info_action)
 
     return parser
 
@@ -125,12 +131,12 @@ def main():
         fatal(f"{module_name}.main was not decorated with `dora.main`.")
     hydra_support = HydraSupport(module.__name__, main.config_name, main.config_path)
 
-    if args.from_sig is not None:
+    if getattr(args, 'from_sig', None) is not None:
         try:
             overrides = hydra_support.get_overrides_from_sig(args.from_sig)
         except RuntimeError:
             fatal(f"Could not find an existing run with sig {args.from_sig}")
-        print("Injecting overrides", overrides, "from sig", args.from_sig)
+        simple_log("Parser", "Injecting overrides", overrides, "from sig", args.from_sig)
         args.overrides = overrides + args.overrides
 
     args.action(args, hydra_support, module.__name__)

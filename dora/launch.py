@@ -11,14 +11,14 @@ log = partial(simple_log, "Launch:")
 def _state_machine(args, sheep):
     if sheep.job is not None:
         if sheep.job.state.startswith("CANCELLED") or sheep.job.state == "FAILED":
-            log(f"Previous job {sheep.job.job_id} failed or was canceled.")
+            log(f"Previous job {sheep.job.job_id} failed or was canceled")
             sheep.job = None
             return
         if args.replace:
             if sheep.job.state == "COMPLETED":
-                log(f"Ignoring previously completed job {sheep.job.job_id}.")
+                log(f"Ignoring previously completed job {sheep.job.job_id}")
             else:
-                log(f"Cancelling previous job {sheep.job.job_id} and status {sheep.job.state}.")
+                log(f"Cancelling previous job {sheep.job.job_id} and status {sheep.job.state}")
                 sheep.job.cancel()
             sheep.job = None
         else:
@@ -40,7 +40,7 @@ def launch_action(args, hydra_support, module):
 
     if sheep.job is None:
         shepherd.submit(sheep)
-        log(f"Job created with id {sheep.job.job_id}.")
+        log(f"Job created with id {sheep.job.job_id}")
 
     if args.tail or args.attach:
         done = False
@@ -48,17 +48,17 @@ def launch_action(args, hydra_support, module):
         try:
             while True:
                 if sheep.log.exists():
-                    tail_process = sp.Popen(["tail", "-n", "200", "-F", sheep.log])
+                    tail_process = sp.Popen(["tail", "-n", "200", "-f", sheep.log])
                 if sheep.is_done():
                     if sheep.log.exists():
-                        tail_process = sp.Popen(["tail", "-n", "200", "-F", sheep.log])
+                        tail_process = sp.Popen(["tail", "-n", "200", "-f", sheep.log])
                     log("Remote process finished with state", sheep.state)
                     done = True
                     break
                 time.sleep(30)
         finally:
             if tail_process:
-                tail_process.terminate()
+                tail_process.kill()
             if not done:
                 log(f"attach is set, killing remote job {sheep.job.job_id}")
                 sheep.job.cancel()
