@@ -79,9 +79,10 @@ class HydraSupport:
         self.config_path = Path(module_path).parent
         if config_path is not None:
             self.config_path = self.config_path / config_path
+        self.job_name = module.rsplit(".", 1)[1]
 
     def _get_config(self, overrides=[], return_hydra_config=False):
-        with initialize_config_dir(str(self.config_path), job_name="dora"):
+        with initialize_config_dir(str(self.config_path), job_name=self.job_name):
             return compose(self.config_name, overrides, return_hydra_config=return_hydra_config)
 
     def get_config(self, overrides=[], return_hydra_config=False):

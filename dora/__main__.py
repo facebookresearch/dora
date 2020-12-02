@@ -88,8 +88,9 @@ def get_parser():
                         help="Does not tail the log once job is started.")
     launch.add_argument("-R", "--replace", action="store_true",
                         help="If job already exist, kill it and replace with a new one.")
-    launch.add_argument("--dev", action="store_true",
+    launch.add_argument("-d", "--dev", action="store_true",
                         help="Short cut for --partition=dev --attach")
+    launch.add_argument("overrides", nargs='*')
     launch.set_defaults(action=launch_action)
 
     return parser

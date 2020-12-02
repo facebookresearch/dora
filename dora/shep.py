@@ -34,6 +34,7 @@ class Sheep:
     def __init__(self, cfg, overrides):
         self.cfg = cfg
         self.overrides = overrides
+        self.job = None
         if self.job_file.exists():
             self.job = try_load(self.job_file, pickle.load)
 
@@ -43,14 +44,25 @@ class Sheep:
 
     @property
     def log(self):
-        return self.cfg.hydra.job_logging.handlers.file.filename
+        return self.folder / self.cfg.hydra.job_logging.handlers.file.filename
 
     @property
     def job_file(self):
-        self.job_file = self.folder / self.cfg.dora.job_file
+        return self.folder / self.cfg.dora.job_file
+
+    @property
+    def sig(self):
+        return self.cfg.dora.sig
 
     def is_done(self):
         return SlurmJob.watcher.is_done(self.job.job_id, 'force')
+
+    @property
+    def state(self):
+        return None if self.job is None else self.job.state
+
+    def __repr__(self):
+        return f"Sheep({self.sig}, state={self.state}, overrides={self.overrides})"
 
 
 class Shepherd:
@@ -93,6 +105,7 @@ class Shepherd:
             slurm.nodes = 1
         mem = slurm.mem_per_task * slurm.ntasks_per_node
         slurm.mem = f"{mem}GB"
+        slurm = dict(slurm)
         del slurm['gpus']
         del slurm['mem_per_task']
         logger.debug("Slurm parameters %r", slurm)
@@ -101,6 +114,6 @@ class Shepherd:
         executor.update_parameters(job_name=name, **slurm)
         job = executor.submit(SubmitItTarget(), sheep.log, ["-m", self.module] + sheep.overrides)
         logger.info(f'Scheduled using Submitit, Job ID: {job.job_id}')
-        pickle.dump(job, open(sheep.job_file, "w"))
+        pickle.dump(job, open(sheep.job_file, "wb"))
         sheep.job = job
         return job

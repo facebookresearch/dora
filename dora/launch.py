@@ -10,7 +10,7 @@ log = partial(simple_log, "Launch:")
 
 def _state_machine(args, sheep):
     if sheep.job is not None:
-        if sheep.job.state.startswith("CANCELLED") or sheep.job.state.FAILED:
+        if sheep.job.state.startswith("CANCELLED") or sheep.job.state == "FAILED":
             log(f"Previous job {sheep.job.job_id} failed or was canceled.")
             sheep.job = None
             return
@@ -33,9 +33,11 @@ def launch_action(args, hydra_support, module):
             args.overrides.append(f"slurm.{name}={value}")
     shepherd = Shepherd(hydra_support, module)
     sheep = shepherd.get_sheep(args.overrides)
+    log(f"Fetched sheep {sheep}")
     _state_machine(args, sheep)
+
     if sheep.job is None:
-        shepherd.schedule(sheep)
+        shepherd.submit(sheep)
         log(f"Job created with id {sheep.job.job_id}")
 
     if args.tail or args.attach:
@@ -46,6 +48,7 @@ def launch_action(args, hydra_support, module):
                 if sheep.log.exists():
                     tail_process = sp.Popen(["tail", "-n", "200", "-F", sheep.log])
                 if sheep.is_done():
+                    log("Remote process finished with state", sheep.state)
                     done = True
                     break
                 time.sleep(30)

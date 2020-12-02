@@ -23,7 +23,7 @@ VERSION = "0.0.1"
 
 HERE = Path(__file__).parent
 
-REQUIRED = [i.strip() for i in open("requirements.txt")]
+REQUIRED = [i.strip() for i in open("requirements.txt") if '://' not in i]
 
 try:
     with open(HERE / "README.md", encoding='utf-8') as f:

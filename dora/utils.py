@@ -145,7 +145,7 @@ def try_load(path: Path, load=torch.load):
     Return None upon failure.
     """
     try:
-        return load(path)
+        return load(open(path, "rb"))
     except (IOError, OSError, pickle.UnpicklingError, RuntimeError, EOFError) as exc:
         # Trying to list everything that can go wrong.
         logger.warning(

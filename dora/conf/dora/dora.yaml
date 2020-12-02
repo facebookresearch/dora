@@ -30,6 +30,10 @@ slurm:
   cpus_per_task: 10
   partition: learnfair
   comment:
+  # dont set those manually they will get overriden
+  nodes:
+  ntasks_per_node:
+  mem:
 
 hydra:
   run:
