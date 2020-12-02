@@ -1,6 +1,6 @@
 import logging
 
-from dora.hydra import main, HydraSupport
+from dora.hydra import main
 
 logger = logging.getLogger(__name__)
 
@@ -11,5 +11,4 @@ def main(cfg):
 
 
 if __name__ == "__main__":
-    print(HydraSupport('__main__', 'config', '../conf').get_config([], True).hydra.run.dir)
     main()

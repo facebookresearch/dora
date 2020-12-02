@@ -6,13 +6,15 @@ from julius.utils import Chrono
 from hydra.core.hydra_config import HydraConfig
 import torch as th
 
+from . import distrib
 from . import utils
 
 logger = logging.getLogger(__name__)
 
 
 class Backbone:
-    def __init__(self, cfg, epochs, model, optimizer):
+    def __init__(self, cfg, model, optimizer):
+        distrib.init(**cfg.dora.ddp)
         self.history = []
         self.cfg = cfg
         self.model = model
@@ -184,7 +186,7 @@ class Backbone:
             for epoch, metrics in enumerate(self.history):
                 self.log_epoch(epoch, metrics)
 
-        for epoch in range(len(self.history), self.epochs):
+        for epoch in range(len(self.history), self.cfg.epochs):
             metrics = {}
             # We first do training and valid.
             with Chrono() as chrono:

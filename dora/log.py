@@ -1,7 +1,8 @@
 import logging
+import sys
 import time
 
-from treetable import colorize
+from treetable.text import colorize
 
 
 class LogProgress:
@@ -77,3 +78,12 @@ def bold(text):
     Display text in bold in the terminal.
     """
     return colorize(text, "1")
+
+
+def simple_log(first, *args):
+    print(bold(first), *args, file=sys.stderr)
+
+
+def fatal(*args):
+    simple_log("FATAL:", *args)
+    sys.exit(1)

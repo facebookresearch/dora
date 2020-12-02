@@ -66,7 +66,7 @@ def _is_excluded(key, excluded):
 
 
 class HydraSupport:
-    _EXCLUDED = ["dora.*"]
+    _EXCLUDED = ["dora.*", "slurm.*"]
 
     def __init__(self, module, config_name, config_path=None):
         self.config_name = config_name
@@ -112,19 +112,31 @@ class HydraSupport:
 
     def get_run_dir(self, overrides=[]):
         sig = self.get_signature(overrides)
-        cfg = self.get_config(overrides + [f"dora.sig={sig}"], True)
+        cfg = self._get_config(overrides + [f"dora.sig={sig}"], True)
         return cfg.hydra.run.dir
 
+    def get_run_dir_from_sig(self, sig: str):
+        cfg = self._get_config([f"dora.sig={sig}"], True)
+        return Path(cfg.hydra.run.dir)
+
     def get_config_from_sig(self, sig: str, return_hydra_config=False):
-        raw_cfg = self.get_config([f"dora.sig={sig}"], True)
-        path = Path(raw_cfg.hydra.run.dir)
+        path = self.get_run_dir_from_sig(sig)
         if not path.is_dir():
             raise RuntimeError(f"Could not find experiment with signature {sig}")
+        cfg = OmegaConf.load(path / ".hydra/config.yaml")
         if return_hydra_config:
-            cfg = OmegaConf.load(path / "hydra.yaml")
-        else:
-            cfg = OmegaConf.load(path / "task.yaml")
+            cfg.hydra = OmegaConf.load(path / ".hydra/hydra.yaml").hydra
         return cfg
+
+    def get_overrides_from_sig(self, sig: str):
+        cfg = self.get_config_from_sig(sig, return_hydra_config=True)
+        path = Path(cfg.hydra.run.dir)
+        if not path.is_dir():
+            raise RuntimeError(f"Could not find experiment with signature {sig}")
+        overrides = OmegaConf.load(path / ".hydra/overrides.yaml")
+        excluded = self._EXCLUDED + list(cfg.dora.exclude)
+        overrides = [o for o in overrides if not _is_excluded(o.split('=', 1)[0], excluded)]
+        return overrides
 
 
 def main(config_name, config_path=None):
@@ -141,5 +153,7 @@ def main(config_name, config_path=None):
             sig = support.get_signature(overrides)
             sys.argv.append(f"dora.sig={sig}")
             return hydra.main(config_name=config_name, config_path=config_path)(_main)()
+        _decorated.config_name = config_name
+        _decorated.config_path = config_path
         return _decorated
     return _decorate

@@ -55,32 +55,30 @@ class ChildrenManager:
             logger.info("All workers completed successfully")
 
 
-def start_ddp_workers(args):
+def start_ddp_workers(module, hydra_support, overrides):
     import torch as th
 
+    cfg = hydra_support.get_config(overrides, True)
     world_size = th.cuda.device_count()
     if not world_size:
         logger.error(
             "DDP is only available on GPU. Make sure GPUs are properly configured with cuda.")
         sys.exit(1)
-    rdv = Path(args.rendezvous_file)
+    rdv = Path(cfg.dora.ddp.rendezvous)
     if rdv.exists():
         rdv.unlink()
-    logger.info(f"Starting {world_size} worker processes for DDP.")
+    print(f"Starting {world_size} worker processes for DDP.")
     with ChildrenManager() as manager:
         for rank in range(world_size):
             kwargs = {}
-            argv = list(sys.argv)
-            spec = sys.modules["__main__"].__spec__
-            if spec is not None:
-                # module was executed with runpy
-                argv[:1] = ["-m", spec.name]
-            argv += [f"world_size={world_size}", f"rank={rank}"]
+            argv = ["-m", module]
+            argv += overrides
+            argv += [f"dora.ddp.world_size={world_size}", f"dora.ddp.rank={rank}"]
             if rank > 0:
                 kwargs['stdin'] = sp.DEVNULL
                 kwargs['stdout'] = sp.DEVNULL
                 kwargs['stderr'] = sp.DEVNULL
-                log = utils.HydraConfig().cfg.hydra.job_logging.handlers.file.filename
+                log = cfg.hydra.job_logging.handlers.file.filename
                 log += f".{rank}"
                 argv.append("hydra.job_logging.handlers.file.filename=" + log)
             manager.add(sp.Popen([sys.executable] + argv, cwd=utils.get_original_cwd(), **kwargs))

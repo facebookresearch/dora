@@ -10,6 +10,7 @@ import os
 import pickle
 
 import numpy as np
+from submitit import JobEnvironment
 import torch
 from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data import DataLoader, Subset
@@ -20,22 +21,31 @@ rank = 0
 world_size = 1
 
 
-def init(args):
+def _set_rank(_rank, _world_size):
+    global rank, world_size
+    rank = _rank
+    world_size = _world_size
+
+
+def init(rank, world_size, rendezvous_file, backend):
     """init.
 
     Initialize DDP using the given rendezvous file.
     """
-    global rank, world_size
-    if args.ddp:
-        assert args.rank is not None and args.world_size is not None
-        rank = args.rank
-        world_size = args.world_size
+    try:
+        job_env = JobEnvironment()
+    except RuntimeError:
+        pass
+    else:
+        rank = job_env.global_rank
+        world_size = job_env.num_tasks
+    _set_rank(rank, world_size)
     if world_size == 1:
         return
     torch.cuda.set_device(rank)
     torch.distributed.init_process_group(
-        backend=args.ddp_backend,
-        init_method='file://' + os.path.abspath(args.rendezvous_file),
+        backend=backend,
+        init_method='file://' + os.path.abspath(rendezvous_file),
         world_size=world_size,
         rank=rank)
     logger.debug("Distributed rendezvous went well, rank %d/%d", rank, world_size)

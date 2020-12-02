@@ -1,0 +1,36 @@
+# @package _global_
+defaults:
+  - hydra/hydra_logging: colorlog
+
+dora:
+  dir: ./outputs
+  db: ${dora.dir}/dbs/
+  sig: dora
+  exclude: []
+  history: history.json
+  checkpoint: checkpoint.th
+  submitit: submitit
+  best: best.th
+  restart: false
+
+  job_file: job_id.pkl
+  ddp:
+    rendezvous: rendezvous.txt
+    world_size: 1
+    rank: 0
+    backend: nccl
+
+epochs: 10
+
+slurm:
+  mem_per_task: 10  # set this in GB
+  gpus: 1 # automatically translated to the right number of nodes
+  # Anything after is forwarded to `AutoExecutor.update_parameters`
+  time: 1200
+  cpus_per_task: 10
+  partition: learnfair
+  comment:
+
+hydra:
+  run:
+    dir: ${dora.dir}/${dora.sig}

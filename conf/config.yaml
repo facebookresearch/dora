@@ -1,16 +1,5 @@
-dora:
-  sig: dora
-  from_sig:
-  exclude: []
-  grid:
-  history: history.json
-  checkpoint: checkpoint.th
-  best: best.th
-
-  restart: false
+defaults:
+  - hydra/job_logging: colorlog
+  - dora: dora
 
 test: 1
-
-hydra:
-  run:
-    dir: ./outputs/${dora.sig}

@@ -11,9 +11,9 @@ from pathlib import Path
 
 from setuptools import setup
 
-NAME = 'dora'
+NAME = 'dora_searchpath'
 DESCRIPTION = (
-    'Easy grid searches for ML')
+    'Easy grid searches for ML. Companion pluging for Hydra.')
 
 URL = 'https://github.com/adefossez/dora'
 EMAIL = 'alexandre.defossez@gmail.com'
@@ -23,7 +23,7 @@ VERSION = "0.0.1"
 
 HERE = Path(__file__).parent
 
-REQUIRED = [i.strip() for i in open("requirements.txt")]
+REQUIRED = []
 
 try:
     with open(HERE / "README.md", encoding='utf-8') as f:
@@ -41,13 +41,9 @@ setup(
     author_email=EMAIL,
     python_requires=REQUIRES_PYTHON,
     url=URL,
-    packages=['dora'],
+    packages=['hydra_plugins.dora_searchpath'],
     install_requires=REQUIRED,
     include_package_data=True,
-    entry_points={
-        'console_scripts': ['dora=dora.__main__:main'],
-    },
-    extras_require={'dev': ['coverage', 'pdoc3']},
     license='Creative Commons Attribution-NonCommercial 4.0 International',
     classifiers=[
         # Trove classifiers
