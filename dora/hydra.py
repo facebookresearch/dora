@@ -79,6 +79,7 @@ class HydraSupport:
                 self.job_name = module.rsplit(".", 1)[1]
         else:
             module_path = find_spec(module).origin
+            self.job_name = module.rsplit(".", 1)[1]
         self.config_path = Path(module_path).parent.resolve()
         if config_path is not None:
             self.config_path = self.config_path / config_path

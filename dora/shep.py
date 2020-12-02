@@ -7,7 +7,7 @@ import subprocess as sp
 import sys
 
 
-from submitit import SlurmJob
+from submitit import SlurmJob, JobEnvironment
 import submitit
 
 from .utils import try_load
@@ -17,13 +17,11 @@ logger = logging.getLogger(__name__)
 
 
 class SubmitItTarget:
-    def __call__(self, log, argv):
-        from . import distrib
-        distrib.init_rank()
-        if distrib.rank > 0:
-            log += f".{distrib.rank}"
-        extra = [
-            "hydra.job_logging.handlers.file.filename=" + log]
+    def __call__(self, argv):
+        env = JobEnvironment()
+        rank = env.global_rank
+        world_size = env.num_tasks
+        extra = [f'dora.ddp.rank={rank}', f'dora.ddp.world_size={world_size}']
         sp.run([sys.executable] + argv + extra)
 
     def checkpoint(self, *args, **kwargs):
@@ -112,7 +110,8 @@ class Shepherd:
 
         name = self.module + ":" + sheep.cfg.dora.sig
         executor.update_parameters(job_name=name, **slurm)
-        job = executor.submit(SubmitItTarget(), sheep.log, ["-m", self.module] + sheep.overrides)
+        job = executor.submit(
+            SubmitItTarget(), ["-m", self.module] + sheep.overrides)
         logger.info(f'Scheduled using Submitit, Job ID: {job.job_id}')
         pickle.dump(job, open(sheep.job_file, "wb"))
         sheep.job = job

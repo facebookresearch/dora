@@ -93,6 +93,10 @@ def get_parser():
     launch.add_argument("overrides", nargs='*')
     launch.set_defaults(action=launch_action)
 
+    info = subparsers.add_parser("info")
+    info.add_argument("-f", "--from_sig", help="Signature of job to use as baseline.")
+    info.add_argument("-j", "--jid", help="Find job by job id.")
+
     return parser
 
 

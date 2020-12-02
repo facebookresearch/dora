@@ -3,3 +3,9 @@ defaults:
   - dora: dora
 
 test: 1
+
+hydra:
+  job_logging:
+    handlers:
+      file:
+        formatter: colorlog

@@ -38,3 +38,8 @@ slurm:
 hydra:
   run:
     dir: ${dora.dir}/${dora.sig}
+  job_logging:
+    handlers:
+      file:
+        mode: w
+        filename: ${hydra.job.name}.log.${dora.ddp.rank}

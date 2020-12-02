@@ -15,12 +15,14 @@ def _state_machine(args, sheep):
             sheep.job = None
             return
         if args.replace:
-            if sheep.job.state != "COMPLETED":
-                log("Cancelling previous job {sheep.job.job_id} and status {sheep.job.state")
+            if sheep.job.state == "COMPLETED":
+                log(f"Ignoring previously completed job {sheep.job.job_id}.")
+            else:
+                log(f"Cancelling previous job {sheep.job.job_id} and status {sheep.job.state}.")
                 sheep.job.cancel()
             sheep.job = None
         else:
-            log("Found previous job {sheep.job.job_id} with status {sheep.job.state}")
+            log(f"Found previous job {sheep.job.job_id} with status {sheep.job.state}")
 
 
 def launch_action(args, hydra_support, module):
@@ -38,7 +40,7 @@ def launch_action(args, hydra_support, module):
 
     if sheep.job is None:
         shepherd.submit(sheep)
-        log(f"Job created with id {sheep.job.job_id}")
+        log(f"Job created with id {sheep.job.job_id}.")
 
     if args.tail or args.attach:
         done = False
@@ -48,6 +50,8 @@ def launch_action(args, hydra_support, module):
                 if sheep.log.exists():
                     tail_process = sp.Popen(["tail", "-n", "200", "-F", sheep.log])
                 if sheep.is_done():
+                    if sheep.log.exists():
+                        tail_process = sp.Popen(["tail", "-n", "200", "-F", sheep.log])
                     log("Remote process finished with state", sheep.state)
                     done = True
                     break
@@ -55,7 +59,6 @@ def launch_action(args, hydra_support, module):
         finally:
             if tail_process:
                 tail_process.terminate()
-            if args.attach:
-                if not done:
-                    log("attach is set, killing remote job {sheep.job.job_id}")
-                    sheep.job.cancel()
+            if not done:
+                log(f"attach is set, killing remote job {sheep.job.job_id}")
+                sheep.job.cancel()

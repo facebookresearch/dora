@@ -10,7 +10,6 @@ import os
 import pickle
 
 import numpy as np
-from submitit import JobEnvironment
 import torch
 from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data import DataLoader, Subset
@@ -32,13 +31,6 @@ def init(rank, world_size, rendezvous_file, backend):
 
     Initialize DDP using the given rendezvous file.
     """
-    try:
-        job_env = JobEnvironment()
-    except RuntimeError:
-        pass
-    else:
-        rank = job_env.global_rank
-        world_size = job_env.num_tasks
     _set_rank(rank, world_size)
     if world_size == 1:
         return
