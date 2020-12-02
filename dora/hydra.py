@@ -72,14 +72,16 @@ class HydraSupport:
             spec = sys.modules[module].__spec__
             if spec is None:
                 module_path = sys.argv[0]
+                self.job_name = module_path.rsplit(".", 2)[1]
             else:
                 module_path = spec.origin
+                module = spec.name
+                self.job_name = module.rsplit(".", 1)[1]
         else:
             module_path = find_spec(module).origin
-        self.config_path = Path(module_path).parent
+        self.config_path = Path(module_path).parent.resolve()
         if config_path is not None:
             self.config_path = self.config_path / config_path
-        self.job_name = module.rsplit(".", 1)[1]
 
     def _get_config(self, overrides=[], return_hydra_config=False):
         with initialize_config_dir(str(self.config_path), job_name=self.job_name):
