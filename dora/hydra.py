@@ -18,8 +18,6 @@ class _NotThere:
 
 
 NotThere = _NotThere()
-
-
 _Difference = namedtuple("_Difference", "path key ref other ref_value other_value")
 
 
@@ -152,7 +150,9 @@ def main(config_name, config_path=None):
             overrides = [a for a in sys.argv[1:] if not a.startswith('-')]
             sig = support.get_signature(overrides)
             sys.argv.append(f"dora.sig={sig}")
-            return hydra.main(config_name=config_name, config_path=config_path)(_main)()
+            return hydra.main(
+                config_name=config_name,
+                config_path=config_path)(_main)()
         _decorated.config_name = config_name
         _decorated.config_path = config_path
         return _decorated
