@@ -52,10 +52,17 @@ def average(metrics, count=1.):
     """
     if world_size == 1:
         return metrics
+    keys = None
+    if isinstance(metrics, dict):
+        keys = list(metrics.keys())
+        metrics = list(metrics.values())
     tensor = torch.tensor(list(metrics) + [1], device='cuda', dtype=torch.float32)
     tensor *= count
     torch.distributed.all_reduce(tensor, op=torch.distributed.ReduceOp.SUM)
-    return (tensor[:-1] / tensor[-1]).cpu().numpy().tolist()
+    metrics = (tensor[:-1] / tensor[-1]).cpu().numpy().tolist()
+    if keys is not None:
+        return dict(zip(keys, metrics))
+    return metrics
 
 
 def sync_grad(params):

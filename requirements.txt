@@ -1,4 +1,5 @@
 hydra-core
 hydra_colorlog
 treetable
+./plugins
 git+https://github.com/facebookincubator/submitit@master#egg=submitit
