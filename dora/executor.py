@@ -19,7 +19,7 @@ from hydra import utils
 from .log import simple_log, fatal
 
 
-log = partial(simple_log, "Executor")
+log = partial(simple_log, "Executor:")
 
 
 class ChildrenManager:

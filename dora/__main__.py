@@ -65,7 +65,9 @@ def get_parser():
                       help="Show the log for the job with the given index")
 
     grid.add_argument(
-        'grid', help='Name of the grid to run. Name of the module will be `package`.grids.`name`.')
+        'grid', nargs='?',
+        help='Name of the grid to run. Name of the module will be `package`.grids.`name`.')
+
     grid.add_argument("patterns", nargs='*',
                       help="Only handle experiments matching all the given pattern. "
                            "If empty, handle all experiments")
