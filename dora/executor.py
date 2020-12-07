@@ -8,7 +8,7 @@
 Start multiple process locally for DDP.
 """
 
-import logging
+from functools import partial
 from pathlib import Path
 import os
 import subprocess as sp
@@ -16,7 +16,10 @@ import sys
 
 from hydra import utils
 
-logger = logging.getLogger(__name__)
+from .log import simple_log, fatal
+
+
+log = partial(simple_log, "Executor")
 
 
 class ChildrenManager:
@@ -33,7 +36,7 @@ class ChildrenManager:
 
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_value is not None:
-            logger.error("An exception happened while starting workers %r", exc_value)
+            log("An exception happened while starting workers %r", exc_value)
             self.failed = True
         try:
             while self.children and not self.failed:
@@ -45,15 +48,15 @@ class ChildrenManager:
                     else:
                         self.children.remove(child)
                         if exitcode:
-                            logger.error(f"Worker {child.rank} died, killing all workers")
+                            log(f"Worker {child.rank} died, killing all workers")
                             self.failed = True
         except KeyboardInterrupt:
-            logger.error("Received keyboard interrupt, trying to kill all workers.")
+            log("Received keyboard interrupt, trying to kill all workers.")
             self.failed = True
         for child in self.children:
             child.terminate()
         if not self.failed:
-            logger.info("All workers completed successfully")
+            log("All workers completed successfully")
 
 
 def start_ddp_workers(package, main, overrides):
@@ -62,15 +65,15 @@ def start_ddp_workers(package, main, overrides):
     cfg = main.get_config(overrides)
     world_size = th.cuda.device_count()
     if not world_size:
-        logger.error(
+        fatal(
             "DDP is only available on GPU. Make sure GPUs are properly configured with cuda.")
         sys.exit(1)
 
     # If rendezvous file already exist, this can deadlock.
-    rdv = Path(cfg.dora.ddp.rendezvous)
-    if rdv.exists():
-        rdv.unlink()
-    print(f"Starting {world_size} worker processes for DDP.")
+    rendezvous_file = Path(cfg.dora.ddp.rendezvous_file)
+    if rendezvous_file.exists():
+        rendezvous_file.unlink()
+    log(f"Starting {world_size} worker processes for DDP.")
     with ChildrenManager() as manager:
         for rank in range(world_size):
             kwargs = {}

@@ -19,6 +19,8 @@ from hydra.experimental import compose, initialize_config_dir
 from omegaconf.dictconfig import DictConfig
 from omegaconf import OmegaConf
 
+from .link import Link
+
 
 logger = logging.getLogger(__name__)
 
@@ -124,8 +126,9 @@ class DecoratedMain:
 
         @wraps(main)
         def _main(cfg):
+            link = Link(cfg)
             try:
-                main(cfg)
+                main(cfg, link)
             except Exception:
                 logger.exception("Error while running main.")
                 sys.exit(1)

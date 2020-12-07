@@ -20,25 +20,22 @@ from torch.utils.data import DataLoader, Subset
 from torch.nn.parallel.distributed import DistributedDataParallel
 
 logger = logging.getLogger(__name__)
-_rank = None
-_world_size = None
 
 
 def _check_forgotten():
-    if _world_size is None:
-        world_size = os.environ.get('DORA_WORLD_SIZE')
-        if world_size is not None and int(world_size) > 1:
-            raise RuntimeError(
-                "torch.distributed was never initialized, but this is meant to be a "
-                "distributed job.")
+    world_size = os.environ.get('DORA_WORLD_SIZE')
+    if world_size is not None and int(world_size) > 1:
+        raise RuntimeError(
+            "torch.distributed was never initialized, but this is meant to be a "
+            "distributed job.")
 
 
 def rank():
     """
     Return process rank. If distributed was never initialized, assumes rank is 0.
     """
-    if _rank is not None:
-        return _rank
+    if torch.distributed.is_initialized():
+        return torch.distributed.get_rank()
     _check_forgotten()
     return 0
 
@@ -47,8 +44,8 @@ def world_size():
     """
     Return world_size. If distributed was never initialized, assumes rank is 0.
     """
-    if _world_size is not None:
-        return _world_size
+    if torch.distributed.is_initialized():
+        return torch.distributed.get_world_size()
     _check_forgotten()
     return 1
 
@@ -63,7 +60,6 @@ def init(rendezvous_file, rank=None, world_size=None, backend="nccl"):
     If `rank` and `world_size` are not provided, this will try to infer it automatically
     from Slurm or Dora env variable.
     """
-    global _rank, _world_size
     if rank is None:
         rank = os.environ.get('DORA_RANK')
         if rank is None:
@@ -73,9 +69,7 @@ def init(rendezvous_file, rank=None, world_size=None, backend="nccl"):
         world_size = os.environ.get('DORA_WORLD_SIZE')
         if world_size is None:
             raise RuntimeError("Could not determine world_size from env.")
-    _rank = rank
-    _world_size = world_size
-
+        world_size = int(world_size)
     if world_size == 1:
         return
     torch.cuda.set_device(rank)

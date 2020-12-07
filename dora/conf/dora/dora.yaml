@@ -21,7 +21,7 @@ dora:
     restart: false
 
   ddp:
-    rendezvous: rendezvous.txt
+    rendezvous_file: rendezvous.txt
     backend: nccl
 
   slurm:

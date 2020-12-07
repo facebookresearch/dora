@@ -7,7 +7,8 @@ logger = logging.getLogger(__name__)
 
 
 @main('config', 'conf')
-def main(cfg):
+def main(cfg, link):
+    link.setup()
     try:
         logger.info(cfg.dora.sig)
     except Exception:

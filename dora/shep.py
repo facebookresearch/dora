@@ -20,8 +20,9 @@ class SubmitItTarget:
         env = JobEnvironment()
         rank = env.global_rank
         world_size = env.num_tasks
-        extra = [f'dora.ddp.rank={rank}', f'dora.ddp.world_size={world_size}']
-        sys.argv[1:] = argv + extra
+        os.environ['DORA_RANK'] = str(rank)
+        os.environ['DORA_WORLD_SIZE'] = str(world_size)
+        sys.argv[1:] = argv
         main()
 
     def checkpoint(self, *args, **kwargs):
@@ -84,9 +85,9 @@ class Shepherd:
         folder = sheep.folder / sheep.cfg.dora.submitit
         if folder.exists():
             shutil.rmtree(folder)
-        rendezvous = sheep.folder / sheep.cfg.dora.ddp.rendezvous
-        if rendezvous.exists():
-            rendezvous.unlink()
+        rendezvous_file = sheep.folder / sheep.cfg.dora.ddp.rendezvous_file
+        if rendezvous_file.exists():
+            rendezvous_file.unlink()
         if sheep.log.exists():
             sheep.log.unlink()
 
