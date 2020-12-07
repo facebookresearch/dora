@@ -4,21 +4,23 @@ defaults:
 
 dora:
   dir: ./outputs
-  dbs: ${dora.dir}/dbs/
   sig: dora
   exclude: []
-  history: history.json
-  checkpoint: checkpoint.th
-  submitit: submitit
-  best: best.th
-  restart: false
-
-  job_file: job_id.pkl
+  scheduler:
+    dbs: ${dora.dir}/dbs/
+    submitit: submitit
+    job_file: job_id.pkl
+  sheep:
+    history: history.json
+  solver:
+    checkpoint: checkpoint.th
+    best: best.th
+    restart: false
   ddp:
     rendezvous: rendezvous.txt
-    world_size: 1
-    rank: 0
     backend: nccl
+    rank: 0
+    world_size: 1
 
 epochs: 10
 
