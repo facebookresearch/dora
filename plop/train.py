@@ -6,7 +6,7 @@ from dora.hydra import main
 logger = logging.getLogger(__name__)
 
 
-@main('config', '../conf')
+@main('config', 'conf')
 def main(cfg):
     try:
         logger.info(cfg.dora.sig)
