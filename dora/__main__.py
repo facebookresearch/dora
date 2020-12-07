@@ -122,7 +122,7 @@ def main():
     except ImportError:
         fatal(f"Could not import module {module_name}.")
     try:
-        main = module.amin
+        main = module.main
     except AttributeError:
         fatal(f"Could not find function `main` in {module_name}.")
 

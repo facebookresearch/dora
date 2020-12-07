@@ -12,5 +12,4 @@ class DoraSearchPathPlugin(SearchPathPlugin):
         # Remember to verify the config is packaged properly (build sdist and look inside,
         # and verify MANIFEST.in is correct).
         search_path.append(
-            provider="dora-search-path-plugin", path="pkg://dora/conf"
-        )
+            provider="dora-search-path-plugin", path="pkg://dora/conf")

@@ -67,15 +67,14 @@ class Shepherd:
     """
     Takes care of the little jobs.
     """
-    def __init__(self, hydra_support, module):
-        self.hydra_support = hydra_support
-        self.module = module
-        self.cfg = self.hydra_support.get_config(return_hydra_config=True)
+    def __init__(self, main):
+        self.main = main
+        self.cfg = self.main.get_config(return_hydra_config=True)
         self.dbs.mkdir(exist_ok=True, parents=True)
         (self.dbs / "job_ids").mkdir(exist_ok=True)
 
     def get_sheep(self, overrides):
-        cfg = self.hydra_support.get_config(overrides, return_hydra_config=True)
+        cfg = self.main.get_config(overrides, return_hydra_config=True)
         return Sheep(cfg, overrides)
 
     def update(self):
@@ -114,7 +113,7 @@ class Shepherd:
         name = self.module + ":" + sheep.cfg.dora.sig
         executor.update_parameters(job_name=name, **slurm)
         job = executor.submit(
-            SubmitItTarget(), main, sheep.overrides)
+            SubmitItTarget(), self.main, sheep.overrides)
         logger.info(f'Scheduled using Submitit, Job ID: {job.job_id}')
         pickle.dump(job, open(sheep.job_file, "wb"))
         sheep.job = job
@@ -130,7 +129,7 @@ class Shepherd:
         link = self.dbs / "job_ids" / job_id
         if link.is_symlink():
             sig = link.resolve().name
-            cfg = self.hydra_support.get_config_from_sig(sig, return_hydra_config=True)
-            overrides = self.hydra_support.get_overrides_from_sig(sig)
+            cfg = self.main.get_config_from_sig(sig, return_hydra_config=True)
+            overrides = self.main.get_overrides_from_sig(sig)
             return Sheep(cfg, overrides)
         return None

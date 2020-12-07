@@ -6,12 +6,15 @@ dora:
   dir: ./outputs
   sig: dora
   exclude: []
+
+  history: history.json
+  seed: 1234
+
   scheduler:
     dbs: ${dora.dir}/dbs/
     submitit: submitit
     job_file: job_id.pkl
-  sheep:
-    history: history.json
+
   solver:
     checkpoint: checkpoint.th
     best: best.th
@@ -20,9 +23,6 @@ dora:
   ddp:
     rendezvous: rendezvous.txt
     backend: nccl
-    rank: 0
-    world_size: 1
-    _child: false
 
   slurm:
     mem_per_task: 10  # set this in GB
@@ -47,4 +47,4 @@ hydra:
     handlers:
       file:
         mode: w
-        filename: ${hydra.job.name}.log.${dora.ddp.rank}
+        filename: ${hydra.job.name}.log.${env:DORA_RANK}

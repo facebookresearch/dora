@@ -1,3 +1,7 @@
+"""
+Distribued utilities. Core features are getting the current rank and world size,
+as well as helpers for initalizing distributed.
+"""
 # Copyright (c) Facebook, Inc. and its affiliates.
 # All rights reserved.
 #
@@ -30,6 +34,9 @@ def _check_forgotten():
 
 
 def rank():
+    """
+    Return process rank. If distributed was never initialized, assumes rank is 0.
+    """
     if _rank is not None:
         return _rank
     _check_forgotten()
@@ -37,10 +44,17 @@ def rank():
 
 
 def world_size():
+    """
+    Return world_size. If distributed was never initialized, assumes rank is 0.
+    """
     if _world_size is not None:
         return _world_size
     _check_forgotten()
     return 1
+
+
+def is_master():
+    return rank() == 0
 
 
 def init(rendezvous_file, rank=None, world_size=None, backend="nccl"):
@@ -104,7 +118,7 @@ def sync_grad(params):
     This is useful is you want to experiment with unclassical methods, like LocalSGD,
     and you do not want implicit broadcasting with every backward.
     """
-    if world_size == 1:
+    if world_size() == 1:
         return
     handles = []
     for p in params:
@@ -114,14 +128,14 @@ def sync_grad(params):
             handles.append((p, handle))
     for p, handle in handles:
         handle.wait()
-        p.grad.data /= world_size
+        p.grad.data /= world_size()
 
 
 def wrap(model):
     """
     Wrap a model with DDP if distributed training is enabled.
     """
-    if world_size == 1:
+    if world_size() == 1:
         return model
     else:
         return DistributedDataParallel(
@@ -134,7 +148,7 @@ def barrier():
     """
     Perform a barrier if distributed is enabled.
     """
-    if world_size > 1:
+    if world_size() > 1:
         torch.distributed.barrier()
 
 
@@ -142,45 +156,45 @@ def share(obj=None):
     """
     Share `obj` from process 0 with everyone as the return value.
     """
-    if world_size == 1:
+    if world_size() == 1:
         return obj
     size = torch.empty(1, device='cuda', dtype=torch.long)
-    if rank == 0:
+    if is_master():
         dump = pickle.dumps(obj)
         size[0] = len(dump)
     torch.distributed.broadcast(size, src=0)
-    if rank == 0:
+    if is_master():
         buffer = torch.from_numpy(np.frombuffer(dump, dtype=np.uint8).copy()).cuda()
     else:
         buffer = torch.empty(size[0].item(), device='cuda', dtype=torch.uint8)
     torch.distributed.broadcast(buffer, src=0)
-    if rank > 0:
+    if not is_master():
         obj = pickle.loads(buffer.cpu().numpy().tobytes())
     logger.debug(f"Shared object of size {len(buffer)}")
     return obj
 
 
-def loader(dataset, *args, shuffle=False, klass=DataLoader, **kwargs):
+def loader(dataset, batch_size=1, shuffle=False, *args, klass=DataLoader, **kwargs):
     """
     Create a dataloader properly in case of distributed training.
     If a gradient is going to be computed you must set `shuffle=True`.
 
-    :param dataset: the dataset to be parallelized
-    :param args: relevant args for the loader
-    :param shuffle: shuffle examples
-    :param klass: loader class
-    :param kwargs: relevant args
+    Args:
+        dataset: the dataset to be parallelized
+        args: relevant args for the loader
+        shuffle: shuffle examples
+        klass: loader class
+        kwargs: relevant kwargs
     """
-
-    if world_size == 1:
-        return klass(dataset, *args, shuffle=shuffle, **kwargs)
+    if world_size() == 1:
+        return klass(dataset, batch_size, shuffle, *args, **kwargs)
 
     if shuffle:
         # train means we will compute backward, we use DistributedSampler
         sampler = DistributedSampler(dataset)
-        # We ignore shuffle, DistributedSampler already shuffles
-        return klass(dataset, *args, **kwargs, sampler=sampler)
+        # Don't pass shuffle, DistributedSampler already shuffles
+        return klass(dataset, batch_size, *args, **kwargs, sampler=sampler)
     else:
         # We make a manual shard, as DistributedSampler otherwise replicate some examples
         dataset = Subset(dataset, list(range(rank, len(dataset), world_size)))
-        return klass(dataset, *args, **kwargs, shuffle=shuffle)
+        return klass(dataset, batch_size, shuffle, *args, **kwargs)

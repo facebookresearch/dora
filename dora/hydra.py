@@ -4,9 +4,12 @@ the end user `main` function and Hydra.
 """
 from collections import namedtuple
 from fnmatch import fnmatch
+from functools import wraps
 from hashlib import sha1
 from importlib.util import find_spec
 import json
+import logging
+import os
 from pathlib import Path
 import sys
 import typing as tp
@@ -15,6 +18,9 @@ import hydra
 from hydra.experimental import compose, initialize_config_dir
 from omegaconf.dictconfig import DictConfig
 from omegaconf import OmegaConf
+
+
+logger = logging.getLogger(__name__)
 
 
 class _NotThere:
@@ -108,15 +114,27 @@ class DecoratedMain:
             self.job_name = module.rsplit(".", 1)[1]
         self.full_config_path = Path(module_path).parent.resolve()
         if config_path is not None:
-            self.full_config_path = self.config_path / config_path
+            self.full_config_path = self.full_config_path / config_path
 
     def __call__(self):
+        if 'DORA_RANK' not in os.environ:
+            os.environ['DORA_RANK'] = '0'
+
+        main = self.main
+
+        @wraps(main)
+        def _main(cfg):
+            try:
+                main(cfg)
+            except Exception:
+                logger.exception("Error while running main.")
+                sys.exit(1)
         overrides = overrides_from_argv(sys.argv[1:])
         sig = self.get_signature(overrides)
         sys.argv.append(f"dora.sig={sig}")
         return hydra.main(
             config_name=self.config_name,
-            config_path=self.config_path)(self.main)()
+            config_path=self.config_path)(_main)()
 
     def _get_config(self,
                     overrides: tp.Sequence[str] = [],

@@ -9,7 +9,7 @@
 
 from pathlib import Path
 
-from setuptools import setup
+from setuptools import setup, find_namespace_packages
 
 NAME = 'dora_searchpath'
 DESCRIPTION = (
@@ -23,7 +23,7 @@ VERSION = "0.0.1"
 
 HERE = Path(__file__).parent
 
-REQUIRED = []
+REQUIRED = ['hydra-core>=1.0']
 
 try:
     with open(HERE / "README.md", encoding='utf-8') as f:
@@ -41,7 +41,7 @@ setup(
     author_email=EMAIL,
     python_requires=REQUIRES_PYTHON,
     url=URL,
-    packages=['hydra_plugins.dora_searchpath'],
+    packages=find_namespace_packages(include=["hydra_plugins.*"]),
     install_requires=REQUIRED,
     include_package_data=True,
     license='Creative Commons Attribution-NonCommercial 4.0 International',

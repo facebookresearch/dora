@@ -139,13 +139,13 @@ def write_and_rename(path: Path, suffix: str = ".tmp", mode: str = "wb"):
     os.rename(tmp_path, path)
 
 
-def try_load(path: Path, load=torch.load):
+def try_load(path: Path, load=torch.load, mode="rb"):
     """
     Try to load from a path using torch.load, and handles various failure cases.
     Return None upon failure.
     """
     try:
-        return load(open(path, "rb"))
+        return load(open(path, mode))
     except (IOError, OSError, pickle.UnpicklingError, RuntimeError, EOFError) as exc:
         # Trying to list everything that can go wrong.
         logger.warning(
