@@ -1,11 +1,15 @@
+"""
+This module provides support for Hydra, in particular the `main` wrapper between
+the end user `main` function and Hydra.
+"""
 from collections import namedtuple
 from fnmatch import fnmatch
-from functools import wraps
 from hashlib import sha1
 from importlib.util import find_spec
 import json
 from pathlib import Path
 import sys
+import typing as tp
 
 import hydra
 from hydra.experimental import compose, initialize_config_dir
@@ -63,11 +67,33 @@ def _is_excluded(key, excluded):
             return True
 
 
-class HydraSupport:
+def overrides_from_argv(argv):
+    return [a for a in argv if not a.startswith('-')]
+
+
+class DecoratedMain:
+    """
+    The core concept in Dora is that of a run *signature*.
+    Given a set of Hydra overrides, this class will compare all the fields
+    that are impacted in the configuration tree structure. Those differences will be hashed.
+
+    The signature will thus uniquely define a run, and be shared even for complex override
+    patterns that would end up being equivalent (i.e. composition vs. manual overrides).
+
+    The run dir will be uniquely defined by the signature. If you run twice the same job
+    with equivalent parameters, they will run in the same folder, with the end goal of
+    automatically discovering checkpoints from a previous run for instance.
+
+    It is even possible to recover a configuration or list of overrides from the signature,
+    but only if a previous run used that specific signature.
+    """
     _EXCLUDED = ["dora.*", "slurm.*"]
 
-    def __init__(self, module, config_name, config_path=None):
+    def __init__(self, main: tp.Callable[[], None], config_name: str, config_path: str):
+        self.main = main
         self.config_name = config_name
+        self.config_path = config_path
+        module = main.__module__
         if module == "__main__":
             spec = sys.modules[module].__spec__
             if spec is None:
@@ -80,22 +106,41 @@ class HydraSupport:
         else:
             module_path = find_spec(module).origin
             self.job_name = module.rsplit(".", 1)[1]
-        self.config_path = Path(module_path).parent.resolve()
+        self.full_config_path = Path(module_path).parent.resolve()
         if config_path is not None:
-            self.config_path = self.config_path / config_path
+            self.full_config_path = self.config_path / config_path
 
-    def _get_config(self, overrides=[], return_hydra_config=False):
-        with initialize_config_dir(str(self.config_path), job_name=self.job_name):
+    def __call__(self):
+        overrides = overrides_from_argv(sys.argv[1:])
+        sig = self.get_signature(overrides)
+        sys.argv.append(f"dora.sig={sig}")
+        return hydra.main(
+            config_name=self.config_name,
+            config_path=self.config_path)(self.main)()
+
+    def _get_config(self,
+                    overrides: tp.Sequence[str] = [],
+                    return_hydra_config: bool = False) -> DictConfig:
+        """
+        Internal method, returns the config for the given override,
+        but without the dora.sig field filled.
+        """
+        with initialize_config_dir(str(self.full_config_path), job_name=self.job_name):
             return compose(self.config_name, overrides, return_hydra_config=return_hydra_config)
 
-    def get_config(self, overrides=[], return_hydra_config=False):
+    def get_config(self,
+                   overrides: tp.Sequence[str] = [],
+                   return_hydra_config: bool = False) -> DictConfig:
         """
-        Returns the config with the actual signature computation.
+        Returns the config for the given override.
         """
         sig = self.get_signature(overrides)
         return self._get_config(overrides + [f"dora.sig={sig}"], return_hydra_config)
 
-    def get_delta(self, init, other):
+    def get_delta(self, init: DictConfig, other: DictConfig):
+        """
+        Returns an iterator over all the differences between the init and other config.
+        """
         delta = _compare_config(init, other)
         excluded = self._EXCLUDED + list(init.dora.exclude)
         delta = []
@@ -106,22 +151,35 @@ class HydraSupport:
         delta.sort(key=lambda x: x[0])
         return delta
 
-    def get_signature(self, overrides=[]):
+    def get_signature(self, overrides: tp.Sequence[str] = []) -> str:
+        """
+        Returns the job signature.
+        """
         init = self._get_config()
         other = self._get_config(overrides)
         delta = self.get_delta(init, other)
         return sha1(json.dumps(delta).encode('utf8')).hexdigest()[:16]
 
-    def get_run_dir(self, overrides=[]):
+    def get_run_dir(self, overrides: tp.Sequence[str] = []) -> Path:
+        """
+        Get the job run dir.
+        """
         sig = self.get_signature(overrides)
         cfg = self._get_config(overrides + [f"dora.sig={sig}"], True)
-        return cfg.hydra.run.dir
+        return Path(cfg.hydra.run.dir)
 
-    def get_run_dir_from_sig(self, sig: str):
+    def get_run_dir_from_sig(self, sig: str) -> Path:
+        """
+        Get the job run dir from the signature.
+        """
         cfg = self._get_config([f"dora.sig={sig}"], True)
         return Path(cfg.hydra.run.dir)
 
-    def get_config_from_sig(self, sig: str, return_hydra_config=False):
+    def get_config_from_sig(self, sig: str, return_hydra_config: bool = False) -> DictConfig:
+        """
+        Get the config from the signature, if a previous run already
+        matched that config.
+        """
         path = self.get_run_dir_from_sig(sig)
         if not path.is_dir():
             raise RuntimeError(f"Could not find experiment with signature {sig}")
@@ -130,7 +188,12 @@ class HydraSupport:
             cfg.hydra = OmegaConf.load(path / ".hydra/hydra.yaml").hydra
         return cfg
 
-    def get_overrides_from_sig(self, sig: str, exclude=True):
+    def get_overrides_from_sig(self, sig: str, exclude: bool = True):
+        """
+        Get the overrides from the signature, if a previous run matched that config.
+        If exclude is True, ignores overrides that would have been excluded in the
+        computation of the signature.
+        """
         cfg = self.get_config_from_sig(sig, return_hydra_config=True)
         path = Path(cfg.hydra.run.dir)
         if not path.is_dir():
@@ -149,16 +212,6 @@ def main(config_name, config_path=None):
     # From the difference between the two configs, we can derive a unique experiment
     # signature. .
     def _decorate(_main):
-        @wraps(_main)
-        def _decorated():
-            support = HydraSupport(_main.__module__, config_name, config_path)
-            overrides = [a for a in sys.argv[1:] if not a.startswith('-')]
-            sig = support.get_signature(overrides)
-            sys.argv.append(f"dora.sig={sig}")
-            return hydra.main(
-                config_name=config_name,
-                config_path=config_path)(_main)()
-        _decorated.config_name = config_name
-        _decorated.config_path = config_path
-        return _decorated
+        return DecoratedMain(_main, config_name, config_path)
+
     return _decorate

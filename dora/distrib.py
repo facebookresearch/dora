@@ -16,22 +16,52 @@ from torch.utils.data import DataLoader, Subset
 from torch.nn.parallel.distributed import DistributedDataParallel
 
 logger = logging.getLogger(__name__)
-rank = 0
-world_size = 1
+_rank = None
+_world_size = None
 
 
-def _set_rank(_rank, _world_size):
-    global rank, world_size
-    rank = _rank
-    world_size = _world_size
+def _check_forgotten():
+    if _world_size is None:
+        world_size = os.environ.get('DORA_WORLD_SIZE')
+        if world_size is not None and int(world_size) > 1:
+            raise RuntimeError(
+                "torch.distributed was never initialized, but this is meant to be a "
+                "distributed job.")
 
 
-def init(rank, world_size, rendezvous_file, backend):
-    """init.
+def rank():
+    if _rank is not None:
+        return _rank
+    _check_forgotten()
+    return 0
 
-    Initialize DDP using the given rendezvous file.
+
+def world_size():
+    if _world_size is not None:
+        return _world_size
+    _check_forgotten()
+    return 1
+
+
+def init(rendezvous_file, rank=None, world_size=None, backend="nccl"):
     """
-    _set_rank(rank, world_size)
+    Initialize DDP using the given rendezvous file.
+    If `rank` and `world_size` are not provided, this will try to infer it automatically
+    from Slurm or Dora env variable.
+    """
+    global _rank, _world_size
+    if rank is None:
+        rank = os.environ.get('DORA_RANK')
+        if rank is None:
+            raise RuntimeError("Could not determine rank from env.")
+        rank = int(rank)
+    if world_size is None:
+        world_size = os.environ.get('DORA_WORLD_SIZE')
+        if world_size is None:
+            raise RuntimeError("Could not determine world_size from env.")
+    _rank = rank
+    _world_size = world_size
+
     if world_size == 1:
         return
     torch.cuda.set_device(rank)
@@ -69,7 +99,10 @@ def sync_grad(params):
     """
     Simpler alternative to DistributedDataParallel, that doesn't rely
     on any black magic. For simple models it can also be as fast.
-    Just call this on your model parameters after the call to backward!
+    Just call this on your model parameters after the call to backward.
+
+    This is useful is you want to experiment with unclassical methods, like LocalSGD,
+    and you do not want implicit broadcasting with every backward.
     """
     if world_size == 1:
         return
@@ -85,8 +118,7 @@ def sync_grad(params):
 
 
 def wrap(model):
-    """wrap.
-
+    """
     Wrap a model with DDP if distributed training is enabled.
     """
     if world_size == 1:
@@ -99,11 +131,17 @@ def wrap(model):
 
 
 def barrier():
+    """
+    Perform a barrier if distributed is enabled.
+    """
     if world_size > 1:
         torch.distributed.barrier()
 
 
 def share(obj=None):
+    """
+    Share `obj` from process 0 with everyone as the return value.
+    """
     if world_size == 1:
         return obj
     size = torch.empty(1, device='cuda', dtype=torch.long)
@@ -123,8 +161,7 @@ def share(obj=None):
 
 
 def loader(dataset, *args, shuffle=False, klass=DataLoader, **kwargs):
-    """loader.
-
+    """
     Create a dataloader properly in case of distributed training.
     If a gradient is going to be computed you must set `shuffle=True`.
 

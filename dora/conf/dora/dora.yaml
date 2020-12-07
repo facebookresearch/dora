@@ -22,6 +22,7 @@ dora:
     backend: nccl
     rank: 0
     world_size: 1
+    _child: false
 
   slurm:
     mem_per_task: 10  # set this in GB

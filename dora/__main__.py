@@ -3,7 +3,7 @@ import importlib
 from pathlib import Path
 import os
 
-from .hydra import HydraSupport
+from .hydra import DecoratedMain
 from .grid import grid_action
 from .info import info_action
 from .launch import launch_action
@@ -122,24 +122,22 @@ def main():
     except ImportError:
         fatal(f"Could not import module {module_name}.")
     try:
-        main = module.main
+        main = module.amin
     except AttributeError:
-        fatal(f"{module_name} does not have a main function.")
-    try:
-        main.config_name
-    except AttributeError:
+        fatal(f"Could not find function `main` in {module_name}.")
+
+    if not isinstance(main, DecoratedMain):
         fatal(f"{module_name}.main was not decorated with `dora.main`.")
-    hydra_support = HydraSupport(module.__name__, main.config_name, main.config_path)
 
     if getattr(args, 'from_sig', None) is not None:
         try:
-            overrides = hydra_support.get_overrides_from_sig(args.from_sig)
+            overrides = main.get_overrides_from_sig(args.from_sig)
         except RuntimeError:
             fatal(f"Could not find an existing run with sig {args.from_sig}")
         simple_log("Parser", "Injecting overrides", overrides, "from sig", args.from_sig)
         args.overrides = overrides + args.overrides
 
-    args.action(args, hydra_support, module.__name__)
+    args.action(args, main)
 
 
 if __name__ == "__main__":

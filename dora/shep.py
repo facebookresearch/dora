@@ -3,7 +3,6 @@ from pathlib import Path
 import pickle
 import os
 import shutil
-import subprocess as sp
 import sys
 
 
@@ -17,12 +16,13 @@ logger = logging.getLogger(__name__)
 
 
 class SubmitItTarget:
-    def __call__(self, argv):
+    def __call__(self, main, argv):
         env = JobEnvironment()
         rank = env.global_rank
         world_size = env.num_tasks
         extra = [f'dora.ddp.rank={rank}', f'dora.ddp.world_size={world_size}']
-        sp.run([sys.executable] + argv + extra)
+        sys.argv[1:] = argv + extra
+        main()
 
     def checkpoint(self, *args, **kwargs):
         return submitit.helpers.DelayedSubmission(self, *args, **kwargs)
@@ -114,7 +114,7 @@ class Shepherd:
         name = self.module + ":" + sheep.cfg.dora.sig
         executor.update_parameters(job_name=name, **slurm)
         job = executor.submit(
-            SubmitItTarget(), ["-m", self.module] + sheep.overrides)
+            SubmitItTarget(), main, sheep.overrides)
         logger.info(f'Scheduled using Submitit, Job ID: {job.job_id}')
         pickle.dump(job, open(sheep.job_file, "wb"))
         sheep.job = job
