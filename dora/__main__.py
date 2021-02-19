@@ -3,7 +3,7 @@ import importlib
 from pathlib import Path
 import os
 
-from .hydra import DecoratedMain
+from .main import DecoratedMain
 from .grid import grid_action
 from .info import info_action
 from .launch import launch_action
@@ -29,7 +29,8 @@ def get_parser():
         help='Training module.'
              'You can also set the DORA_PACKAGE env. In last resort, '
              'Dora will look for a package in the current folder with a train.py module.')
-    subparsers = parser.add_subparsers(title="command", help="Command to execute")
+    subparsers = parser.add_subparsers(
+        title="command", help="Command to execute", required=True, dest='command')
     grid = subparsers.add_parser("grid")
     grid.add_argument("-r", "--retry", action="store_true",
                       help="Retry failed jobs")
@@ -76,7 +77,7 @@ def get_parser():
     run = subparsers.add_parser("run", help="Run locally the given command.")
     run.add_argument("-f", "--from_sig", help="Signature of job to use as baseline.")
     run.add_argument("-d", "--ddp", action="store_true", help="Distributed trainin.")
-    run.add_argument("overrides", nargs='*')
+    run.add_argument("argv", nargs='*')
     run.set_defaults(action=run_action)
 
     launch = subparsers.add_parser("launch")
@@ -93,7 +94,7 @@ def get_parser():
                         help="If job already exist, kill it and replace with a new one.")
     launch.add_argument("-d", "--dev", action="store_true",
                         help="Short cut for --partition=dev --attach")
-    launch.add_argument("overrides", nargs='*')
+    launch.add_argument("argv", nargs='*')
     launch.set_defaults(action=launch_action)
 
     info = subparsers.add_parser("info")
@@ -102,7 +103,7 @@ def get_parser():
     info.add_argument("-C", "--cancel", action="store_true", help="Cancel job")
     info.add_argument("-l", "--log", action="store_true", help="Show entire log")
     info.add_argument("-t", "--tail", action="store_true", help="Tail log")
-    info.add_argument("overrides", nargs='*')
+    info.add_argument("argv", nargs='*')
     info.set_defaults(action=info_action)
 
     return parser
@@ -129,15 +130,16 @@ def main():
         fatal(f"Could not find function `main` in {module_name}.")
 
     if not isinstance(main, DecoratedMain):
+        breakpoint()
         fatal(f"{module_name}.main was not decorated with `dora.main`.")
 
     if getattr(args, 'from_sig', None) is not None:
         try:
-            overrides = main.get_overrides_from_sig(args.from_sig)
+            argv = main.get_argv_from_sig(args.from_sig)
         except RuntimeError:
             fatal(f"Could not find an existing run with sig {args.from_sig}")
-        simple_log("Parser", "Injecting overrides", overrides, "from sig", args.from_sig)
-        args.overrides = overrides + args.overrides
+        simple_log("Parser", "Injecting argv", argv, "from sig", args.from_sig)
+        args.overrides = argv + args.argv
 
     args.action(args, main)
 

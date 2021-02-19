@@ -9,12 +9,9 @@ Start multiple process locally for DDP.
 """
 
 from functools import partial
-from pathlib import Path
 import os
 import subprocess as sp
 import sys
-
-from hydra import utils
 
 from .log import simple_log, fatal
 
@@ -59,18 +56,18 @@ class ChildrenManager:
             log("All workers completed successfully")
 
 
-def start_ddp_workers(package, main, overrides):
+def start_ddp_workers(package, main, argv):
     import torch as th
 
-    cfg = main.get_config(overrides)
     world_size = th.cuda.device_count()
     if not world_size:
         fatal(
             "DDP is only available on GPU. Make sure GPUs are properly configured with cuda.")
         sys.exit(1)
 
+    run = main.get_run(argv)
     # If rendezvous file already exist, this can deadlock.
-    rendezvous_file = Path(cfg.dora.ddp.rendezvous_file)
+    rendezvous_file = run.folder / run.cfg.ddp.rendezvous_file
     if rendezvous_file.exists():
         rendezvous_file.unlink()
     log(f"Starting {world_size} worker processes for DDP.")
@@ -80,13 +77,12 @@ def start_ddp_workers(package, main, overrides):
             env = dict(os.environ)
             env['DORA_RANK'] = str(rank)
             env['DORA_WORLD_SIZE'] = str(world_size)
-            env['DORA_CHILD'] = '1'
-            argv = ["-m", "dora", "-P", package]
-            argv += overrides
+            args = ["-m", "dora", "-P", package]
+            args += argv
             if rank > 0:
                 kwargs['stdin'] = sp.DEVNULL
-                kwargs['stdout'] = sp.DEVNULL
-                kwargs['stderr'] = sp.DEVNULL
+                kwargs['stdout'] = open(run.folder / f'worker_{rank}.log', 'w')
+                kwargs['stderr'] = sp.STDOUT
             manager.add(
-                sp.Popen([sys.executable] + argv, cwd=utils.get_original_cwd(), env=env, **kwargs))
+                sp.Popen([sys.executable] + argv, env=env, **kwargs))
     sys.exit(int(manager.failed))

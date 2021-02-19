@@ -114,11 +114,13 @@ def pull_metric(history, name):
 def jsonable(value):
     if isinstance(value, dict):
         return {k: jsonable(v) for k, v in value.items()}
-    elif isinstance(value, [list, tuple]):
+    elif isinstance(value, (list, tuple)):
         return [jsonable(v) for v in value]
     elif isinstance(value, torch.Tensor):
         return value.detach().cpu().tolist()
-    elif value is None or isinstance(value, [int, float, str, bool]):
+    elif isinstance(value, Path):
+        return str(value)
+    elif value is None or isinstance(value, (int, float, str, bool)):
         return value
     else:
         raise ValueError(f"{value:r} is not jsonable.")
