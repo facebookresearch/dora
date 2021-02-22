@@ -8,6 +8,7 @@ import argparse
 from contextlib import contextmanager
 from hashlib import sha1
 import json
+from pathlib import Path
 import typing as tp
 import sys
 
@@ -15,7 +16,7 @@ from .conf import DoraConfig, DoraRun
 from .utils import jsonable
 
 
-def _get_sig(jsoned) -> str:
+def _get_sig(jsoned: tp.Any) -> str:
     return sha1(json.dumps(jsoned).encode('utf8')).hexdigest()[:8]
 
 
@@ -44,14 +45,18 @@ def get_run() -> DoraRun:
         return _context._run
 
 
+MainFun = tp.Callable[[], tp.Any]
+
+
 class DecoratedMain:
-    def __init__(self, main, dora: DoraConfig):
+    def __init__(self, main: MainFun, dora: DoraConfig):
         self.main = main
         self.dora = dora
 
     def __call__(self):
         argv = self._get_argv()
         run = self.get_run(argv)
+        self._init_run(run)
         with _context.enter_run(run):
             self.main()
 
@@ -61,19 +66,19 @@ class DecoratedMain:
     def _get_argv(self) -> tp.List[str]:
         return sys.argv[1:]
 
-    def _init_run(self, run):
+    def _init_run(self, run: DoraRun):
         run.folder.mkdir(exist_ok=True, parents=True)
         json.dump(run.argv, open(run._argv_cache, 'w'))
         return run
 
-    def get_argv_from_sig(self, sig: str):
+    def get_argv_from_sig(self, sig: str) -> tp.Sequence[str]:
         run = DoraRun(sig=sig, dora=self.dora, cfg=None, argv=[])
         if run._argv_cache.exists():
             return json.load(open(run._argv_cache))
         else:
             raise RuntimeError(f"Could not find experiment with signature {sig}")
 
-    def get_run_from_sig(self, sig: str):
+    def get_run_from_sig(self, sig: str) -> DoraRun:
         return self.get_run(self.get_argv_from_sig)
 
     def __repr__(self):
@@ -81,7 +86,7 @@ class DecoratedMain:
 
 
 class ArgparseMain(DecoratedMain):
-    def __init__(self, main, dora: DoraConfig, parser: argparse.ArgumentParser):
+    def __init__(self, main: DoraRun, dora: DoraConfig, parser: argparse.ArgumentParser):
         super().__init__(main, dora)
         self.parser = parser
 
@@ -96,15 +101,16 @@ class ArgparseMain(DecoratedMain):
         delta.sort(key=lambda x: x[0])
         sig = _get_sig(jsonable(delta))
         run = DoraRun(sig=sig, dora=self.dora, cfg=args, argv=argv)
-        self._init_run(run)
         return run
 
 
-def argparse_main(parser, name=None, exclude=None, dir="./outputs"):
+def argparse_main(parser, name: str = None,
+                  exclude: tp.Sequence[str] = None,
+                  dir: tp.Union[str, Path] = "./outputs"):
     def _decorator(main):
         dora = DoraConfig(
             name=name or main.__module__,
-            dir=dir,
+            dir=Path(dir),
             exclude=exclude or [])
         return ArgparseMain(main, dora, parser)
     return _decorator

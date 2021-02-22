@@ -33,13 +33,13 @@ class ChildrenManager:
 
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_value is not None:
-            log("An exception happened while starting workers %r", exc_value)
+            log(f"An exception happened while starting workers {exc_value}")
             self.failed = True
         try:
             while self.children and not self.failed:
                 for child in list(self.children):
                     try:
-                        exitcode = child.wait(0.1)
+                        exitcode = child.wait(0.05)
                     except sp.TimeoutExpired:
                         continue
                     else:
@@ -66,17 +66,15 @@ def start_ddp_workers(package, main, argv):
         sys.exit(1)
 
     run = main.get_run(argv)
-    # If rendezvous file already exist, this can deadlock.
-    rendezvous_file = run.folder / run.cfg.ddp.rendezvous_file
-    if rendezvous_file.exists():
-        rendezvous_file.unlink()
+    if run.rendezvous_file.exists():
+        run.rendezvous_file.unlink()
     log(f"Starting {world_size} worker processes for DDP.")
     with ChildrenManager() as manager:
         for rank in range(world_size):
             kwargs = {}
             env = dict(os.environ)
-            env['DORA_RANK'] = str(rank)
-            env['DORA_WORLD_SIZE'] = str(world_size)
+            env['RANK'] = str(rank)
+            env['WORLD_SIZE'] = str(world_size)
             args = ["-m", "dora", "-P", package]
             args += argv
             if rank > 0:

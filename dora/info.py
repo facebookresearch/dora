@@ -37,4 +37,3 @@ def info_action(args, hydra_support, module):
         if not sheep.log.exists():
             fatal(f"Log {sheep.log} does not exist")
         os.execvp("tail", ["tail", "-n", "200", "-f", args.log])
-

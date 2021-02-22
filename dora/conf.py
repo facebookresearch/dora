@@ -11,29 +11,34 @@ from .link import Link
 
 @dataclass
 class SlurmConfig:
-    mem_per_task: float = 10
+    mem_per_gpu: float = 10
     gpus: int = 1
     time: int = 1200
-    cpus_per_task: int = 10
+    cpus_per_gpu: int = 10
     partition: str = "learnfair"
     comment: tp.Optional[str] = None
     setup: tp.List[str] = field(default_factory=list)
 
+    max_num_timeout: int = 20
+
 
 @dataclass
-class DoraDDPConfig:
-    rendezvous_file: str = "rendezvous.txt"
-    backend: str = "nccl"
+class ShepConfig:
+    job_file: str = "job.pkl"
+    by_id: str = "by_id"
+    submitit_folder: str = "submitit"
 
 
 @dataclass
 class DoraConfig:
     name: str = "default"  # default basename for experiments
-    dir: str = "./outputs"  # where everything will be stored
+    dir: Path = Path("./outputs")  # where everything will be stored
     exclude: tp.List[str] = field(default_factory=list)
     history: str = "history.json"  # where metrics will be stored
-    dbs: str = "dbs"  # location inside `dir` with the grid databases
-    ddp: DoraDDPConfig = field(default_factory=DoraDDPConfig)
+    runs: str = "runs"
+
+    shep: ShepConfig = field(default_factory=ShepConfig)
+    rendezvous_file: str = "rendezvous.txt"
 
     def is_excluded(self, arg_name):
         for pattern in self.exclude:
@@ -56,7 +61,11 @@ class DoraRun:
 
     @property
     def folder(self) -> Path:
-        return Path(self.dora.dir) / self.sig
+        return self.dora.dir / self.runs / self.sig
+
+    @property
+    def rendezvous_file(self) -> Path:
+        return self.folder / self.dora.rendezvous_file
 
     @property
     def _argv_cache(self) -> Path:
