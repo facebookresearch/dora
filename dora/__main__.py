@@ -1,7 +1,9 @@
 import argparse
 import importlib
+import logging
 from pathlib import Path
 import os
+import sys
 
 from .main import DecoratedMain
 from .grid import grid_action
@@ -20,6 +22,27 @@ def _find_package():
     return None
 
 
+def add_submit_rules(parser):
+    parser.add_argument("-r", "--retry", action="store_true",
+                        help="Retry failed jobs")
+    parser.add_argument("-R", "--replace", action="store_true",
+                        help="Replace any running job.")
+    parser.add_argument("--restart", action="store_true",
+                        help="Restart from scratch any unfinished job.")
+    parser.add_argument("-D", "--replace_done", action="store_true",
+                        help="Also resubmit done jobs.")
+    parser.add_argument("-C", "--cancel", action='store_true',
+                        help="Cancel all running jobs.")
+
+
+def add_slurm_config(parser):
+    parser.add_argument("-g", "--gpus", type=int, help="Number of gpus.")
+    parser.add_argument("-p", "--partition", default="learnfair", help="Partition.")
+    parser.add_argument("--dev", action="store_const", dest="partition", const="dev",
+                        help="Use dev partition.")
+    parser.add_argument("-c", "--comment", help="Comment.")
+
+
 def get_parser():
     parser = argparse.ArgumentParser()
     module = os.environ.get('DORA_PACKAGE')
@@ -32,18 +55,6 @@ def get_parser():
     subparsers = parser.add_subparsers(
         title="command", help="Command to execute", required=True, dest='command')
     grid = subparsers.add_parser("grid")
-    grid.add_argument("-r", "--retry", action="store_true",
-                      help="Retry failed jobs")
-    grid.add_argument("-R", "--replace", action="store_true",
-                      help="Replace any running job.")
-    grid.add_argument("--restart", action="store_true",
-                      help="Restart from scratch any unfinished job.")
-    grid.add_argument("-D", "--replace_done", action="store_true",
-                      help="Also resubmit done jobs.")
-    grid.add_argument("-U", "--update", action="store_true",
-                      help="Only replace jobs that are still pending.")
-    grid.add_argument("-C", "--cancel", action='store_true',
-                      help="Cancel all running jobs.")
     grid.add_argument("-i", "--interval", default=5, type=float,
                       help="Update status and metrics every that number of minutes. "
                            "Default is 5 min.")
@@ -64,7 +75,8 @@ def get_parser():
                       help="Show the folder for the job with the given index")
     grid.add_argument("-l", "--log", type=int,
                       help="Show the log for the job with the given index")
-
+    grid.add_argument("-v", "--verbose", action="store_true", help="Show debug info.")
+    add_submit_rules(grid)
     grid.add_argument(
         'grid', nargs='?',
         help='Name of the grid to run. Name of the module will be `package`.grids.`name`.')
@@ -82,9 +94,6 @@ def get_parser():
 
     launch = subparsers.add_parser("launch")
     launch.add_argument("-f", "--from_sig", help="Signature of job to use as baseline.")
-    launch.add_argument("-g", "--gpus", type=int, help="Number of gpus.")
-    launch.add_argument("-p", "--partition", default="learnfair", help="Partition.")
-    launch.add_argument("-C", "--comment", help="Comment.")
     launch.add_argument("-a", "--attach", action="store_true",
                         help="Attach to the remote process. Interrupting the command will "
                              "kill the remote job.")
@@ -94,12 +103,13 @@ def get_parser():
                         help="If job already exist, kill it and replace with a new one.")
     launch.add_argument("-d", "--dev", action="store_true",
                         help="Short cut for --partition=dev --attach")
+    add_submit_rules(launch)
     launch.add_argument("argv", nargs='*')
     launch.set_defaults(action=launch_action)
 
     info = subparsers.add_parser("info")
     info.add_argument("-f", "--from_sig", help="Signature of job to use as baseline.")
-    info.add_argument("-j", "--jid", help="Find job by job id.")
+    info.add_argument("-j", "--job_id", help="Find job by job id.")
     info.add_argument("-C", "--cancel", action="store_true", help="Cancel job")
     info.add_argument("-l", "--log", action="store_true", help="Show entire log")
     info.add_argument("-t", "--tail", action="store_true", help="Tail log")
@@ -110,6 +120,7 @@ def get_parser():
 
 
 def main():
+    logging.basicConfig(stream=sys.stderr, level=logging.INFO)
     parser = get_parser()
     args = parser.parse_args()
     if args.action is None:
@@ -129,6 +140,11 @@ def main():
     except AttributeError:
         fatal(f"Could not find function `main` in {module_name}.")
 
+    try:
+        dora_config = importlib.import_module(args.package + ".dora_config")
+    except ImportError:
+        dora_config = importlib.import_module("dora.dora_config")
+
     if not isinstance(main, DecoratedMain):
         breakpoint()
         fatal(f"{module_name}.main was not decorated with `dora.main`.")
@@ -141,7 +157,7 @@ def main():
         simple_log("Parser", "Injecting argv", argv, "from sig", args.from_sig)
         args.overrides = argv + args.argv
 
-    args.action(args, main)
+    args.action(args, main, dora_config)
 
 
 if __name__ == "__main__":
