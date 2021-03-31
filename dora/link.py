@@ -1,7 +1,6 @@
 import json
 import logging
 
-from . import distrib
 from . import utils
 
 logger = logging.getLogger(__name__)
@@ -20,13 +19,14 @@ class Link:
         self.history = []
         self.history_file = run.folder / run.dora.history
 
-    def setup(self, load_history: bool = True):
-        if load_history and self.history_file.exists():
+    def load(self):
+        if self.history_file.exists():
             history = utils.try_load(self.history_file, load=json.load, mode='r')
             if history is not None:
                 self.history = history
 
     def _commit(self):
+        from . import distrib
         if not distrib.is_master():
             return
         with utils.write_and_rename(self.history_file, "w") as tmp:

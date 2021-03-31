@@ -24,4 +24,5 @@ Some Dora concepts:
 - A *Sheep* is the association of a Slurm/Submitit job, and an XP.
 """
 # flake8: noqa
-from .main import argparse_main, get_run
+from .explore import Explorer
+from .main import argparse_main, get_xp

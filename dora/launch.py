@@ -1,3 +1,5 @@
+"""
+"""
 from functools import partial
 import subprocess as sp
 import time
@@ -27,8 +29,8 @@ def launch_action(args, main: DecoratedMain):
         tail_process = None
         try:
             while True:
-                if sheep.stdout.exists() and tail_process is None:
-                    tail_process = sp.Popen(["tail", "-n", "200", "-f", sheep.stdout])
+                if sheep.log.exists() and tail_process is None:
+                    tail_process = sp.Popen(["tail", "-n", "200", "-f", sheep.log])
                 if sheep.job.is_done("force"):
                     log("Remote process finished with state", sheep.state())
                     done = True

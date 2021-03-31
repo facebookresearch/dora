@@ -47,7 +47,6 @@ class SlurmConfig:
     partition: str = "learnfair"
     comment: tp.Optional[str] = None
     setup: tp.List[str] = field(default_factory=list)
-
     max_num_timeout: int = 20
 
 
@@ -90,21 +89,18 @@ class DoraConfig:
     Main Dora configuration. The main parameters to change are the following.
 
     Args:
-        name (str): basename for the experiments. This will be preprended
-            to the name of all experiments.
         dir (Path): path where Dora will save all useful informations, logs.
             This is also where you should store your checkpoints (see `dora.xp.XP`).
         exclude (List[str]): list of patterns of argument names to ignore
             when computing the XP signature and doing deduplication.
             For instance 'num_workers', etc.
     """
-
-    name: str = "default"  # default basename for experiments
     dir: Path = Path("./outputs")  # where everything will be stored
     exclude: tp.List[str] = field(default_factory=list)
 
+    # Those are internal config values and are unlikely to be changed
     history: str = "history.json"  # where metrics will be stored
-    runs: str = "runs"
+    xps: str = "xps"  # subfolder to store xps
 
     shep: ShepConfig = field(default_factory=ShepConfig)
     rendezvous_file: str = "rendezvous.txt"
@@ -116,4 +112,3 @@ class DoraConfig:
             if fnmatch(arg_name, pattern):
                 return True
         return False
-

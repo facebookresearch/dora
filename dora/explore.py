@@ -2,14 +2,15 @@ from collections import OrderedDict
 from copy import deepcopy
 import typing as tp
 
+import treetable as tt
+
 from .conf import SlurmConfig
-from .customize import Customizations, custom
 from .shep import Shepherd
 
 
 class Launcher:
     def __init__(self, shepherd: Shepherd, herd: OrderedDict,
-                 slurm: SlurmConfig, args=None):
+                 slurm: SlurmConfig, args: tp.Optional[tp.List[tp.Any]] = None):
         self.shepherd = shepherd
         self.herd = herd
         self.slurm = slurm
@@ -33,18 +34,14 @@ class Launcher:
         self.herd[sheep.run.sig] = (sheep, launcher.slurm)
 
 
-Explore = tp.Callable[[Launcher], None]
-
-
 class Explorer:
-    def __init__(self, explore: Explore, custom: Customizations = custom):
-        self.explore = explore
-        self.custom = custom
+    def __call__(self, launcher: Launcher):
+        raise NotImplementedError()
 
+    def get_grid_metrics(self):
+        """Return the metrics that should be displayed in the tracking table.
+        """
+        return tt.group("Metrics", [])
 
-def explorer(explore: Explore = None, *, custom: Customizations = custom):
-    if explore is None:
-        def _decorator(explore: Explore):
-            return Explorer(explore, custom)
-        return _decorator
-    return Explorer(explore, custom)
+    def get_colors(self):
+        return ["0", "38;5;245"]

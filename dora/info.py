@@ -1,3 +1,7 @@
+"""
+The info commands gets the information on a Sheep or XP and can be used
+to retrieve the job status, logs etc.
+"""
 from functools import partial
 import os
 import shutil
@@ -21,7 +25,7 @@ def info_action(args, main: DecoratedMain):
     else:
         sheep = shepherd.get_sheep(args.argv)
     log("Found sheep", sheep)
-    log("Folder is", sheep.folder)
+    log("Folder is", sheep.xp.folder)
     if sheep.log:
         log("Main log is", sheep.log)
     if args.cancel:

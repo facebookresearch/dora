@@ -65,7 +65,7 @@ def start_ddp_workers(package, main, argv):
             "DDP is only available on GPU. Make sure GPUs are properly configured with cuda.")
         sys.exit(1)
 
-    run = main.get_run(argv)
+    run = main.get_xp(argv)
     if run.rendezvous_file.exists():
         run.rendezvous_file.unlink()
     log(f"Starting {world_size} worker processes for DDP.")
@@ -73,6 +73,7 @@ def start_ddp_workers(package, main, argv):
         for rank in range(world_size):
             kwargs = {}
             env = dict(os.environ)
+            env['LOCAL_RANK'] = str(rank)
             env['RANK'] = str(rank)
             env['WORLD_SIZE'] = str(world_size)
             args = ["-m", "dora", "-P", package]

@@ -10,9 +10,10 @@ import typing as tp
 from submitit import SlurmJob, JobEnvironment
 import submitit
 
-from .conf import XP, SlurmConfig, SubmitRules
+from .conf import SlurmConfig, SubmitRules
 from .main import DecoratedMain
 from .utils import try_load
+from .xp import XP
 
 
 logger = logging.getLogger(__name__)
@@ -20,7 +21,6 @@ logger = logging.getLogger(__name__)
 
 class SubmitItTarget:
     def __call__(self, main: DecoratedMain, argv: tp.Sequence[str]):
-        os.dup2(sys.stdout.fileno(), sys.stderr.fileno())
         env = JobEnvironment()
         rank = env.global_rank
         world_size = env.num_tasks
@@ -35,15 +35,19 @@ class SubmitItTarget:
 
 
 class Sheep:
-    def __init__(self, run: XP):
-        self.run = run
+    """
+    A Sheep is a specific run for a given XP. Sheeps are managed
+    by the Shepherd.
+    """
+    def __init__(self, xp: XP, job: SlurmJob = None):
+        self.xp = xp
         self.job: tp.Optional[submitit.SlurmJob] = None
         if self.job_file.exists():
             self.job = try_load(self.job_file, pickle.load)
 
     @property
     def job_file(self) -> Path:
-        return self.folder / self.cfg.dora.job_file
+        return self.xp.folder / self.xp.dora.shep.job_file
 
     def state(self, mode="standard"):
         if self.job is None:
@@ -61,11 +65,11 @@ class Sheep:
     @property
     def log(self):
         if self.job is not None:
-            return self.run.submitit / f"{self.job.job_id}_0.out"
+            return self.xp.submitit / f"{self.job.job_id}_0.out"
         return None
 
     def __repr__(self):
-        return f"Sheep({self.run.sig}, state={self.state()}, argv={self.run.argv})"
+        return f"Sheep({self.xp.sig}, state={self.state()}, argv={self.xp.argv})"
 
 
 def no_log(x: str):
@@ -86,8 +90,8 @@ class Shepherd:
         self._to_submit = []
 
     def get_sheep(self, argv: tp.Sequence[str]):
-        run = self.main.get_run(argv)
-        return Sheep(run)
+        xp = self.main.get_xp(argv)
+        return Sheep(xp)
 
     def update(self):
         SlurmJob.watcher.update()
@@ -104,7 +108,7 @@ class Shepherd:
         if sheep.job is not None:
             state = sheep.state()
             if sheep.job.is_done():
-                if rules.restart_done:
+                if rules.replace_done:
                     self.log(f"Ignoring previously completed job {sheep.job.job_id}")
                     sheep.job = None
             elif state in ["FAILED", "CANCELED"]:
@@ -112,7 +116,7 @@ class Shepherd:
                 if rules.retry:
                     sheep.job = None
             else:
-                if rules.restart:
+                if rules.replace:
                     self.log(f"Canceling previous job {sheep.job.job_id} with status {state}")
                     self.cancel_lazy(sheep)
 
@@ -133,10 +137,10 @@ class Shepherd:
             self.log(f"Job created with id {sheep.job.job_id}")
 
     def _submit(self, sheep, slurm_config: SlurmConfig):
-        run = sheep.run
-        folder = run.folder / run.dora.shep.submitit_folder
-        if run.rendezvous_file.exists():
-            run.rendezvous_file.unlink()
+        xp = sheep.xp
+        folder = xp.folder / xp.dora.shep.submitit_folder
+        if xp.rendezvous_file.exists():
+            xp.rendezvous_file.unlink()
 
         # Kill the job if any of the task fails
         os.environ['SLURM_KILL_BAD_EXIT'] = '1'
@@ -159,7 +163,10 @@ class Shepherd:
         logger.debug("Slurm parameters %r", kwargs)
 
         name = self.module + ":" + sheep.cfg.dora.sig
-        executor.update_parameters(job_name=name, **kwargs)
+        executor.update_parameters(
+            job_name=name,
+            stderr_to_stdout=True,
+            **kwargs)
         job = executor.submit(
             SubmitItTarget(), self.main, sheep.overrides)
         pickle.dump(job, open(sheep.job_file, "wb"))
@@ -167,12 +174,12 @@ class Shepherd:
         sheep.job = job
         link = self.by_id / job.job_id
         link = link
-        link.symlink_to(sheep.run.folder.resolve())
+        link.symlink_to(sheep.xp.folder.resolve())
 
     def get_sheep_from_job_id(self, job_id: str) -> tp.Optional[Sheep]:
         link = self.dbs / "job_ids" / job_id
         if link.is_symlink():
             sig = link.resolve().name
-            run = self.main.get_run_from_sig(sig)
-            return Sheep(run)
+            xp = self.main.get_xp_from_sig(sig)
+            return Sheep(xp)
         return None
