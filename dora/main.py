@@ -77,7 +77,7 @@ class DecoratedMain(_NamesMixin):
     def __call__(self):
         argv = self._get_argv()
         xp = self.get_xp(argv)
-        self._init_xp(xp)
+        self.init_xp(xp)
         with _context.enter_run(xp):
             self.main()
 
@@ -92,18 +92,18 @@ class DecoratedMain(_NamesMixin):
         # by other means, e.g. from a grid search file, or info command.
         return sys.argv[1:]
 
-    def _init_xp(self, run: XP):
+    def init_xp(self, xp: XP):
         # Initialize the XP just before the actual execution.
         # This will create the XP directory and dump the argv used.
-        run.folder.mkdir(exist_ok=True, parents=True)
-        json.dump(run.argv, open(run._argv_cache, 'w'))
-        return run
+        xp.folder.mkdir(exist_ok=True, parents=True)
+        json.dump(xp.argv, open(xp._argv_cache, 'w'))
+        return xp
 
     def get_argv_from_sig(self, sig: str) -> tp.Sequence[str]:
         """Returns the argv used to obtain a given signature.
         This can only work if an XP was previously ran with this signature.
         """
-        xp = XP(sig=sig, dora=self.dora, cfg=None, argv=[])
+        xp = XP(sig=sig, dora=self.dora, cfg=None, argv=[], delta=[])
         if xp._argv_cache.exists():
             return json.load(open(xp._argv_cache))
         else:

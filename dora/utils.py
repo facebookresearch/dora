@@ -32,7 +32,7 @@ def jsonable(value):
 
 
 @contextmanager
-def write_and_rename(path: Path, suffix: str = ".tmp", mode: str = "wb"):
+def write_and_rename(path: Path, mode: str = "wb", suffix: str = ".tmp"):
     """
     Write to a temporary file with the given suffix, then rename it
     to the right filename. As renaming a file is usually much faster
@@ -46,7 +46,7 @@ def write_and_rename(path: Path, suffix: str = ".tmp", mode: str = "wb"):
     os.rename(tmp_path, path)
 
 
-def try_load(path: Path, load=torch.load, mode="rb"):
+def try_load(path: Path, load=pickle.load, mode: str = "rb"):
     """
     Try to load from a path using torch.load, and handles various failure cases.
     Return None upon failure.

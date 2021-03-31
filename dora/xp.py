@@ -31,7 +31,7 @@ class XP:
 
     @property
     def submitit(self) -> Path:
-        return self.dora.dir / self.dora.shep.submitit_folder
+        return self.folder / self.dora.shep.submitit_folder
 
     @property
     def rendezvous_file(self) -> Path:

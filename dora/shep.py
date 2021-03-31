@@ -24,7 +24,7 @@ class SubmitItTarget:
         env = JobEnvironment()
         rank = env.global_rank
         world_size = env.num_tasks
-        os.environ['LOCAL_RANK'] = env.local_rank
+        os.environ['LOCAL_RANK'] = str(env.local_rank)
         os.environ['RANK'] = str(rank)
         os.environ['WORLD_SIZE'] = str(world_size)
         sys.argv[1:] = argv
@@ -43,7 +43,7 @@ class Sheep:
         self.xp = xp
         self.job: tp.Optional[submitit.SlurmJob] = None
         if self.job_file.exists():
-            self.job = try_load(self.job_file, pickle.load)
+            self.job = try_load(self.job_file, load=pickle.load)
 
     @property
     def job_file(self) -> Path:
@@ -65,7 +65,7 @@ class Sheep:
     @property
     def log(self):
         if self.job is not None:
-            return self.xp.submitit / f"{self.job.job_id}_0.out"
+            return self.xp.submitit / f"{self.job.job_id}_0_log.out"
         return None
 
     def __repr__(self):
@@ -124,6 +124,7 @@ class Shepherd:
                 if rules.replace:
                     self.log(f"Cancelling previous job {sheep.job.job_id} with status {state}")
                     self.cancel_lazy(sheep)
+                    sheep.job = None
 
         if sheep.job is None:
             self._to_submit.append((sheep, slurm_config))
@@ -144,6 +145,7 @@ class Shepherd:
 
     def _submit(self, sheep, slurm_config: SlurmConfig):
         xp = sheep.xp
+        self.main.init_xp(xp)
         folder = xp.folder / xp.dora.shep.submitit_folder
         if xp.rendezvous_file.exists():
             xp.rendezvous_file.unlink()
