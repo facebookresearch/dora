@@ -2,6 +2,7 @@ from collections import OrderedDict
 import fnmatch
 from functools import partial
 from importlib import import_module
+import os
 from pathlib import Path
 import pkgutil
 import pickle
@@ -93,25 +94,34 @@ def grid_action(args: tp.Any, main: DecoratedMain):
 
     if args.cancel:
         for sheep in sheeps:
-            shepherd.cancel_lazy(sheep)
-            name = main.get_name(sheep.xp)
-            log(f"Canceling job {sheep.job.job_id} for sheep {name}")
+            if not sheep.is_done():
+                shepherd.cancel_lazy(sheep)
+                name = main.get_name(sheep.xp)
+                log(f"Canceling job {sheep.job.job_id} for sheep {name}")
+        if not args.dry_run:
+            shepherd.commit()
         return
 
-    if args.folder is not None or args.log is not None:
-        index = args.folder if args.folder is not None else args.log
+    actions = list(filter(None, [args.folder, args.log, args.tail]))
+
+    if actions:
+        assert len(actions) == 1
+        index = actions[0]
         try:
             sheep = sheeps[index]
         except IndexError:
             fatal(f"Invalid index {args.folder}")
         name = main.get_name(sheep.xp)
         if args.folder is not None:
-            log(f"Folder for sheep {name}")
-            print(sheep.xp.folder)
+            log(f"Folder for sheep {name}: {sheep.xp.folder}")
+        elif args.tail is not None:
+            if not sheep.log.exists():
+                fatal(f"Log {sheep.log} does not exist")
+            os.execvp("tail", ["tail", "-n", "200", "-f", args.log])
         else:
-            if not sheep.xp.log.exists():
+            if not sheep.log.exists():
                 fatal(f"Log file does not exist for sheep {name}.")
-            shutil.copyfileobj(open(sheep.xp.log), sys.stdout)
+            shutil.copyfileobj(open(sheep.log), sys.stdout)
         return
 
     print(f"Monitoring Grid {args.grid}")
@@ -162,9 +172,14 @@ def monitor(args: tp.Any, main: DecoratedMain, explorer: Explorer, herd: tp.List
     names, base_name = main.get_names([sheep.xp for sheep in herd])
     all_metrics = [main.get_xp_metrics(sheep.xp) for sheep in herd]
 
+    trim = None
     if args.trim is not None:
-        length = len(all_metrics[args.trim])
-        all_metrics = [metrics[:length] for metrics in all_metrics]
+        trim = len(all_metrics[args.trim])
+    elif args.trim_last:
+        trim = min(len(metrics) for metrics in all_metrics)
+
+    if trim is not None:
+        all_metrics = [metrics[:trim] for metrics in all_metrics]
 
     lines = []
     for index, (sheep, metrics, name) in enumerate(zip(herd, all_metrics, names)):
@@ -172,9 +187,9 @@ def monitor(args: tp.Any, main: DecoratedMain, explorer: Explorer, herd: tp.List
             'name': name,
             'index': index,
             'sid': sheep.job.job_id if sheep.job else '',
+            'sig': sheep.xp.sig,
             'state': sheep.state(),
-            'epochs': len(metrics),
-
+            'epoch': len(metrics),
         }
         line = {}
         line['Meta'] = meta
@@ -193,10 +208,12 @@ def monitor(args: tp.Any, main: DecoratedMain, explorer: Explorer, herd: tp.List
                 tt.leaf("index", align=">"),
                 tt.leaf("name"),
                 tt.leaf("state"),
-                tt.leaf("sid", align=">"),
-                tt.leaf("epoch"),
+                tt.leaf("sig")] + (
+                    [tt.leaf("sid", align=">")] if args.job_id else []
+                ) + [
+                tt.leaf("epoch", align=">"),
             ]),
             tt.group("Metrics", explorer.get_grid_metrics()),
         ]
     )
-    print(tt.treetable(lines, table))#, colors=explorer.get_colors()))
+    print(tt.treetable(lines, table, colors=explorer.get_colors()))

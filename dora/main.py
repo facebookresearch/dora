@@ -113,7 +113,7 @@ class DecoratedMain(_NamesMixin):
         """Returns the XP from the signature. Can only work if such an XP
         has previously ran.
         """
-        return self.get_xp(self.get_argv_from_sig)
+        return self.get_xp(self.get_argv_from_sig(sig))
 
     def __repr__(self):
         return f"DecoratedMain({self.main})"

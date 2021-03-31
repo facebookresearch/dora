@@ -60,8 +60,6 @@ class Explorer:
     def get_grid_metrics(self) -> tp.List[_Node]:
         """Return the metrics that should be displayed in the tracking table.
         """
-        import treetable as tt
-        # return [tt.leaf("plop")]
         return []
 
     def get_colors(self):

@@ -135,6 +135,7 @@ class Shepherd:
     def commit(self):
         if self._to_cancel:
             cancel_cmd = ["scancel"] + [s.job.job_id for s in self._to_cancel]
+            logger.debug("Running %s", " ".join(cancel_cmd))
             sp.run(cancel_cmd, check=True)
             self._to_cancel = []
 
@@ -185,7 +186,7 @@ class Shepherd:
         link.symlink_to(sheep.xp.folder.resolve())
 
     def get_sheep_from_job_id(self, job_id: str) -> tp.Optional[Sheep]:
-        link = self.dbs / "job_ids" / job_id
+        link = self.by_id / job_id
         if link.is_symlink():
             sig = link.resolve().name
             xp = self.main.get_xp_from_sig(sig)

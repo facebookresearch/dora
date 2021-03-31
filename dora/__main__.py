@@ -53,29 +53,35 @@ def get_parser():
         help='Training module.'
              'You can also set the DORA_PACKAGE env. In last resort, '
              'Dora will look for a package in the current folder with a train.py module.')
+    parser.add_argument('--verbose', '-v', action='store_true', help="Show debug info.")
     subparsers = parser.add_subparsers(
         title="command", help="Command to execute", required=True, dest='command')
     grid = subparsers.add_parser("grid")
     add_submit_rules(grid)
     add_slurm_config(grid)
-    parser.add_argument("-C", "--cancel", action='store_true',
-                        help="Cancel all running jobs.")
+    grid.add_argument("-C", "--cancel", action='store_true',
+                      help="Cancel all running jobs.")
     grid.add_argument("-i", "--interval", default=5, type=float,
                       help="Update status and metrics every that number of minutes. "
                            "Default is 5 min.")
 
     grid.add_argument("--dry_run", action="store_true",
                       help="Only simulate actions but does not run any call to Slurm.")
+    grid.add_argument("--job_id", "-j", action="store_true",
+                      help="Display the slurm job id.")
     grid.add_argument("-t", "--trim", type=int,
                       help="Trim history to the length of the exp with the given index.")
-    grid.add_argument("-T", "--trim-last", type=int,
+    grid.add_argument("-T", "--trim-last", action="store_true",
                       help="Trim history to the slowest.")
 
-    grid.add_argument("-f", "--folder", type=int,
-                      help="Show the folder for the job with the given index")
-    grid.add_argument("-l", "--log", type=int,
-                      help="Show the log for the job with the given index")
-    grid.add_argument("-v", "--verbose", action="store_true", help="Show debug info.")
+    group = grid.add_mutually_exclusive_group()
+    group.add_argument("-f", "--folder", type=int,
+                       help="Show the folder for the job with the given index")
+    group.add_argument("-l", "--log", type=int,
+                       help="Show the log for the job with the given index")
+    group.add_argument("-A", "--tail", type=int,
+                       help="Show the log for the job with the given index")
+
     grid.add_argument(
         'grid', nargs='?',
         help='Name of the grid to run. Name of the module will be `package`.grids.`name`.')
@@ -117,9 +123,10 @@ def get_parser():
 
 
 def main():
-    logging.basicConfig(stream=sys.stderr, level=logging.INFO)
     parser = get_parser()
     args = parser.parse_args()
+    if args.verbose:
+        logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
     if args.action is None:
         fatal("You must give an action.")
