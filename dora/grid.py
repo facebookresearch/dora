@@ -14,7 +14,7 @@ import time
 from .conf import SubmitRules, update_from_args
 from .explore import Explorer, Launcher
 from .main import DecoratedMain
-from .log import simple_log, fatal
+from .log import colorize, simple_log, fatal
 from .shep import Sheep, Shepherd, no_log
 from .utils import try_load
 
@@ -128,7 +128,13 @@ def grid_action(args: tp.Any, main: DecoratedMain):
     while True:
         shepherd.update()
         monitor(args, main, explorer, sheeps)
-        time.sleep(60 * args.interval)
+        sleep = int(args.interval * 60)
+        for ela in range(sleep):
+            out = f'Next update in {sleep - ela:.0f} seconds       '
+            if sleep - ela < 10:
+                out = colorize(out, '31')
+            print(out, end='\r')
+            time.sleep(1)
 
 
 def _match_name(name, patterns):
