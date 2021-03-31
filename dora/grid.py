@@ -102,7 +102,7 @@ def grid_action(args: tp.Any, main: DecoratedMain):
             shepherd.commit()
         return
 
-    actions = list(filter(None, [args.folder, args.log, args.tail]))
+    actions = [action for action in [args.folder, args.log, args.tail] if action is not None]
 
     if actions:
         assert len(actions) == 1
@@ -117,7 +117,7 @@ def grid_action(args: tp.Any, main: DecoratedMain):
         elif args.tail is not None:
             if not sheep.log.exists():
                 fatal(f"Log {sheep.log} does not exist")
-            os.execvp("tail", ["tail", "-n", "200", "-f", args.log])
+            os.execvp("tail", ["tail", "-n", "200", "-f", sheep.log])
         else:
             if not sheep.log.exists():
                 fatal(f"Log file does not exist for sheep {name}.")
@@ -129,12 +129,14 @@ def grid_action(args: tp.Any, main: DecoratedMain):
         shepherd.update()
         monitor(args, main, explorer, sheeps)
         sleep = int(args.interval * 60)
+        print()
         for ela in range(sleep):
             out = f'Next update in {sleep - ela:.0f} seconds       '
             if sleep - ela < 10:
                 out = colorize(out, '31')
             print(out, end='\r')
             time.sleep(1)
+        print(' ' * 60)
 
 
 def _match_name(name, patterns):
@@ -194,7 +196,7 @@ def monitor(args: tp.Any, main: DecoratedMain, explorer: Explorer, herd: tp.List
             'index': index,
             'sid': sheep.job.job_id if sheep.job else '',
             'sig': sheep.xp.sig,
-            'state': sheep.state(),
+            'state': sheep.state()[:3],
             'epoch': len(metrics),
         }
         line = {}
@@ -206,7 +208,8 @@ def monitor(args: tp.Any, main: DecoratedMain, explorer: Explorer, herd: tp.List
 
         lines.append(line)
 
-    print("Base name: ", base_name)
+    if base_name:
+        print("Base name: ", base_name)
     table = tt.table(
         shorten=True,
         groups=[
