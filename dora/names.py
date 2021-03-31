@@ -36,7 +36,7 @@ class _NamesMixin:
         """
         return self.get_names([xp])[-1]
 
-    def _get_short_name(self, parts: OrderedDict, reference: OrderedDict):
+    def _get_short_name(self, parts: OrderedDict, reference: dict = {}):
         out_parts = []
         for key, value in parts.items():
             if key not in reference:

@@ -123,12 +123,15 @@ class DecoratedMain(_NamesMixin):
         """
         raise NotImplementedError()
 
-    def get_xp_metrics(self, run: XP):
-        """Return the metrics for a given run. By default this will look into
+    def get_xp_metrics(self, xp: XP) -> tp.List[dict]:
+        """Return the metrics for a given XP. By default this will look into
         the `history.json` file, that can be populated with the Link class.
+
+        Can be overriden, but metrics should still be returned as a list
+        of dicts, possibly with nested dicts.
         """
-        if run.history.exists():
-            metrics = json.load(open(run.history))
+        if xp.history.exists():
+            metrics = json.load(open(xp.history))
             return metrics
         else:
             return []
@@ -142,9 +145,11 @@ class DecoratedMain(_NamesMixin):
 class ArgparseMain(DecoratedMain):
     """Implementation of `DecoratedMain` for XP that uses argparse.
     """
-    def __init__(self, main: XP, dora: DoraConfig, parser: argparse.ArgumentParser):
+    def __init__(self, main: XP, dora: DoraConfig, parser: argparse.ArgumentParser,
+                 use_underscore=False):
         super().__init__(main, dora)
         self.parser = parser
+        self.use_underscore = use_underscore
 
     def get_xp(self, argv: tp.Sequence[str]) -> XP:
         argv = list(argv)
@@ -159,12 +164,20 @@ class ArgparseMain(DecoratedMain):
         xp = XP(sig=sig, dora=self.dora, cfg=args, argv=argv, delta=delta)
         return xp
 
-    def merge_args(self, args: tp.List[tp.Any]) -> tp.List[str]:
+    def grid_args_to_argv(self, arg: tp.Any) -> tp.List[str]:
         argv = []
-        for part in args:
-            if not isinstance(part, list):
-                raise ValueError("Can only merge list of argv.")
-            argv += part
+        if isinstance(arg, str):
+            argv.append(arg)
+        elif isinstance(arg, dict):
+            for key, value in arg.items():
+                if not self.use_underscore:
+                    key = key.replace("_", "-")
+                argv.append(f"--{key}={value}")
+        elif isinstance(arg, [list, tuple]):
+            for part in arg:
+                argv += self.grid_args_to_argv(part)
+        else:
+            raise ValueError(f"Can only process dict, tuple, lists and str, but got {arg}")
         return argv
 
     def get_name_parts(self, xp: XP) -> OrderedDict:
@@ -174,7 +187,7 @@ class ArgparseMain(DecoratedMain):
         return parts
 
 
-def argparse_main(parser, name: str = None,
+def argparse_main(parser, *, use_underscore=False,
                   exclude: tp.Sequence[str] = None,
                   dir: tp.Union[str, Path] = "./outputs"):
     """Nicer version of `ArgparseMain` that acts like a decorator, and directly
@@ -184,5 +197,5 @@ def argparse_main(parser, name: str = None,
         dora = DoraConfig(
             dir=Path(dir),
             exclude=exclude or [])
-        return ArgparseMain(main, dora, parser)
+        return ArgparseMain(main, dora, parser, use_underscore=use_underscore)
     return _decorator

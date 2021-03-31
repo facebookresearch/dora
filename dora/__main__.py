@@ -64,6 +64,8 @@ def get_parser():
                       help="Update status and metrics every that number of minutes. "
                            "Default is 5 min.")
 
+    grid.add_argument("--dry_run", action="store_true",
+                      help="Only simulate actions but does not run any call to Slurm.")
     grid.add_argument("-t", "--trim", type=int,
                       help="Trim history to the length of the exp with the given index.")
     grid.add_argument("-T", "--trim-last", type=int,
@@ -107,6 +109,7 @@ def get_parser():
     info.add_argument("-C", "--cancel", action="store_true", help="Cancel job")
     info.add_argument("-l", "--log", action="store_true", help="Show entire log")
     info.add_argument("-t", "--tail", action="store_true", help="Tail log")
+    info.add_argument("-m", "--metrics", action="store_true", help="Show last metrics")
     info.add_argument("argv", nargs='*')
     info.set_defaults(action=info_action)
 

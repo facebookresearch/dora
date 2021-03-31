@@ -37,6 +37,8 @@ def launch_action(args, main: DecoratedMain):
                     done = True
                     break
                 time.sleep(30)
+        except KeyboardInterrupt:
+            log("KeyboardInterrupt received...")
         finally:
             if tail_process:
                 tail_process.kill()

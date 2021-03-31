@@ -33,29 +33,24 @@ def get_explore(args, main):
     if args.grid is None:
         candidates = []
         for info in pkgutil.walk_packages([Path(grids.__file__).parent]):
-            mod = import_module(root_name + "." + info.name)
-            if hasattr(mod, 'explore'):
-                candidates.append(info.name)
+            candidates.append(info.name)
         log(f"Potential grids are: {', '.join(candidates)}")
         sys.exit(0)
 
     grid_name = root_name + "." + args.grid
-    try:
-        grid = import_module(grid_name)
-    except ImportError:
-        fatal(f"Could not import {grid_name}")
+    grid = import_module(grid_name)
 
     try:
-        explore = grid.explore
+        explorer = grid.explorer
     except AttributeError:
         fatal(f"{grid_name} has no exploration function `explore`.")
-    if not isinstance(explore, Explorer):
-        fatal(f"Function {explore} should be decorated with `dora.explorer`")
-    return explore
+    if not isinstance(explorer, Explorer):
+        fatal(f"{explorer} must be an instance of `dora.Explorer`")
+    return explorer
 
 
 def grid_action(args: tp.Any, main: DecoratedMain):
-    explore = get_explore(args, main)
+    explorer = get_explore(args, main)
 
     shepherd = Shepherd(main, log=log if args.verbose else no_log)
     slurm = main.get_slurm_config()
@@ -64,18 +59,20 @@ def grid_action(args: tp.Any, main: DecoratedMain):
     update_from_args(rules, args)
 
     grid_file = shepherd.grids / (args.grid + ".pkl")
-    previous_herd = try_load(grid_file) or {}
+    previous_herd = {}
+    if grid_file.exists():
+        previous_herd = try_load(grid_file) or {}
 
     herd = OrderedDict()
     shepherd = Shepherd(main)
-    launcher = Launcher(shepherd, herd)
-    explore(launcher)
+    launcher = Launcher(shepherd, slurm, herd)
+    explorer(launcher)
 
     shepherd.update()
 
     for sheep, slurm in herd.values():
         shepherd.maybe_submit_lazy(sheep, slurm, rules)
-        previous_herd.pop(sheep.xp.sig)
+        previous_herd.pop(sheep.xp.sig, None)
 
     for sheep, _ in previous_herd:
         if not sheep.is_done():
@@ -83,10 +80,11 @@ def grid_action(args: tp.Any, main: DecoratedMain):
             name = main.get_name(sheep.xp)
             log(f"Canceling job {sheep.job.job_id} for no longer required sheep {name}")
 
-    shepherd.commit()
-    pickle.dump(herd, open(grid_file, "wb"))
+    if not args.dry_run:
+        shepherd.commit()
+        pickle.dump(herd, open(grid_file, "wb"))
 
-    sheeps = list(herd.values())
+    sheeps = [sheep for sheep, _ in herd.values()]
     sheeps = filter_grid_sheeps(args, main, sheeps)
 
     if not sheeps:
@@ -119,8 +117,8 @@ def grid_action(args: tp.Any, main: DecoratedMain):
     print(f"Monitoring Grid {args.grid}")
     while True:
         shepherd.update()
-        monitor(args, main, sheeps)
-        time.sleep(args.interval)
+        monitor(args, main, explorer, sheeps)
+        time.sleep(60 * args.interval)
 
 
 def _match_name(name, patterns):
@@ -152,35 +150,38 @@ def filter_grid_sheeps(args: tp.Any, main: DecoratedMain, sheeps: tp.List[Sheep]
             patterns.remove(p)
     out = []
     for sheep in sheeps:
-        name = main.get_name(sheep)
+        name = main.get_name(sheep.xp)
         if _match_name(name, patterns):
-            out.append(name)
+            out.append(sheep)
     if indexes:
-        return [out[idx] for idx in indexes]
+        out = [out[idx] for idx in indexes]
+    return out
 
 
-def monitor(args, explorer: Explorer, main: DecoratedMain, herd: tp.List[Sheep]):
+def monitor(args: tp.Any, main: DecoratedMain, explorer: Explorer, herd: tp.List[Sheep]):
     names, base_name = main.get_names([sheep.xp for sheep in herd])
     all_metrics = [main.get_xp_metrics(sheep.xp) for sheep in herd]
 
     if args.trim is not None:
-        length = len(all_metrics[cfg.trim])
+        length = len(all_metrics[args.trim])
         all_metrics = [metrics[:length] for metrics in all_metrics]
 
-        line = []
+    lines = []
     for index, (sheep, metrics, name) in enumerate(zip(herd, all_metrics, names)):
-        line = {}
-        meta = {'name': name, 'index': index}
+        meta = {
+            'name': name,
+            'index': index,
+            'sid': sheep.job.job_id if sheep.job else '',
+            'state': sheep.state(),
+            'epochs': len(metrics),
 
-        meta['sid'] = sheep.job.job_id if sheep.job else ''
-        meta['name'] = name
-        meta['state'] = sheep.state
-        meta['epoch'] = len(metrics)
-        line['meta'] = meta
+        }
+        line = {}
+        line['Meta'] = meta
         if metrics:
-            line['metrics'] = metrics[-1]
+            line['Metrics'] = metrics[-1]
         else:
-            line['metrics'] = {}
+            line['Metrics'] = {}
 
         lines.append(line)
 
@@ -188,14 +189,14 @@ def monitor(args, explorer: Explorer, main: DecoratedMain, herd: tp.List[Sheep])
     table = tt.table(
         shorten=True,
         groups=[
-            tt.group("meta", [
+            tt.group("Meta", [
                 tt.leaf("index", align=">"),
                 tt.leaf("name"),
                 tt.leaf("state"),
                 tt.leaf("sid", align=">"),
                 tt.leaf("epoch"),
             ]),
-            explorer.get_grid_metrics(),
+            tt.group("Metrics", explorer.get_grid_metrics()),
         ]
     )
-    print(tt.treetable(lines, table, colors=explorer.get_colors()))
+    print(tt.treetable(lines, table))#, colors=explorer.get_colors()))
