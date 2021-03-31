@@ -7,7 +7,7 @@ Dora is an experiment launching tool which provides the following features:
 - Deduplication: experiments are assigned a signature based on their arguments.
     If you ask twice for the same experiment to be ran, it won't be scheduled twice,
     but merged to the same run. If your code handles checkpointing properly,
-    it means any previous run will be automatically resumed.
+    any previous run will be automatically resumed.
 - Monitoring: Dora supports basic monitoring from inside the terminal.
     You can customize the metrics to display in the monitoring table,
     and easily track progress, and compare runs in a grid search.
