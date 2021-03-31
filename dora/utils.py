@@ -28,7 +28,7 @@ def jsonable(value):
     elif value is None or isinstance(value, (int, float, str, bool)):
         return value
     else:
-        raise ValueError(f"{value:r} is not jsonable.")
+        raise ValueError(f"{repr(value)} is not jsonable.")
 
 
 @contextmanager

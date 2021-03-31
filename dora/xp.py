@@ -1,9 +1,18 @@
 from dataclasses import dataclass
+from hashlib import sha1
+import json
 from pathlib import Path
 import typing as tp
 
 from .conf import DoraConfig
 from .link import Link
+from .utils import jsonable
+
+
+def _get_sig(delta: tp.List[tp.Tuple[str, tp.Any]]) -> str:
+    # Return signature from a jsonable content.
+    sorted_delta = sorted(delta)
+    return sha1(json.dumps(sorted_delta).encode('utf8')).hexdigest()[:8]
 
 
 @dataclass
@@ -14,15 +23,20 @@ class XP:
 
     One XP can have multiple runs.
     """
-    sig: str
     dora: DoraConfig
     cfg: tp.Any
     argv: tp.List[str]
-    delta: tp.List[tp.Any]
+    delta: tp.Optional[tp.List[tp.Tuple[str, tp.Any]]] = None
+    sig: tp.Optional[str] = None
 
     link: Link = None
 
     def __post_init__(self):
+        if self.delta is not None:
+            self.delta = jsonable([(k, v) for k, v in self.delta if not self.dora.is_excluded(k)])
+        if self.sig is None:
+            assert self.delta is not None
+            self.sig = _get_sig(self.delta)
         self.link = Link(self)
 
     @property

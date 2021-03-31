@@ -25,4 +25,5 @@ Some Dora concepts:
 """
 # flake8: noqa
 from .explore import Explorer
+from .hydra import hydra_main
 from .main import argparse_main, get_xp

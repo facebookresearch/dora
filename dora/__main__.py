@@ -20,11 +20,18 @@ from .run import run_action
 
 def _find_package():
     cwd = Path(".")
+    candidates = []
     for child in cwd.iterdir():
         if child.is_dir() and (child / "__init__.py").exists():
             if (child / "train.py").exists():
-                return child.name
-    return None
+                candidates.append(child.name)
+    if len(candidates) == 0:
+        fatal("Could not find a training package. Use -P, or set DORA_PACKAGE.")
+    elif len(candidates) == 1:
+        return candidates[0]
+    else:
+        fatal(f"Found multiple candidates: {', '.join(candidates)}. "
+              "Use -P, or set DORA_PACKAGE.")
 
 
 def add_submit_rules(parser):
@@ -133,8 +140,6 @@ def main():
 
     if args.package is None:
         args.package = _find_package()
-        if args.package is None:
-            fatal("Could not find a training package. Use -P, or set DORA_PACKAGE.")
     module_name = args.package + ".train"
     module = importlib.import_module(module_name)
     try:

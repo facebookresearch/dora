@@ -10,7 +10,6 @@ Slurm configuration, storage location, naming conventions etc.
 import argparse
 from collections import OrderedDict
 from contextlib import contextmanager
-from hashlib import sha1
 import json
 from pathlib import Path
 import typing as tp
@@ -18,13 +17,7 @@ import sys
 
 from .conf import DoraConfig, SlurmConfig
 from .names import _NamesMixin
-from .utils import jsonable
 from .xp import XP
-
-
-def _get_sig(json_like: tp.Any) -> str:
-    # Return signature from a jsonable content.
-    return sha1(json.dumps(json_like).encode('utf8')).hexdigest()[:8]
 
 
 class _Context:
@@ -57,7 +50,7 @@ def get_xp() -> XP:
         return _context._run
 
 
-MainFun = tp.Callable[[], tp.Any]
+MainFun = tp.Callable
 
 
 class DecoratedMain(_NamesMixin):
@@ -79,7 +72,10 @@ class DecoratedMain(_NamesMixin):
         xp = self.get_xp(argv)
         self.init_xp(xp)
         with _context.enter_run(xp):
-            self.main()
+            return self._main()
+
+    def _main(self):
+        return self.main()
 
     def get_xp(self, argv: tp.Sequence[str]) -> XP:
         """Return an XP given a list of arguments.
@@ -103,7 +99,7 @@ class DecoratedMain(_NamesMixin):
         """Returns the argv used to obtain a given signature.
         This can only work if an XP was previously ran with this signature.
         """
-        xp = XP(sig=sig, dora=self.dora, cfg=None, argv=[], delta=[])
+        xp = XP(sig=sig, dora=self.dora, cfg=None, argv=[])
         if xp._argv_cache.exists():
             return json.load(open(xp._argv_cache))
         else:
@@ -145,7 +141,7 @@ class DecoratedMain(_NamesMixin):
 class ArgparseMain(DecoratedMain):
     """Implementation of `DecoratedMain` for XP that uses argparse.
     """
-    def __init__(self, main: XP, dora: DoraConfig, parser: argparse.ArgumentParser,
+    def __init__(self, main: MainFun, dora: DoraConfig, parser: argparse.ArgumentParser,
                  use_underscore=False):
         super().__init__(main, dora)
         self.parser = parser
@@ -157,11 +153,8 @@ class ArgparseMain(DecoratedMain):
         delta = []
         for key, value in args.__dict__.items():
             if self.parser.get_default(key) != value:
-                if not self.dora.is_excluded(key):
-                    delta.append((key, value))
-        delta_sorted = sorted(delta, key=lambda x: x[0])
-        sig = _get_sig(jsonable(delta_sorted))
-        xp = XP(sig=sig, dora=self.dora, cfg=args, argv=argv, delta=delta)
+                delta.append((key, value))
+        xp = XP(dora=self.dora, cfg=args, argv=argv, delta=delta)
         return xp
 
     def grid_args_to_argv(self, arg: tp.Any) -> tp.List[str]:
@@ -172,7 +165,10 @@ class ArgparseMain(DecoratedMain):
             for key, value in arg.items():
                 if not self.use_underscore:
                     key = key.replace("_", "-")
-                argv.append(f"--{key}={value}")
+                if value is True:
+                    argv.append(f"--{key}")
+                else:
+                    argv.append(f"--{key}={value}")
         elif isinstance(arg, [list, tuple]):
             for part in arg:
                 argv += self.grid_args_to_argv(part)
@@ -187,13 +183,13 @@ class ArgparseMain(DecoratedMain):
         return parts
 
 
-def argparse_main(parser, *, use_underscore=False,
+def argparse_main(parser: argparse.ArgumentParser, *, use_underscore: bool = False,
                   exclude: tp.Sequence[str] = None,
                   dir: tp.Union[str, Path] = "./outputs"):
     """Nicer version of `ArgparseMain` that acts like a decorator, and directly
     exposes the most useful configs to override.
     """
-    def _decorator(main):
+    def _decorator(main: MainFun):
         dora = DoraConfig(
             dir=Path(dir),
             exclude=exclude or [])

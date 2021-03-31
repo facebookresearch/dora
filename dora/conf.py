@@ -7,6 +7,9 @@ from fnmatch import fnmatch
 from pathlib import Path
 import typing as tp
 
+from omegaconf.dictconfig import DictConfig
+from omegaconf import OmegaConf
+
 
 def update_from_args(data: tp.Any, args: Namespace):
     """Update the given dataclass from the argument parser args.
@@ -14,6 +17,18 @@ def update_from_args(data: tp.Any, args: Namespace):
     for key in data.__dict__:
         if hasattr(args, key):
             setattr(data, key, getattr(args, key))
+
+
+def update_from_hydra(data: tp.Any, cfg: DictConfig):
+    """Update the given dataclass from the hydra config.
+    """
+
+    for key, value in OmegaConf.to_container(cfg).items():
+        if hasattr(data, key):
+            setattr(data, key, value)
+        else:
+            raise AttributeError(f"Object of type {data.__class__} "
+                                 f"does not have an attribute {key}")
 
 
 @dataclass
