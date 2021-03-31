@@ -14,13 +14,14 @@ log = partial(simple_log, "Launch:")
 
 def launch_action(args, main: DecoratedMain):
     shepherd = Shepherd(main, log=log)
-    slurm = main.custom.get_slurm_config()
+    slurm = main.get_slurm_config()
     update_from_args(slurm, args)
     rules = SubmitRules()
     update_from_args(rules, args)
 
     sheep = shepherd.get_sheep(args.argv)
     log(f"Fetched sheep {sheep}")
+    shepherd.update()
     shepherd.maybe_submit_lazy(sheep, slurm, rules)
     shepherd.commit()
 
@@ -31,7 +32,7 @@ def launch_action(args, main: DecoratedMain):
             while True:
                 if sheep.log.exists() and tail_process is None:
                     tail_process = sp.Popen(["tail", "-n", "200", "-f", sheep.log])
-                if sheep.job.is_done("force"):
+                if sheep.is_done("force"):
                     log("Remote process finished with state", sheep.state())
                     done = True
                     break

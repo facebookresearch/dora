@@ -37,7 +37,7 @@ def add_submit_rules(parser):
 
 
 def add_slurm_config(parser):
-    parser.add_argument("-g", "--gpus", type=int, help="Number of gpus.")
+    parser.add_argument("-g", "--gpus", type=int, help="Number of gpus.", default=1)
     parser.add_argument("-p", "--partition", default="learnfair", help="Partition.")
     parser.add_argument("--dev", action="store_const", dest="partition", const="dev",
                         help="Use dev partition.")
@@ -57,6 +57,7 @@ def get_parser():
         title="command", help="Command to execute", required=True, dest='command')
     grid = subparsers.add_parser("grid")
     add_submit_rules(grid)
+    add_slurm_config(grid)
     parser.add_argument("-C", "--cancel", action='store_true',
                         help="Cancel all running jobs.")
     grid.add_argument("-i", "--interval", default=5, type=float,
@@ -84,7 +85,7 @@ def get_parser():
 
     run = subparsers.add_parser("run", help="Run locally the given command.")
     run.add_argument("-f", "--from_sig", help="Signature of job to use as baseline.")
-    run.add_argument("-d", "--ddp", action="store_true", help="Distributed trainin.")
+    run.add_argument("-d", "--ddp", action="store_true", help="Distributed training.")
     run.add_argument("argv", nargs='*')
     run.set_defaults(action=run_action)
 
@@ -95,9 +96,8 @@ def get_parser():
                              "kill the remote job.")
     launch.add_argument("--no_tail", action="store_false", dest="tail", default=True,
                         help="Does not tail the log once job is started.")
-    launch.add_argument("-d", "--dev", action="store_true",
-                        help="Short cut for --partition=dev --attach")
     add_submit_rules(launch)
+    add_slurm_config(launch)
     launch.add_argument("argv", nargs='*')
     launch.set_defaults(action=launch_action)
 

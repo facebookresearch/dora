@@ -59,6 +59,7 @@ def grid_action(args: tp.Any, main: DecoratedMain):
 
     shepherd = Shepherd(main, log=log if args.verbose else no_log)
     slurm = main.get_slurm_config()
+    update_from_args(slurm, args)
     rules = SubmitRules()
     update_from_args(rules, args)
 

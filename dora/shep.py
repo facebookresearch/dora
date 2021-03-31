@@ -53,13 +53,13 @@ class Sheep:
         if self.job is None:
             return None
         state = self.job.watcher.get_state(self.job.job_id, mode)
-        if state.startswith('CANCELED'):
-            return 'CANCELED'
+        if state.startswith('CANCELLED'):
+            return 'CANCELLED'
         return state
 
     def is_done(self, mode="standard"):
         if self.job is None:
-            return True
+            return False
         return self.job.watcher.is_done(self.job.job_id, mode)
 
     @property
@@ -69,7 +69,12 @@ class Sheep:
         return None
 
     def __repr__(self):
-        return f"Sheep({self.xp.sig}, state={self.state()}, argv={self.xp.argv})"
+        out = f"Sheep({self.xp.sig}, state={self.state()}, "
+        if self.job is not None:
+            out += f"sid={self.job.job_id}, "
+
+        out += f"argv={self.xp.argv})"
+        return out
 
 
 def no_log(x: str):
@@ -107,17 +112,17 @@ class Shepherd:
     def maybe_submit_lazy(self, sheep: Sheep, slurm_config: SlurmConfig, rules: SubmitRules):
         if sheep.job is not None:
             state = sheep.state()
-            if sheep.job.is_done():
+            if state == 'COMPLETED':
                 if rules.replace_done:
                     self.log(f"Ignoring previously completed job {sheep.job.job_id}")
                     sheep.job = None
-            elif state in ["FAILED", "CANCELED"]:
+            elif state in ["FAILED", "CANCELLED"]:
                 self.log(f"Previous job {sheep.job.job_id} failed or was canceled")
                 if rules.retry:
                     sheep.job = None
             else:
                 if rules.replace:
-                    self.log(f"Canceling previous job {sheep.job.job_id} with status {state}")
+                    self.log(f"Cancelling previous job {sheep.job.job_id} with status {state}")
                     self.cancel_lazy(sheep)
 
         if sheep.job is None:
@@ -127,9 +132,10 @@ class Shepherd:
         self._to_cancel.append(sheep)
 
     def commit(self):
-        cancel_cmd = ["scancel"] + [s.job.job_id for s in self._to_cancel]
-        sp.run(cancel_cmd, check=True)
-        self._to_cancel = []
+        if self._to_cancel:
+            cancel_cmd = ["scancel"] + [s.job.job_id for s in self._to_cancel]
+            sp.run(cancel_cmd, check=True)
+            self._to_cancel = []
 
         while self._to_submit:
             sheep, slurm_config = self._to_submit.pop(0)
@@ -162,13 +168,13 @@ class Shepherd:
         del kwargs['mem_per_gpu']
         logger.debug("Slurm parameters %r", kwargs)
 
-        name = self.module + ":" + sheep.cfg.dora.sig
+        name = self.main.name + ":" + sheep.xp.sig
         executor.update_parameters(
             job_name=name,
             stderr_to_stdout=True,
             **kwargs)
         job = executor.submit(
-            SubmitItTarget(), self.main, sheep.overrides)
+            SubmitItTarget(), self.main, sheep.xp.argv)
         pickle.dump(job, open(sheep.job_file, "wb"))
         logger.debug("Created job with id %s", job.job_id)
         sheep.job = job
