@@ -1,27 +1,40 @@
+"""
+The info commands gets the information on a Sheep or XP and can be used
+to retrieve the job status, logs etc.
+"""
 from functools import partial
+import json
 import os
 import shutil
 import sys
 
+from .main import DecoratedMain
 from .shep import Shepherd
 from .log import simple_log, fatal
 
 log = partial(simple_log, "Info:")
 
 
-def info_action(args, hydra_support, module):
-    shepherd = Shepherd(hydra_support, module)
-    if args.jid is not None:
-        sheep = shepherd.get_sheep_from_jid(args.jid)
+def info_action(args, main: DecoratedMain):
+    shepherd = Shepherd(main)
+    if args.job_id is not None:
+        if len(args.argv) > 0:
+            fatal("If a job id is provided, you shouldn't pass argv.")
+        sheep = shepherd.get_sheep_from_job_id(args.job_id)
+        if sheep is None:
+            fatal("Could not find any matching sheep")
     else:
-        sheep = shepherd.get_sheep(args.overrides)
-    if sheep is None:
-        fatal("Could not find any matching sheep")
+        sheep = shepherd.get_sheep(args.argv)
     log("Found sheep", sheep)
-    if sheep.job is not None:
-        log("Job id is", sheep.job.job_id)
-    log("Folder is", sheep.folder)
-    log("Main log is", sheep.log)
+    log("Folder is", sheep.xp.folder)
+    if sheep.log:
+        log("Main log is", sheep.log)
+    if args.metrics:
+        metrics = main.get_xp_metrics(sheep.xp)
+        out = f"Metrics[{len(metrics)}]: "
+        if metrics:
+            out += json.dumps(metrics[-1])
+        log(out)
     if args.cancel:
         if sheep.job is None:
             log("Could not cancel non existing job")
@@ -30,6 +43,8 @@ def info_action(args, hydra_support, module):
         else:
             sheep.job.cancel()
     if args.log:
+        if sheep.log is None:
+            fatal("No log, sheep hasn't been scheduled yet.")
         if not sheep.log.exists():
             fatal(f"Log {sheep.log} does not exist")
         shutil.copyfileobj(open(sheep.log, "r"), sys.stdout, 4096)
@@ -37,4 +52,3 @@ def info_action(args, hydra_support, module):
         if not sheep.log.exists():
             fatal(f"Log {sheep.log} does not exist")
         os.execvp("tail", ["tail", "-n", "200", "-f", args.log])
-

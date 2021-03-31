@@ -1,16 +1,23 @@
-from collections import namedtuple
-from fnmatch import fnmatch
-from functools import wraps
-from hashlib import sha1
+"""
+This module provides support for Hydra, in particular the `main` wrapper between
+the end user `main` function and Hydra.
+"""
+from collections import namedtuple, OrderedDict
 from importlib.util import find_spec
-import json
+import logging
 from pathlib import Path
 import sys
+import typing as tp
 
 import hydra
 from hydra.experimental import compose, initialize_config_dir
 from omegaconf.dictconfig import DictConfig
-from omegaconf import OmegaConf
+
+from .conf import DoraConfig, SlurmConfig, update_from_hydra
+from .main import DecoratedMain, MainFun, get_xp
+from .xp import XP
+
+logger = logging.getLogger(__name__)
 
 
 class _NotThere:
@@ -57,108 +64,103 @@ def _compare_config(ref, other, path=[]):
     return delta
 
 
-def _is_excluded(key, excluded):
-    for pattern in excluded:
-        if fnmatch(key, pattern):
-            return True
-
-
-class HydraSupport:
-    _EXCLUDED = ["dora.*", "slurm.*"]
-
-    def __init__(self, module, config_name, config_path=None):
+class HydraMain(DecoratedMain):
+    def __init__(self, main: MainFun, config_name: str, config_path: str):
         self.config_name = config_name
+        self.config_path = config_path
+
+        module = main.__module__
         if module == "__main__":
             spec = sys.modules[module].__spec__
             if spec is None:
                 module_path = sys.argv[0]
-                self.job_name = module_path.rsplit(".", 2)[1]
+                self._job_name = module_path.rsplit(".", 2)[1]
             else:
                 module_path = spec.origin
                 module = spec.name
-                self.job_name = module.rsplit(".", 1)[1]
+                self._job_name = module.rsplit(".", 1)[1]
         else:
             module_path = find_spec(module).origin
-            self.job_name = module.rsplit(".", 1)[1]
-        self.config_path = Path(module_path).parent.resolve()
+            self._job_name = module.rsplit(".", 1)[1]
+        self.full_config_path = Path(module_path).parent.resolve()
         if config_path is not None:
-            self.config_path = self.config_path / config_path
+            self.full_config_path = self.full_config_path / config_path
 
-    def _get_config(self, overrides=[], return_hydra_config=False):
-        with initialize_config_dir(str(self.config_path), job_name=self.job_name):
+        self._base_cfg = self._get_config()
+        dora = self._get_dora()
+        super().__init__(main, dora)
+
+    def _get_dora(self) -> DoraConfig:
+        dora = DoraConfig()
+        if hasattr(self._base_cfg, "dora"):
+            update_from_hydra(dora, self._base_cfg.dora)
+        dora.exclude += ["dora.*", "slurm.*"]
+        dora.dir = Path(dora.dir)
+        return dora
+
+    def get_slurm_config(self) -> SlurmConfig:
+        """Return default Slurm config for the launch and grid actions.
+        """
+        slurm = SlurmConfig()
+        if hasattr(self._base_cfg, "slurm"):
+            update_from_hydra(slurm, self._base_cfg.dora)
+        return slurm
+
+    def get_xp(self, argv: tp.Sequence[str]):
+        argv = list(argv)
+        cfg = self._get_config(argv)
+        delta = self._get_delta(self._base_cfg, cfg)
+        xp = XP(dora=self.dora, cfg=cfg, argv=argv, delta=delta)
+        return xp
+
+    def grid_args_to_argv(self, arg: tp.Any) -> tp.List[str]:
+        argv = []
+        if isinstance(arg, str):
+            argv.append(arg)
+        elif isinstance(arg, dict):
+            for key, value in arg.items():
+                argv.append(f"{key}={value}")
+        elif isinstance(arg, [list, tuple]):
+            for part in arg:
+                argv += self.grid_args_to_argv(part)
+        else:
+            raise ValueError(f"Can only process dict, tuple, lists and str, but got {arg}")
+        return argv
+
+    def get_name_parts(self, xp: XP) -> OrderedDict:
+        parts = OrderedDict()
+        for name, value in xp.delta:
+            parts[name] = value
+        return parts
+
+    def _main(self):
+        sys.argv.append(f"hydra.run.dir={get_xp().folder}")
+        return hydra.main(
+            config_name=self.config_name,
+            config_path=self.config_path)(self.main)()
+
+    def _get_config(self,
+                    overrides: tp.Sequence[str] = [],
+                    return_hydra_config: bool = False) -> DictConfig:
+        """
+        Internal method, returns the config for the given override,
+        but without the dora.sig field filled.
+        """
+        with initialize_config_dir(str(self.full_config_path), job_name=self._job_name):
             return compose(self.config_name, overrides, return_hydra_config=return_hydra_config)
 
-    def get_config(self, overrides=[], return_hydra_config=False):
+    def _get_delta(self, init: DictConfig, other: DictConfig):
         """
-        Returns the config with the actual signature computation.
+        Returns an iterator over all the differences between the init and other config.
         """
-        sig = self.get_signature(overrides)
-        return self._get_config(overrides + [f"dora.sig={sig}"], return_hydra_config)
-
-    def get_delta(self, init, other):
-        delta = _compare_config(init, other)
-        excluded = self._EXCLUDED + list(init.dora.exclude)
         delta = []
         for diff in _compare_config(init, other):
             name = ".".join(diff.path)
-            if not _is_excluded(name, excluded):
-                delta.append((name, diff.other_value))
-        delta.sort(key=lambda x: x[0])
+            delta.append((name, diff.other_value))
         return delta
 
-    def get_signature(self, overrides=[]):
-        init = self._get_config()
-        other = self._get_config(overrides)
-        delta = self.get_delta(init, other)
-        return sha1(json.dumps(delta).encode('utf8')).hexdigest()[:16]
 
-    def get_run_dir(self, overrides=[]):
-        sig = self.get_signature(overrides)
-        cfg = self._get_config(overrides + [f"dora.sig={sig}"], True)
-        return cfg.hydra.run.dir
-
-    def get_run_dir_from_sig(self, sig: str):
-        cfg = self._get_config([f"dora.sig={sig}"], True)
-        return Path(cfg.hydra.run.dir)
-
-    def get_config_from_sig(self, sig: str, return_hydra_config=False):
-        path = self.get_run_dir_from_sig(sig)
-        if not path.is_dir():
-            raise RuntimeError(f"Could not find experiment with signature {sig}")
-        cfg = OmegaConf.load(path / ".hydra/config.yaml")
-        if return_hydra_config:
-            cfg.hydra = OmegaConf.load(path / ".hydra/hydra.yaml").hydra
-        return cfg
-
-    def get_overrides_from_sig(self, sig: str, exclude=True):
-        cfg = self.get_config_from_sig(sig, return_hydra_config=True)
-        path = Path(cfg.hydra.run.dir)
-        if not path.is_dir():
-            raise RuntimeError(f"Could not find experiment with signature {sig}")
-        overrides = OmegaConf.load(path / ".hydra/overrides.yaml")
-        if exclude:
-            excluded = self._EXCLUDED + list(cfg.dora.exclude)
-            overrides = [o for o in overrides if not _is_excluded(o.split('=', 1)[0], excluded)]
-        return overrides
-
-
-def main(config_name, config_path=None):
-
-    # A lot of black magic happens here. We are going to intercept the overrides,
-    # and compute both the reference config (i.e. without overrides) and the actual one.
-    # From the difference between the two configs, we can derive a unique experiment
-    # signature. .
-    def _decorate(_main):
-        @wraps(_main)
-        def _decorated():
-            support = HydraSupport(_main.__module__, config_name, config_path)
-            overrides = [a for a in sys.argv[1:] if not a.startswith('-')]
-            sig = support.get_signature(overrides)
-            sys.argv.append(f"dora.sig={sig}")
-            return hydra.main(
-                config_name=config_name,
-                config_path=config_path)(_main)()
-        _decorated.config_name = config_name
-        _decorated.config_path = config_path
-        return _decorated
-    return _decorate
+def hydra_main(config_name: str, config_path: str):
+    def _decorator(main: MainFun):
+        return HydraMain(main, config_name=config_name, config_path=config_path)
+    return _decorator
