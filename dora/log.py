@@ -4,7 +4,7 @@ import sys
 import time
 import typing as tp
 
-from treetable.text import colorize  # type: ignore
+from treetable.text import colorize
 
 
 class LogProgress:

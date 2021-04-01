@@ -146,10 +146,11 @@ class ArgparseMain(DecoratedMain):
     """Implementation of `DecoratedMain` for XP that uses argparse.
     """
     def __init__(self, main: MainFun, dora: DoraConfig, parser: argparse.ArgumentParser,
-                 use_underscore=False):
+                 slurm: tp.Optional[SlurmConfig] = None, use_underscore: bool = False):
         super().__init__(main, dora)
         self.parser = parser
         self.use_underscore = use_underscore
+        self.slurm = slurm
 
     def get_xp(self, argv: tp.Sequence[str]) -> XP:
         argv = list(argv)
@@ -187,9 +188,17 @@ class ArgparseMain(DecoratedMain):
             parts[name] = value
         return parts
 
+    def get_slurm_config(self) -> SlurmConfig:
+        """Return default Slurm config for the launch and grid actions.
+        """
+        if self.slurm is not None:
+            return self.slurm
+        return super().get_slurm_config()
+
 
 def argparse_main(parser: argparse.ArgumentParser, *, use_underscore: bool = False,
                   exclude: tp.Sequence[str] = None,
+                  slurm: tp.Optional[SlurmConfig] = None,
                   dir: tp.Union[str, Path] = "./outputs"):
     """Nicer version of `ArgparseMain` that acts like a decorator, and directly
     exposes the most useful configs to override.
@@ -198,5 +207,5 @@ def argparse_main(parser: argparse.ArgumentParser, *, use_underscore: bool = Fal
         dora = DoraConfig(
             dir=Path(dir),
             exclude=list(exclude) if exclude is not None else [])
-        return ArgparseMain(main, dora, parser, use_underscore=use_underscore)
+        return ArgparseMain(main, dora, parser, use_underscore=use_underscore, slurm=slurm)
     return _decorator

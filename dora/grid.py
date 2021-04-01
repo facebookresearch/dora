@@ -16,7 +16,7 @@ from .main import DecoratedMain
 from .log import colorize, simple_log, fatal
 from .shep import Sheep, Shepherd, no_log
 
-import treetable as tt  # type: ignore
+import treetable as tt
 
 log: tp.Callable[[str], None] = partial(simple_log, "Grid:")
 

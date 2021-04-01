@@ -145,15 +145,14 @@ dora.distrib.init()
 You can debug and run everything locally by calling
 
 ```bash
-dora run [ARGS ...]
+dora run [TRAINING_ARGS ...]
 ```
 
 **Warning**: for the `argparse` backend, you must insert `--` between the dora args and your own training args, i.e.:
 
 ```bash
-dora [-P mycode] run -- [ARGS ...]
+dora run -- [TRAINING_ARGS ...]
 ```
-### run flags
 
 `dora run` supports two flags:
 - `-d`: distributed training using all available gpus. The master worker output will be to the shell, and other workers will be redirected to a log file in the XP folder.
@@ -164,5 +163,33 @@ dora [-P mycode] run -- [ARGS ...]
 Dora supports scheduling experiments on Slurm. If you need to schedule many of them, then a grid file is properly better.
 
 ```dora
-dora
+dora launch [--dev] [-g NUMBER_OF_GPUS] [TRAINING_ARGS ...]
+```
+
+Dora will automatically select the appropriate number of nodes and tasks per nodes based on the number of GPU required, as well as scale required memory.
+This command will launch the command, and immediately tail its log and monitor its progress, just like if it were running in locally.
+If you want to kill the command if you kill the local process, you can add the `-a`, `--attach` flag.
+To avoid tailing the log, just pass `--no_tail`.
+
+If a previous run has failed or was canceled, Dora will not automatically start a new one, to give you a chance to inspect the logs.
+If you want to reschedule a run, use the `-r` flag.
+
+
+## Inspecting an experiment
+
+You can get information on an experiment with the `dora info` command:
+
+```bash
+dora info [TRAINING_ARGS ...]
+dora info -f SIGNATURE
+dora info -j SLURM_ID
+```
+
+You can either specify the XP by listing all of its training arguments, by passing its signature, or even the latest Slurm id associated with it.
+The info command supports a number of flags:
+- `-f`: print the folder for the XP
+- `-l`: print the entire log for the main task (this only work for remote jobs, not XP ran locally with `dora run`)
+- `-t`: tail the log for the main task.
+
+## Grid Files
 

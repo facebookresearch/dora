@@ -1,7 +1,7 @@
 from collections import OrderedDict
 import typing as tp
 
-from treetable.table import _Node  # type: ignore
+from treetable.table import _Node
 
 from .conf import SlurmConfig
 from .shep import Shepherd
