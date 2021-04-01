@@ -71,6 +71,8 @@ def get_parser():
     grid.add_argument("-i", "--interval", default=5, type=float,
                       help="Update status and metrics every that number of minutes. "
                            "Default is 5 min.")
+    grid.add_argument("--no_monitoring", action="store_false", dest="monitor",
+                      help="No monitoring, just schedule and print current state.")
 
     grid.add_argument("--dry_run", action="store_true",
                       help="Only simulate actions but does not run any call to Slurm.")
@@ -141,6 +143,7 @@ def main():
     if args.package is None:
         args.package = _find_package()
     module_name = args.package + ".train"
+    sys.path.insert(0, ".")
     module = importlib.import_module(module_name)
     try:
         main = module.main

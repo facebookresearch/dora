@@ -41,25 +41,16 @@ def _compare_config(ref, other, path=[]):
     for key in keys:
         path[-1] = key
         ref_value = ref[key]
-        try:
-            other_value = other[key]
-        except KeyError:
-            other_value = NotThere
+        assert key in other, "Structure of config should be identical between XPs."
+        other_value = other[key]
 
-        different = False
         if isinstance(ref_value, DictConfig):
-            if isinstance(other_value, DictConfig):
-                yield from _compare_config(ref_value, other_value, path)
-            else:
-                different = True
-                yield _Difference(list(path), key, ref, other, ref_value, other_value)
+            assert isinstance(other_value, DictConfig), \
+                "Structure of config should be identical between XPs."
+            yield from _compare_config(ref_value, other_value, path)
         elif other_value != ref_value:
-            different = True
-        if different:
             yield _Difference(list(path), key, ref, other, ref_value, other_value)
-    for key in remaining:
-        path[-1] = key
-        yield _Difference(list(path), key, ref, other, NotThere, other_value)
+    assert len(remaining) == 0, "Structure of config should be identical between XPs."
     path.pop(-1)
     return delta
 
@@ -92,6 +83,10 @@ class HydraMain(DecoratedMain):
         self._base_cfg = self._get_config()
         dora = self._get_dora()
         super().__init__(main, dora)
+        # this is a really dirty hack to make Hydra believe that this is
+        # coming from the __main__ module, as it would usually be.
+        # This allows to use relative paths for config_path.
+        main.__module__ = "__main__"
 
     def _get_dora(self) -> DoraConfig:
         dora = DoraConfig()
@@ -106,7 +101,7 @@ class HydraMain(DecoratedMain):
         """
         slurm = SlurmConfig()
         if hasattr(self._base_cfg, "slurm"):
-            update_from_hydra(slurm, self._base_cfg.dora)
+            update_from_hydra(slurm, self._base_cfg.slurm)
         return slurm
 
     def get_xp(self, argv: tp.Sequence[str]):
@@ -116,7 +111,7 @@ class HydraMain(DecoratedMain):
         xp = XP(dora=self.dora, cfg=cfg, argv=argv, delta=delta)
         return xp
 
-    def grid_args_to_argv(self, arg: tp.Any) -> tp.List[str]:
+    def value_to_argv(self, arg: tp.Any) -> tp.List[str]:
         argv = []
         if isinstance(arg, str):
             argv.append(arg)
@@ -125,7 +120,7 @@ class HydraMain(DecoratedMain):
                 argv.append(f"{key}={value}")
         elif isinstance(arg, (list, tuple)):
             for part in arg:
-                argv += self.grid_args_to_argv(part)
+                argv += self.value_to_argv(part)
         else:
             raise ValueError(f"Can only process dict, tuple, lists and str, but got {arg}")
         return argv
@@ -138,10 +133,14 @@ class HydraMain(DecoratedMain):
         return parts
 
     def _main(self):
-        sys.argv.append(f"hydra.run.dir={get_xp().folder}")
-        return hydra.main(
-            config_name=self.config_name,
-            config_path=self.config_path)(self.main)()
+        run_dir = f"hydra.run.dir={get_xp().folder}"
+        sys.argv.append(run_dir)
+        try:
+            return hydra.main(
+                config_name=self.config_name,
+                config_path=self.config_path)(self.main)()
+        finally:
+            sys.argv.remove(run_dir)
 
     def _get_config(self,
                     overrides: tp.List[str] = [],

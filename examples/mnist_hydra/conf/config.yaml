@@ -12,7 +12,6 @@ seed: 1234
 log_interval: 100
 save_model: false
 
-
 dora:
   exclude: ["save_model", "no_cuda", "dry_run", "log_interval"]
   dir: "outputs_complex"

@@ -115,8 +115,11 @@ class DecoratedMain(_NamesMixin):
     def __repr__(self):
         return f"DecoratedMain({self.main})"
 
-    def merge_args(self, args: tp.List[tp.Any]) -> tp.List[str]:
-        """Merge a sequence of arguments. This is used by the gird utility.
+    def value_to_argv(self, arg: tp.Any) -> tp.List[str]:
+        """Convert a Python value to argv. arg can be either:
+        - a list, then each entry will be converted and all argv are concatenated.
+        - a str, then it is directly an argv entry.
+        - a dict, then each key, value pair is mapped to an argv entry.
         """
         raise NotImplementedError()
 
@@ -158,7 +161,7 @@ class ArgparseMain(DecoratedMain):
         xp = XP(dora=self.dora, cfg=args, argv=argv, delta=delta)
         return xp
 
-    def grid_args_to_argv(self, arg: tp.Any) -> tp.List[str]:
+    def value_to_argv(self, arg: tp.Any) -> tp.List[str]:
         argv = []
         if isinstance(arg, str):
             argv.append(arg)
@@ -172,7 +175,7 @@ class ArgparseMain(DecoratedMain):
                     argv.append(f"--{key}={value}")
         elif isinstance(arg, (list, tuple)):
             for part in arg:
-                argv += self.grid_args_to_argv(part)
+                argv += self.value_to_argv(part)
         else:
             raise ValueError(f"Can only process dict, tuple, lists and str, but got {arg}")
         return argv

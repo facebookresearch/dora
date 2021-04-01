@@ -1,4 +1,5 @@
 from pathlib import Path
+import torch
 
 import pytest
 
@@ -52,7 +53,11 @@ def test_link(tmpdir):
     xp.link.load()
     assert xp.link.history == [{"plop": 42}]
 
-    xp.link.update_history([{"plok": 43}])
-    assert xp.link.history == [{"plok": 43}]
+    val = [{"plok": 43, "out": Path("plop"), "mat": torch.zeros(5)}]
+    xp.link.update_history(val)
+    assert xp.link.history == [{"plok": 43, "out": "plop", "mat": [0.] * 5}]
     with pytest.raises(ValueError):
         xp.link.update_history({"plop": 42})
+
+    with pytest.raises(ValueError):
+        xp.link.update_history([{"plop": object()}])

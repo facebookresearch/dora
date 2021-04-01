@@ -131,6 +131,8 @@ def grid_action(args: tp.Any, main: DecoratedMain):
     while True:
         shepherd.update()
         monitor(args, main, explorer, sheeps)
+        if not args.monitor:
+            break
         sleep = int(args.interval * 60)
         print()
         for ela in range(sleep):
@@ -194,12 +196,17 @@ def monitor(args: tp.Any, main: DecoratedMain, explorer: Explorer, herd: tp.List
 
     lines = []
     for index, (sheep, metrics, name) in enumerate(zip(herd, all_metrics, names)):
+        state = sheep.state()
+        if state is None:
+            state = "N/A"
+        else:
+            state = state[:3]
         meta = {
             'name': name,
             'index': index,
             'sid': sheep.job.job_id if sheep.job else '',
             'sig': sheep.xp.sig,
-            'state': sheep.state()[:3],
+            'state': state,
             'epoch': len(metrics),
         }
         line = {}
