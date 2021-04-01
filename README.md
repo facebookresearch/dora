@@ -2,7 +2,7 @@
 
 <p align="center">
 <img src="./dora.jpg" alt="Really cheesy effects applied on a Dora picture."
-width="600px"></p>
+width="400px"></p>
 
 ## Installation
 
