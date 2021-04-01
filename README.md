@@ -1,5 +1,9 @@
 # Dora The Explorer, a friendly experiment manager
 
+<p align="center">
+<img src="./dora.png" alt="Really cheesy effects applied on a Dora picture."
+width="600px"></p>
+
 ## Installation
 
 ```bash
@@ -80,9 +84,85 @@ def main():
 ```
 
 
+### Hydra support
+
+The template for `train.py`:
+```python
+from dora import hydra_main, get_xp
 
 
+@hydra_main(
+    config_path="./conf",  # path where the config is stored, relative to the parent of `mycode`.
+    config_name="config"  # a file `config.yaml` should exist there.
+)
+def main(cfg):
+    xp = get_xp()
+    xp.sig  # signature for the current run
+    # Hydra run folder will automatically be set to xp.folder!
+
+    xp.link  # link object, can send back metrics to Dora
+
+    for t in range(10):
+        xp.link.push_metrics({"loss": 1/(t + 1)})
+    ...
+```
+
+You can customize `dora` behavior from the `config.yaml` file, e.g.
+
+```yaml
+my_config: plop
+num_workers: 40
+logs:
+    interval: 10
+    level: info
+
+dora:
+    exclude: ["num_workers", "logs.*"]
+    dir: "./outputs"
+```
+
+## Letting Dora find your code
+
+Every Dora command will start with `dora some_command ...`. In order for Dora to find your code, you must pass your training package
+(i.e. `mycode`) as `dora -P mycode some_command`.
+This flag can be skipped if `mycode` is in the current working directory and is the only folder with a `train.py` file in it, in which
+case Dora will find it automatically.
+You can also export `DORA_PACKAGE` to avoid having to give the `-P` flag explicitely.
 
 
+## Distributed training support
+
+Dora supports distributed training, and makes a few assumptions for you. It will schedule one task
+per GPU required. You should initialize distributed training through dora, by calling in your `main` function:
+
+```
+import dora.distrib
+dora.distrib.init()
+```
 
 ## Running experiments locally
+
+You can debug and run everything locally by calling
+
+```bash
+dora run [ARGS ...]
+```
+
+**Warning**: for the `argparse` backend, you must insert `--` between the dora args and your own training args, i.e.:
+
+```bash
+dora [-P mycode] run -- [ARGS ...]
+```
+### run flags
+
+`dora run` supports two flags:
+- `-d`: distributed training using all available gpus. The master worker output will be to the shell, and other workers will be redirected to a log file in the XP folder.
+- `-f sig`: this will inject the hyper-parameters from the XP with the given sig on top of the one provided on the command line. Useful to resume locally a remote job that failed.
+
+## Launching experiments remotely
+
+Dora supports scheduling experiments on Slurm. If you need to schedule many of them, then a grid file is properly better.
+
+```dora
+dora
+
