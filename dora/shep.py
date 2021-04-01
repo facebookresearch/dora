@@ -130,11 +130,12 @@ class Shepherd:
             self._to_submit.append((sheep, slurm_config))
 
     def cancel_lazy(self, sheep: Sheep):
-        self._to_cancel.append(sheep)
+        assert sheep.job is not None
+        self._to_cancel.append(sheep.job)
 
     def commit(self):
         if self._to_cancel:
-            cancel_cmd = ["scancel"] + [s.job.job_id for s in self._to_cancel]
+            cancel_cmd = ["scancel"] + [job.job_id for job in self._to_cancel]
             logger.debug("Running %s", " ".join(cancel_cmd))
             sp.run(cancel_cmd, check=True)
             self._to_cancel = []
