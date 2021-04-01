@@ -11,13 +11,13 @@ class Link:
     Connection with Dora for your trainer.
     This is minimalistic and won't do much.
     """
-    def __init__(self, run):
+    def __init__(self, xp):
         """
         Initialize the Link with Dora.
         """
-        self.run = run
+        self.xp = xp
         self.history = []
-        self.history_file = run.folder / run.dora.history
+        self.history_file = xp.folder / xp.dora.history
 
     def load(self):
         if self.history_file.exists():

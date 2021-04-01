@@ -9,7 +9,7 @@ gamma: 0.7
 no_cuda: false
 dry_run: false
 seed: 1234
-log_interval: 1000
+log_interval: 100
 save_model: false
 
 

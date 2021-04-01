@@ -157,7 +157,7 @@ def main():
         except RuntimeError:
             fatal(f"Could not find an existing run with sig {args.from_sig}")
         simple_log("Parser", "Injecting argv", argv, "from sig", args.from_sig)
-        args.overrides = argv + args.argv
+        args.argv = argv + args.argv
 
     args.action(args, main)
 
