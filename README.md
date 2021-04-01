@@ -1,7 +1,7 @@
 # Dora The Explorer, a friendly experiment manager
 
 <p align="center">
-<img src="./dora.png" alt="Really cheesy effects applied on a Dora picture."
+<img src="./dora.jpg" alt="Really cheesy effects applied on a Dora picture."
 width="600px"></p>
 
 ## Installation
