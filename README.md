@@ -1,5 +1,9 @@
 # Dora The Explorer, a friendly experiment manager
 
+![tests badge](https://github.com/adefossez/dora/workflows/tests/badge.svg)
+![linter badge](https://github.com/adefossez/dora/workflows/linter/badge.svg)
+
+
 <p align="center">
 <img src="./dora.jpg" alt="Really cheesy effects applied on a Dora picture."
 width="400px"></p>
