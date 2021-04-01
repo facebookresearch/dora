@@ -9,7 +9,7 @@
 
 from pathlib import Path
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 NAME = 'dora'
 DESCRIPTION = 'Easy grid searches for ML'
@@ -40,7 +40,7 @@ setup(
     author_email=EMAIL,
     python_requires=REQUIRES_PYTHON,
     url=URL,
-    packages=['dora'],
+    packages=find_packages(),
     install_requires=['hydra-core', 'submitit', 'treetable', 'torch'],
     include_package_data=True,
     entry_points={
