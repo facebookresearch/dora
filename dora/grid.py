@@ -5,22 +5,20 @@ from importlib import import_module
 import os
 from pathlib import Path
 import pkgutil
-import pickle
 import typing as tp
 import shutil
 import sys
 import time
 
-from .conf import SubmitRules, update_from_args
+from .conf import SlurmConfig, SubmitRules, update_from_args
 from .explore import Explorer, Launcher
 from .main import DecoratedMain
 from .log import colorize, simple_log, fatal
 from .shep import Sheep, Shepherd, no_log
-from .utils import try_load
 
-import treetable as tt
+import treetable as tt  # type: ignore
 
-log = partial(simple_log, "Grid:")
+log: tp.Callable[[str], None] = partial(simple_log, "Grid:")
 
 
 def get_explore(args, main):
@@ -59,12 +57,10 @@ def grid_action(args: tp.Any, main: DecoratedMain):
     rules = SubmitRules()
     update_from_args(rules, args)
 
-    grid_file = shepherd.grids / (args.grid + ".pkl")
-    previous_herd = {}
-    if grid_file.exists():
-        previous_herd = try_load(grid_file) or {}
+    grid_folder = shepherd.grids / args.grid
+    grid_folder.mkdir(exist_ok=True, parents=True)
 
-    herd = OrderedDict()
+    herd: OrderedDict[str, tp.Tuple[Sheep, SlurmConfig]] = OrderedDict()
     shepherd = Shepherd(main)
     launcher = Launcher(shepherd, slurm, herd)
     explorer(launcher)
@@ -73,17 +69,23 @@ def grid_action(args: tp.Any, main: DecoratedMain):
 
     for sheep, slurm in herd.values():
         shepherd.maybe_submit_lazy(sheep, slurm, rules)
-        previous_herd.pop(sheep.xp.sig, None)
 
-    for sheep, _ in previous_herd:
-        if not sheep.is_done():
-            shepherd.cancel_lazy(sheep)
-            name = main.get_name(sheep.xp)
-            log(f"Canceling job {sheep.job.job_id} for no longer required sheep {name}")
+    to_unlink = []
+    for child in grid_folder.iterdir():
+        if child.name not in herd:
+            sheep = shepherd.get_sheep(child.name)
+            if sheep.job is not None:
+                shepherd.cancel_lazy(sheep)
+                name = main.get_name(sheep.xp)
+                log(f"Canceling job {sheep.job.job_id} for no longer required sheep {name}")
+            to_unlink.append(child)
 
     if not args.dry_run:
+        for sig, (sheep, _) in herd.items():
+            (grid_folder / sig).symlink_to(sheep.xp.folder)
         shepherd.commit()
-        pickle.dump(herd, open(grid_file, "wb"))
+        for child in to_unlink:
+            child.unlink()
 
     sheeps = [sheep for sheep, _ in herd.values()]
     sheeps = filter_grid_sheeps(args, main, sheeps)
@@ -95,9 +97,10 @@ def grid_action(args: tp.Any, main: DecoratedMain):
     if args.cancel:
         for sheep in sheeps:
             if not sheep.is_done():
-                shepherd.cancel_lazy(sheep)
-                name = main.get_name(sheep.xp)
-                log(f"Canceling job {sheep.job.job_id} for sheep {name}")
+                if sheep.job is not None:
+                    shepherd.cancel_lazy(sheep)
+                    name = main.get_name(sheep.xp)
+                    log(f"Canceling job {sheep.job.job_id} for sheep {name}")
         if not args.dry_run:
             shepherd.commit()
         return

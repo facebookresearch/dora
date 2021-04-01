@@ -170,7 +170,7 @@ class ArgparseMain(DecoratedMain):
                     argv.append(f"--{key}")
                 else:
                     argv.append(f"--{key}={value}")
-        elif isinstance(arg, [list, tuple]):
+        elif isinstance(arg, (list, tuple)):
             for part in arg:
                 argv += self.grid_args_to_argv(part)
         else:
@@ -179,6 +179,7 @@ class ArgparseMain(DecoratedMain):
 
     def get_name_parts(self, xp: XP) -> OrderedDict:
         parts = OrderedDict()
+        assert xp.delta is not None
         for name, value in xp.delta:
             parts[name] = value
         return parts
@@ -193,6 +194,6 @@ def argparse_main(parser: argparse.ArgumentParser, *, use_underscore: bool = Fal
     def _decorator(main: MainFun):
         dora = DoraConfig(
             dir=Path(dir),
-            exclude=exclude or [])
+            exclude=list(exclude) if exclude is not None else [])
         return ArgparseMain(main, dora, parser, use_underscore=use_underscore)
     return _decorator

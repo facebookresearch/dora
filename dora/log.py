@@ -1,8 +1,10 @@
+from collections.abc import Iterable, Sized
 import logging
 import sys
 import time
+import typing as tp
 
-from treetable.text import colorize
+from treetable.text import colorize  # type: ignore
 
 
 class LogProgress:
@@ -19,15 +21,18 @@ class LogProgress:
         - level: logging level (like `logging.INFO`).
     """
     def __init__(self,
-                 logger,
-                 iterable,
-                 updates=5,
-                 min_interval=1,
-                 total=None,
-                 name="LogProgress",
-                 level=logging.INFO):
+                 logger: logging.Logger,
+                 iterable: Iterable,
+                 updates: int = 5,
+                 min_interval: int = 1,
+                 total: tp.Optional[int] = None,
+                 name: str = "LogProgress",
+                 level: int = logging.INFO):
         self.iterable = iterable
-        self.total = total or len(iterable)
+        if total is None:
+            assert isinstance(iterable, Sized)
+            total = len(iterable)
+        self.total = total
         self.updates = updates
         self.min_interval = min_interval
         self.name = name
@@ -73,17 +78,17 @@ class LogProgress:
         self.logger.log(self.level, out)
 
 
-def bold(text):
+def bold(text: str) -> str:
     """
     Display text in bold in the terminal.
     """
     return colorize(text, "1")
 
 
-def simple_log(first, *args):
+def simple_log(first: str, *args):
     print(bold(first), *args, file=sys.stderr)
 
 
-def fatal(*args):
+def fatal(*args) -> tp.NoReturn:
     simple_log("FATAL:", *args)
     sys.exit(1)

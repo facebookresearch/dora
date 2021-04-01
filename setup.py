@@ -12,14 +12,13 @@ from pathlib import Path
 from setuptools import setup
 
 NAME = 'dora'
-DESCRIPTION = (
-    'Easy grid searches for ML')
+DESCRIPTION = 'Easy grid searches for ML'
 
-URL = 'https://github.com/adefossez/dora'
-EMAIL = 'alexandre.defossez@gmail.com'
+URL = 'https://github.com/fairinternal/dora'
+EMAIL = 'defossez@fb.com'
 AUTHOR = 'Alexandre Défossez'
 REQUIRES_PYTHON = '>=3.7.0'
-VERSION = "0.0.1"
+VERSION = "0.1.0"
 
 HERE = Path(__file__).parent
 
@@ -42,12 +41,14 @@ setup(
     python_requires=REQUIRES_PYTHON,
     url=URL,
     packages=['dora'],
-    install_requires=REQUIRED,
+    install_requires=['hydra-core', 'submitit', 'treetable', 'torch'],
     include_package_data=True,
     entry_points={
         'console_scripts': ['dora=dora.__main__:main'],
     },
-    extras_require={'dev': ['coverage', 'pdoc3']},
+    extras_require={
+        'dev': ['coverage', 'flake8', 'mypy', 'pytest', 'hydra_colorlog'],
+    },
     license='Creative Commons Attribution-NonCommercial 4.0 International',
     classifiers=[
         # Trove classifiers

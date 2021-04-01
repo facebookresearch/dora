@@ -33,7 +33,10 @@ class Link:
             json.dump(self.history, tmp)
 
     def update_history(self, history):
-        self.history = utils.jsonable(history)
+        history = utils.jsonable(history)
+        if not isinstance(history, list):
+            raise ValueError(f"history must be a list, but got {type(history)}")
+        self.history = history
         self._commit()
 
     def push_metrics(self, metrics):

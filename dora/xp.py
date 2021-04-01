@@ -29,7 +29,7 @@ class XP:
     delta: tp.Optional[tp.List[tp.Tuple[str, tp.Any]]] = None
     sig: tp.Optional[str] = None
 
-    link: Link = None
+    link: tp.Optional[Link] = None
 
     def __post_init__(self):
         if self.delta is not None:
@@ -41,6 +41,7 @@ class XP:
 
     @property
     def folder(self) -> Path:
+        assert self.sig is not None
         return self.dora.dir / self.dora.xps / self.sig
 
     @property

@@ -43,5 +43,6 @@ def launch_action(args, main: DecoratedMain):
             if tail_process:
                 tail_process.kill()
             if args.attach and not done:
-                log(f"attach is set, killing remote job {sheep.job.job_id}")
-                sheep.job.cancel()
+                if sheep.job is not None:
+                    log(f"attach is set, killing remote job {sheep.job.job_id}")
+                    sheep.job.cancel()

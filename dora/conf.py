@@ -23,7 +23,9 @@ def update_from_hydra(data: tp.Any, cfg: DictConfig):
     """Update the given dataclass from the hydra config.
     """
 
-    for key, value in OmegaConf.to_container(cfg).items():
+    dct = OmegaConf.to_container(cfg)
+    assert isinstance(dct, dict)
+    for key, value in dct.items():
         if hasattr(data, key):
             setattr(data, key, value)
         else:

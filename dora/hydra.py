@@ -76,11 +76,14 @@ class HydraMain(DecoratedMain):
                 module_path = sys.argv[0]
                 self._job_name = module_path.rsplit(".", 2)[1]
             else:
+                assert spec.origin is not None
                 module_path = spec.origin
                 module = spec.name
                 self._job_name = module.rsplit(".", 1)[1]
         else:
-            module_path = find_spec(module).origin
+            spec = find_spec(module)
+            assert spec is not None and spec.origin is not None
+            module_path = spec.origin
             self._job_name = module.rsplit(".", 1)[1]
         self.full_config_path = Path(module_path).parent.resolve()
         if config_path is not None:
@@ -120,7 +123,7 @@ class HydraMain(DecoratedMain):
         elif isinstance(arg, dict):
             for key, value in arg.items():
                 argv.append(f"{key}={value}")
-        elif isinstance(arg, [list, tuple]):
+        elif isinstance(arg, (list, tuple)):
             for part in arg:
                 argv += self.grid_args_to_argv(part)
         else:
@@ -129,6 +132,7 @@ class HydraMain(DecoratedMain):
 
     def get_name_parts(self, xp: XP) -> OrderedDict:
         parts = OrderedDict()
+        assert xp.delta is not None
         for name, value in xp.delta:
             parts[name] = value
         return parts
@@ -140,7 +144,7 @@ class HydraMain(DecoratedMain):
             config_path=self.config_path)(self.main)()
 
     def _get_config(self,
-                    overrides: tp.Sequence[str] = [],
+                    overrides: tp.List[str] = [],
                     return_hydra_config: bool = False) -> DictConfig:
         """
         Internal method, returns the config for the given override,

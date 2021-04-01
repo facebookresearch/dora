@@ -91,10 +91,10 @@ class Shepherd:
         self.grids.mkdir(exist_ok=True, parents=True)
         self.log = log
 
-        self._to_cancel = []
-        self._to_submit = []
+        self._to_cancel: tp.List[submitit.SlurmJob] = []
+        self._to_submit: tp.List[tp.Tuple[Sheep, SlurmConfig]] = []
 
-    def get_sheep(self, argv: tp.Sequence[str]):
+    def get_sheep(self, argv: tp.Sequence[str]) -> Sheep:
         xp = self.main.get_xp(argv)
         return Sheep(xp)
 
