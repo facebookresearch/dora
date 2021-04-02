@@ -245,8 +245,8 @@ from dora import Explorer, Launcher
 @Explorer
 def explore(launcher: Launcher):
     launcher(batch_size=128)  # Schedule an experiments with the given batch size.
-    # For an argparse based project, this will get converted to the `--batch_size=128`
-    # flag, if `use_underscore=True`, else `--batch-size=128`.
+    # For an argparse based project, this will get converted to the `--batch_size=128` flag
+    # You can pass `use_underscore=False` to `argparse_main` to get instead `--batch-size=128`.
 
     sub = launcher.bind(lr=0.01)  # bind some parameter value, in a new launcher
     sub.slurm_(gpus=8)  # all jobs scheduled with `sub` will use 8 gpus.
