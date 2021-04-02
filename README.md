@@ -32,14 +32,14 @@ pip install -U git+ssh://git@github.com/fairinternal/dora
 
 Dora is an experiment launching tool which provides the following features:
 
-- Grid search management: automatic scheduling and canceling of the jobs
+- **Grid search management:** automatic scheduling and canceling of the jobs
     to match what is specified in the grid search files. Grid search files
     are pure Python, and can contain arbitrary loops, conditions etc.
-- Deduplication: experiments are assigned a signature based on their arguments.
+- **Deduplication:** experiments are assigned a signature based on their arguments.
     If you ask twice for the same experiment to be ran, it won't be scheduled twice,
     but merged to the same run. If your code handles checkpointing properly,
     any previous run will be automatically resumed.
-- Monitoring: Dora supports basic monitoring from inside the terminal.
+- **Monitoring:** Dora supports basic monitoring from inside the terminal.
     You can customize the metrics to display in the monitoring table,
     and easily track progress, and compare runs in a grid search.
 
@@ -239,13 +239,14 @@ should repeatidly call it to schedule experiments.
 Here is an example of grid search file, for instance `mycode.grids.mygrid`.
 
 ```python
+from itertools import product
 from dora import Explorer, Launcher
 
 @Explorer
 def explore(launcher: Launcher):
     launcher(batch_size=128)  # Schedule an experiments with the given batch size.
-    # For an argparse based project, this will get converted to the `--batch_size=128`
-    # flag, if `use_underscore=True`, else `--batch-size=128`.
+    # For an argparse based project, this will get converted to the `--batch_size=128` flag
+    # You can pass `use_underscore=False` to `argparse_main` to get instead `--batch-size=128`.
 
     sub = launcher.bind(lr=0.01)  # bind some parameter value, in a new launcher
     sub.slurm_(gpus=8)  # all jobs scheduled with `sub` will use 8 gpus.
@@ -253,6 +254,13 @@ def explore(launcher: Launcher):
     sub()  # Job with lr=0.01 and 8 gpus.
     sub.bind_(epochs=40)  # in-place version of bind()
     sub.slurm(partition="dev")(batch_size=64)  # lr=0.01, 8 gpus, dev, bs=64 and epochs=40.
+    
+    # Nice thing of native python, you can define arbitrary set of XP!
+    for lr, bs in product([0.1, 0.01, 0.001], [16, 32, 64]):
+        if bs > 32 and lr < 0.01:
+            # this is just too extreme, let's skip
+            continue
+        launcher(lr=lr, batch_size=bs)
 
 ```
 
