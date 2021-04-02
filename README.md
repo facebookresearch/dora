@@ -1,7 +1,7 @@
 # Dora The Explorer, a friendly experiment manager
 
-![tests badge](https://github.com/adefossez/dora/workflows/tests/badge.svg)
-![linter badge](https://github.com/adefossez/dora/workflows/linter/badge.svg)
+![tests badge](https://github.com/fairinternal/dora/workflows/tests/badge.svg)
+![linter badge](https://github.com/fairinternal/dora/workflows/linter/badge.svg)
 
 
 <p align="center">
