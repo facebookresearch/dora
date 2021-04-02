@@ -12,6 +12,8 @@ width="400px"></p>
 
 - [Installation](#Installation)
 - [Introduction](#Introduction)
+- [Making your code compatible with Dora](#making-your-code-compatible-with-dora)
+- [Making your code compatible with Dora](#making-your-code-compatible-with-dora)
 
 ## Installation
 
@@ -130,7 +132,7 @@ dora:
     dir: "./outputs"
 ```
 
-## Letting Dora find your code
+## The `dora` command
 
 Every Dora command will start with `dora some_command ...`. In order for Dora to find your code, you must pass your training package
 (i.e. `mycode`) as `dora -P mycode some_command`.
