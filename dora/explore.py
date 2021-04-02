@@ -139,3 +139,9 @@ class Explorer:
 
     def get_colors(self):
         return ["0", "38;5;245"]
+
+    def process_history(self, history: tp.List[dict]) -> dict:
+        if history:
+            return history[-1]
+        else:
+            return {}

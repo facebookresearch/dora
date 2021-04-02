@@ -34,7 +34,18 @@ def init(backend='nccl'):
 
 
 def is_master():
+    return rank() == 0
+
+
+def rank():
     if torch.distributed.is_initialized():
-        return torch.distributed.get_rank() == 0
+        return torch.distributed.get_rank()
     else:
-        return True
+        return 0
+
+
+def world_size():
+    if torch.distributed.is_initialized():
+        return torch.distributed.get_world_size()
+    else:
+        return 1

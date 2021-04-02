@@ -30,7 +30,7 @@ def info_action(args, main: DecoratedMain):
     if sheep.log:
         log("Main log is", sheep.log)
     if args.metrics:
-        metrics = main.get_xp_metrics(sheep.xp)
+        metrics = main.get_xp_history(sheep.xp)
         out = f"Metrics[{len(metrics)}]: "
         if metrics:
             out += json.dumps(metrics[-1])
