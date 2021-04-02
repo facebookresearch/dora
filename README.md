@@ -15,6 +15,11 @@ width="400px"></p>
 - [Making your code compatible with Dora](#making-your-code-compatible-with-dora)
 - [The `dora` command](#the-dora-command)
 - [`dora run`: Running XP locally](#dora-run-running-xp-locally)
+- [`dora launch`: Launching XP remotely](#dora-launch-launching-xp-remotely)
+- [`dora info`: Inspecting an XP](#dora-info-inspecting-an-xp)
+- [`dora grid`: Managing a grid search](#dora-grid-managing-a-grid-search)
+- [Advanced configuration](#advanced-configuration)
+- [Contributing](#contributing)
 
 ## Installation
 
@@ -179,7 +184,7 @@ dora run -- [TRAINING_ARGS ...]
 - `-D, --debug`: will activate the Python debugger when an exception occurs (when combined with
     distributed, only for the master process.)
 
-## Launching experiments remotely
+## `dora launch`: Launching XP remotely
 
 Dora supports scheduling experiments on Slurm. If you need to schedule many of them, then a grid file is properly better.
 
@@ -206,7 +211,7 @@ Other flags:
     - `-c, --comment COMMENT`: comment for the job (e.g. if priority is used).
 
 
-## Inspecting an experiment
+## `dora info`: Inspecting an XP
 
 You can get information on an XP with the `dora info` command:
 
@@ -222,7 +227,7 @@ The info command supports a number of flags:
 - `-l`: print the entire log for the main task (this only work for remote jobs, not XP ran locally with `dora run`)
 - `-t`: tail the log for the main task.
 
-## Grid Files
+## `dora grid`: Managing a grid search
 
 The main benefit from Dora is the ability to handle arbitarily complex grid searches.
 Each *grid* is defined by a grid file, inside a `grids` package (i.e. `mycode.grids.my_grid`).
@@ -237,7 +242,7 @@ The grid file
 ### Changing the namings of the XPs.
 
 
-## Developing
+## Contributing
 
-Before submitting anychange, please run `make` to run unit tests and code linting.
+Before submitting any change, please run `make` to run unit tests and code linting.
 
