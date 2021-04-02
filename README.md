@@ -1,7 +1,7 @@
 # Dora The Explorer, a friendly experiment manager
 
-![tests badge](https://github.com/adefossez/dora/workflows/tests/badge.svg)
-![linter badge](https://github.com/adefossez/dora/workflows/linter/badge.svg)
+![tests badge](./workflows/tests/badge.svg)
+![linter badge](./workflows/linter/badge.svg)
 
 
 <p align="center">
@@ -220,4 +220,9 @@ The grid file
 ### Setting SLURM default parameters
 
 ### Changing the namings of the XPs.
+
+
+## Developing
+
+Before submitting anychange, please run `make` to run unit tests and code linting.
 

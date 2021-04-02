@@ -16,7 +16,7 @@ clean:
 
 docs:
 	pdoc3 --html -o docs -f dora
-	cp dora.jpg docs/
+	cp dora.jpg docs/dora/
 
 live:
 	pdoc3 --http : dora
