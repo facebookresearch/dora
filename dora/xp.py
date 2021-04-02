@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from hashlib import sha1
 import json
 from pathlib import Path
@@ -29,7 +29,7 @@ class XP:
     delta: tp.Optional[tp.List[tp.Tuple[str, tp.Any]]] = None
     sig: tp.Optional[str] = None
 
-    link: tp.Optional[Link] = None
+    link: tp.Optional[Link] = field(default=None, compare=False)
 
     def __post_init__(self):
         if self.delta is not None:

@@ -19,7 +19,7 @@ def launch_action(args, main: DecoratedMain):
     rules = SubmitRules()
     update_from_args(rules, args)
 
-    sheep = shepherd.get_sheep(args.argv)
+    sheep = shepherd.get_sheep_from_argv(args.argv)
     log(f"Fetched sheep {sheep}")
     shepherd.update()
     shepherd.maybe_submit_lazy(sheep, slurm, rules)

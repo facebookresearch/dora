@@ -1,1 +1,3 @@
 recursive-include examples *.py
+recursive-include examples *.yaml
+recursive-include dora *.yaml

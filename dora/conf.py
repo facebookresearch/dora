@@ -1,5 +1,5 @@
 """
-Basic configuration for dora is here.
+Basic configuration for Dora is here.
 """
 from argparse import Namespace
 from dataclasses import dataclass, field
@@ -96,7 +96,6 @@ class ShepConfig:
     """
     job_file: str = "job.pkl"
     by_id: str = "by_id"
-    grids: str = "grids"
     submitit_folder: str = "submitit"
 
 
@@ -121,6 +120,7 @@ class DoraConfig:
 
     shep: ShepConfig = field(default_factory=ShepConfig)
     rendezvous_file: str = "rendezvous.txt"
+    grids: str = "grids"
 
     def is_excluded(self, arg_name: str) -> bool:
         """Return True if the given argument name should be excluded from

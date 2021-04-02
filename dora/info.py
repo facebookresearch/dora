@@ -24,7 +24,7 @@ def info_action(args, main: DecoratedMain):
         if sheep is None:
             fatal("Could not find any matching sheep")
     else:
-        sheep = shepherd.get_sheep(args.argv)
+        sheep = shepherd.get_sheep_from_argv(args.argv)
     log("Found sheep", sheep)
     log("Folder is", sheep.xp.folder)
     if sheep.log:

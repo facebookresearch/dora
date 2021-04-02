@@ -6,12 +6,16 @@
 # author: adefossez 2020
 
 from contextlib import contextmanager
+import importlib
 import logging
+import os
 from pathlib import Path
 import pickle
-import os
+import typing as tp
 
 import torch
+
+from .log import fatal
 
 logger = logging.getLogger(__name__)
 
@@ -59,3 +63,12 @@ def try_load(path: Path, load=pickle.load, mode: str = "rb"):
             "An error happened when trying to load from %s, this file will be ignored: %r",
             path, exc)
         return None
+
+
+def import_or_fatal(module_name: str) -> tp.Any:
+    try:
+        return importlib.import_module(module_name)
+    except ImportError:
+        logger.exception("Could not import module %s", module_name)
+        fatal(f"Failed to import module {module_name}. "
+              "Retry with the -v, --verbose flag for a traceback.")

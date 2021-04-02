@@ -14,6 +14,12 @@ dist:
 clean:
 	rm -r docs dist build *.egg-info
 
+docs:
+	pdoc3 --html -o docs -f dora
+	cp dora.jpg docs/
+
+live:
+	pdoc3 --http : dora
 
 
-.PHONY: tests lint dist clean
+.PHONY: docs tests lint dist clean

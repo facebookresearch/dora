@@ -47,7 +47,7 @@ setup(
         'console_scripts': ['dora=dora.__main__:main'],
     },
     extras_require={
-        'dev': ['coverage', 'flake8', 'mypy', 'pytest', 'hydra_colorlog'],
+        'dev': ['coverage', 'flake8', 'mypy', 'pdoc3', 'pytest', 'hydra_colorlog'],
     },
     license='Creative Commons Attribution-NonCommercial 4.0 International',
     classifiers=[

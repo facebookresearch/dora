@@ -4,7 +4,6 @@ check grid files, launch XPs, check their logs etc, as well
 as doing local runs for debugging.
 """
 import argparse
-import importlib
 import logging
 from pathlib import Path
 import os
@@ -16,6 +15,7 @@ from .info import info_action
 from .launch import launch_action
 from .log import fatal, simple_log
 from .run import run_action
+from .utils import import_or_fatal
 
 
 def _find_package():
@@ -76,8 +76,6 @@ def get_parser():
 
     grid.add_argument("--dry_run", action="store_true",
                       help="Only simulate actions but does not run any call to Slurm.")
-    grid.add_argument("--job_id", "-j", action="store_true",
-                      help="Display the slurm job id.")
     grid.add_argument("-t", "--trim", type=int,
                       help="Trim history to the length of the exp with the given index.")
     grid.add_argument("-T", "--trim-last", action="store_true",
@@ -103,6 +101,8 @@ def get_parser():
     run = subparsers.add_parser("run", help="Run locally the given command.")
     run.add_argument("-f", "--from_sig", help="Signature of job to use as baseline.")
     run.add_argument("-d", "--ddp", action="store_true", help="Distributed training.")
+    run.add_argument("-D", "--debug", action="store_true",
+                     help="Activate Python debugger on exception.")
     run.add_argument("argv", nargs='*')
     run.set_defaults(action=run_action)
 
@@ -132,6 +132,13 @@ def get_parser():
 
 
 def main():
+    try:
+        import coverage
+    except ImportError:
+        pass
+    else:
+        coverage.process_startup()
+
     parser = get_parser()
     args = parser.parse_args()
     if args.verbose:
@@ -144,7 +151,7 @@ def main():
         args.package = _find_package()
     module_name = args.package + ".train"
     sys.path.insert(0, ".")
-    module = importlib.import_module(module_name)
+    module = import_or_fatal(module_name)
     try:
         main = module.main
     except AttributeError:

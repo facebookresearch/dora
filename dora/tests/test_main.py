@@ -64,10 +64,7 @@ def test_main(tmpdir):
     assert argv == main.get_argv_from_sig(xp2.sig)
 
     xp3 = main.get_xp_from_sig(xp2.sig)
-    assert xp2.argv == xp3.argv
-    assert xp2.delta == xp3.delta
-    assert xp2.sig == xp3.sig
-    assert xp2.dora == xp3.dora
+    assert xp2 == xp3
 
     metrics = main.get_xp_metrics(xp3)
     assert metrics[-1]["loss"] == 0.1

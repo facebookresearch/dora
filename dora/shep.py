@@ -19,7 +19,7 @@ from .xp import XP
 logger = logging.getLogger(__name__)
 
 
-class SubmitItTarget:
+class _SubmitItTarget:
     def __call__(self, main: DecoratedMain, argv: tp.Sequence[str]):
         env = JobEnvironment()
         rank = env.global_rank
@@ -42,14 +42,16 @@ class Sheep:
     def __init__(self, xp: XP, job: SlurmJob = None):
         self.xp = xp
         self.job: tp.Optional[submitit.SlurmJob] = None
-        if self.job_file.exists():
-            self.job = try_load(self.job_file, load=pickle.load)
+        if self._job_file.exists():
+            self.job = try_load(self._job_file, load=pickle.load)
 
     @property
-    def job_file(self) -> Path:
+    def _job_file(self) -> Path:
         return self.xp.folder / self.xp.dora.shep.job_file
 
     def state(self, mode="standard"):
+        """Return the current state of the `Sheep`.
+        """
         if self.job is None:
             return None
         state = self.job.watcher.get_state(self.job.job_id, mode)
@@ -58,12 +60,16 @@ class Sheep:
         return state
 
     def is_done(self, mode="standard"):
+        """Return True if the job is no longer running on the cluster.
+        """
         if self.job is None:
-            return False
+            return True
         return self.job.watcher.is_done(self.job.job_id, mode)
 
     @property
     def log(self):
+        """Return the path to the main log.
+        """
         if self.job is not None:
             return self.xp.submitit / f"{self.job.job_id}_0_log.out"
         return None
@@ -78,38 +84,70 @@ class Sheep:
 
 
 def no_log(x: str):
+    """No logging logging function, passed to `Shepherd`.
+    """
     pass
 
 
 class Shepherd:
     """
     Takes care of the little jobs.
+
+    Args:
+        main (DecoratedMain): main function decorated by Dora.
+        log (callable): log function, if provided should take a single string
+            argument.
     """
     def __init__(self, main: DecoratedMain, log: tp.Callable[[str], None] = no_log):
         self.main = main
-        self.by_id.mkdir(exist_ok=True, parents=True)
-        self.grids.mkdir(exist_ok=True, parents=True)
+        self._by_id.mkdir(exist_ok=True, parents=True)
         self.log = log
 
         self._to_cancel: tp.List[submitit.SlurmJob] = []
         self._to_submit: tp.List[tp.Tuple[Sheep, SlurmConfig]] = []
 
-    def get_sheep(self, argv: tp.Sequence[str]) -> Sheep:
+    def get_sheep_from_argv(self, argv: tp.Sequence[str]) -> Sheep:
+        """
+        Given a list of of arguments, return the matching `Sheep`,
+        which will contain both information on the `dora.xp.XP`, and on
+        the latest job associated with that XP.
+        """
+        assert not isinstance(argv, str)
         xp = self.main.get_xp(argv)
         return Sheep(xp)
 
+    def get_sheep_from_sig(self, sig: str) -> tp.Optional[Sheep]:
+        """
+        Returns a `Sheep` given the XP signature, if any exists, otherwise
+        returns None.
+        """
+        xp = self.main.get_xp_from_sig(sig)
+        return Sheep(xp)
+
+    def get_sheep_from_job_id(self, job_id: str) -> tp.Optional[Sheep]:
+        """
+        Returns the `Sheep` associated with the given `job_id`. If no sheep
+        is found, returns None.
+        """
+        link = self._by_id / job_id
+        if link.is_symlink():
+            sig = link.resolve().name
+            xp = self.main.get_xp_from_sig(sig)
+            return Sheep(xp)
+        return None
+
     def update(self):
+        """
+        Force an update of all job states with submitit.
+        """
         SlurmJob.watcher.update()
 
-    @property
-    def by_id(self) -> Path:
-        return self.main.dora.dir / self.main.dora.shep.by_id
-
-    @property
-    def grids(self) -> Path:
-        return self.main.dora.dir / self.main.dora.shep.grids
-
     def maybe_submit_lazy(self, sheep: Sheep, slurm_config: SlurmConfig, rules: SubmitRules):
+        """
+        Decides whether to schedule a new job for the given sheep, based on the rules
+        given in `rules`.
+        Jobs are actually only scheduled once the `commit()` method is called.
+        """
         if sheep.job is not None:
             state = sheep.state()
             if state == 'COMPLETED':
@@ -130,20 +168,34 @@ class Shepherd:
             self._to_submit.append((sheep, slurm_config))
 
     def cancel_lazy(self, sheep: Sheep):
-        assert sheep.job is not None
-        self._to_cancel.append(sheep.job)
+        """
+        Cancel a sheep. The job is actually cancelled only when `commit()` is called.
+        """
+        if sheep.job is not None:
+            self._to_cancel.append(sheep.job)
 
     def commit(self):
+        """
+        Commit all changes registered so far with either `maybe_submit_lazy()`
+        and `cancel_lazy()`.
+        """
         if self._to_cancel:
-            cancel_cmd = ["scancel"] + [job.job_id for job in self._to_cancel]
-            logger.debug("Running %s", " ".join(cancel_cmd))
-            sp.run(cancel_cmd, check=True)
+            self._cancel(self._to_cancel)
             self._to_cancel = []
 
         while self._to_submit:
             sheep, slurm_config = self._to_submit.pop(0)
             self._submit(sheep, slurm_config)
             self.log(f"Job created with id {sheep.job.job_id}")
+
+    @property
+    def _by_id(self) -> Path:
+        return self.main.dora.dir / self.main.dora.shep.by_id
+
+    def _cancel(self, jobs: tp.List[SlurmJob]):
+        cancel_cmd = ["scancel"] + [job.job_id for job in self._to_cancel]
+        logger.debug("Running %s", " ".join(cancel_cmd))
+        sp.run(cancel_cmd, check=True)
 
     def _submit(self, sheep, slurm_config: SlurmConfig):
         xp = sheep.xp
@@ -160,7 +212,7 @@ class Shepherd:
         gpus = slurm_config.gpus
         if gpus > 8:
             if gpus % 8 != 0:
-                raise RuntimeError("Can only take <= 8 gpus, or multiple of 8 gpus")
+                raise ValueError("Can only take <= 8 gpus, or multiple of 8 gpus")
             kwargs['nodes'] = gpus // 8
             kwargs['ntasks_per_node'] = 8
         else:
@@ -178,18 +230,10 @@ class Shepherd:
             stderr_to_stdout=True,
             **kwargs)
         job = executor.submit(
-            SubmitItTarget(), self.main, sheep.xp.argv)
-        pickle.dump(job, open(sheep.job_file, "wb"))
+            _SubmitItTarget(), self.main, sheep.xp.argv)
+        pickle.dump(job, open(sheep._job_file, "wb"))
         logger.debug("Created job with id %s", job.job_id)
         sheep.job = job
-        link = self.by_id / job.job_id
+        link = self._by_id / job.job_id
         link = link
         link.symlink_to(sheep.xp.folder.resolve())
-
-    def get_sheep_from_job_id(self, job_id: str) -> tp.Optional[Sheep]:
-        link = self.by_id / job_id
-        if link.is_symlink():
-            sig = link.resolve().name
-            xp = self.main.get_xp_from_sig(sig)
-            return Sheep(xp)
-        return None

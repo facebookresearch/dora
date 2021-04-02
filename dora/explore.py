@@ -2,6 +2,7 @@ from collections import OrderedDict
 import typing as tp
 
 from treetable.table import _Node
+import treetable as tt
 
 from .conf import SlurmConfig
 from .shep import Shepherd
@@ -42,8 +43,9 @@ class Launcher:
 
     def __call__(self, *args, **kwargs):
         launcher = self.bind(*args, **kwargs)
-        sheep = self._shepherd.get_sheep(launcher._argv)
+        sheep = self._shepherd.get_sheep_from_argv(launcher._argv)
         self._herd[sheep.xp.sig] = (sheep, launcher._slurm)
+        return sheep
 
 
 Explore = tp.Callable[[Launcher], None]
@@ -60,6 +62,18 @@ class Explorer:
         """Return the metrics that should be displayed in the tracking table.
         """
         return []
+
+    def get_grid_meta(self) -> tp.List[_Node]:
+        """Returns the list of Meta information to display for each XP/job.
+        """
+        return [
+            tt.leaf("index", align=">"),
+            tt.leaf("name"),
+            tt.leaf("state"),
+            tt.leaf("sig"),
+            tt.leaf("sid", align=">"),
+            tt.leaf("epoch", align=">"),
+        ]
 
     def get_colors(self):
         return ["0", "38;5;245"]

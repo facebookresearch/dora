@@ -1,7 +1,14 @@
+"""
+This defines the `dora grid` action, and provides a `run_grid` API
+that can be used from a notebook or any other script.
+
+When using the API, you can provide the equivalent of the command line flags
+with the `RunGridArgs` dataclass.
+"""
 from collections import OrderedDict
+from dataclasses import dataclass, field
 import fnmatch
 from functools import partial
-from importlib import import_module
 import os
 from pathlib import Path
 import pkgutil
@@ -15,19 +22,63 @@ from .explore import Explorer, Launcher
 from .main import DecoratedMain
 from .log import colorize, simple_log, fatal
 from .shep import Sheep, Shepherd, no_log
+from .utils import import_or_fatal
 
 import treetable as tt
 
 log: tp.Callable[[str], None] = partial(simple_log, "Grid:")
 
 
-def get_explore(args, main):
+@dataclass
+class RunGridArgs:
+    """
+    Arguments to tune the behavior of the `run_grid` function.
+
+        patterns (list[str]): List of patterns used to filter by name
+            the XPs.
+        monitor (bool): if True, will monitor the advances of the XPs
+            every `interval` minutes, stopping only when all runs completed or
+            failed.
+        interval (float): interval in minutes to wait between updates.
+        trim (int or None): if provided, will trim all XP logs to the epoch of
+            the XP with the provided index. Useful to compare XP started at different
+            times.
+        trim_last (bool): if True, will trim all XP to the least advanced XP.
+        verbose (bool): if True, Dora will details how scheduling decisions are made.
+        dry_run (bool): if True, Dora will simulate the run of the grid, without scheduling
+            or canceling any XP.
+        cancel (bool): if True, will cancel all XPs in the grid. If `patterns` is provided,
+            only XP matching the patterns will be canceled.
+
+    """
+    patterns: tp.List[str] = field(default_factory=list)
+
+    # Monitoring params
+    monitor: bool = True
+    interval: float = 5
+    trim: tp.Optional[int] = None
+    trim_last: bool = False
+
+    # Debug flags
+    verbose: bool = False
+    dry_run: bool = False
+
+    # Scheduling
+    cancel: bool = False
+
+    # Other flags, supported only from the command line.
+    folder: tp.Optional[int] = None
+    log: tp.Optional[int] = None
+    tail: tp.Optional[int] = None
+
+    _from_commandline: bool = False
+
+
+def _get_explore(args, main):
+    # Finds the explorer.
     package = args.package
     root_name = package + ".grids"
-    try:
-        grids = import_module(root_name)
-    except ImportError:
-        fatal(f"Could not find module {root_name}.")
+    grids = import_or_fatal(root_name)
 
     if args.grid is None:
         candidates = []
@@ -37,7 +88,7 @@ def get_explore(args, main):
         sys.exit(0)
 
     grid_name = root_name + "." + args.grid
-    grid = import_module(grid_name)
+    grid = import_or_fatal(grid_name)
 
     try:
         explorer = grid.explorer
@@ -49,65 +100,105 @@ def get_explore(args, main):
 
 
 def grid_action(args: tp.Any, main: DecoratedMain):
-    explorer = get_explore(args, main)
+    explorer = _get_explore(args, main)
 
-    shepherd = Shepherd(main, log=log if args.verbose else no_log)
     slurm = main.get_slurm_config()
     update_from_args(slurm, args)
     rules = SubmitRules()
     update_from_args(rules, args)
+    grid_args = RunGridArgs()
+    grid_args._from_commandline = True
+    update_from_args(grid_args, args)
+    run_grid(main, explorer, args.grid, rules, slurm, grid_args)
 
-    grid_folder = shepherd.grids / args.grid
+
+def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
+             rules: SubmitRules = SubmitRules(), slurm: tp.Optional[SlurmConfig] = None,
+             args: RunGridArgs = RunGridArgs()) -> tp.List[Sheep]:
+    """
+    Run a grid search, this is the API underlying the `dora grid` command,
+    so that it can be used from a notebook.
+    You can also provide patterns to filter out XPs to be displayed.
+
+    Args:
+        main (DecoratedMain): main training function, decorated with Dora.
+        explorer (Explorer): explorer instance that will define the XPs to launch.
+        grid_name (str): this must be a unique name for the grid.
+        rules (SubmitRules): see `dora.conf.SubmitRules`, those defines the
+            rules for rescheduling failed XP etc.
+        slurm (SlurmConfig or None): if provided, this will override
+            the default Slurm config defined my the `main` argument.
+
+    Returns:
+        A list of `dora.shep.Sheep`.
+
+    """
+    assert isinstance(explorer, Explorer)
+    if slurm is None:
+        slurm = main.get_slurm_config()
+
+    grid_folder = main.dora.dir / main.dora.grids / grid_name
     grid_folder.mkdir(exist_ok=True, parents=True)
 
     herd: OrderedDict[str, tp.Tuple[Sheep, SlurmConfig]] = OrderedDict()
-    shepherd = Shepherd(main)
+    shepherd = Shepherd(main, log=log if args.verbose else no_log)
     launcher = Launcher(shepherd, slurm, herd)
     explorer(launcher)
 
     shepherd.update()
 
     for sheep, slurm in herd.values():
-        shepherd.maybe_submit_lazy(sheep, slurm, rules)
+        if not args.cancel:
+            shepherd.maybe_submit_lazy(sheep, slurm, rules)
 
     to_unlink = []
     for child in grid_folder.iterdir():
         if child.name not in herd:
-            sheep = shepherd.get_sheep(child.name)
-            if sheep.job is not None:
+            old_sheep = shepherd.get_sheep_from_sig(child.name)
+            assert old_sheep is not None
+            if not old_sheep.is_done():
+                assert old_sheep.job is not None
                 shepherd.cancel_lazy(sheep)
-                name = main.get_name(sheep.xp)
-                log(f"Canceling job {sheep.job.job_id} for no longer required sheep {name}")
+                name = main.get_name(old_sheep.xp)
+                log(f"Canceling job {old_sheep.job.job_id} for no longer required "
+                    f"sheep {old_sheep.xp.sig}/{name}")
             to_unlink.append(child)
 
     if not args.dry_run:
         for sig, (sheep, _) in herd.items():
-            (grid_folder / sig).symlink_to(sheep.xp.folder)
+            link = (grid_folder / sig)
+            if link.exists():
+                assert link.is_symlink() and link.resolve() == sheep.xp.folder
+            else:
+                link.symlink_to(sheep.xp.folder)
         shepherd.commit()
         for child in to_unlink:
             child.unlink()
 
     sheeps = [sheep for sheep, _ in herd.values()]
-    sheeps = filter_grid_sheeps(args, main, sheeps)
+    sheeps = _filter_grid_sheeps(args.patterns, main, sheeps)
 
     if not sheeps:
         log("No sheep to handle.")
-        return
+        return sheeps
 
     if args.cancel:
         for sheep in sheeps:
             if not sheep.is_done():
-                if sheep.job is not None:
-                    shepherd.cancel_lazy(sheep)
-                    name = main.get_name(sheep.xp)
-                    log(f"Canceling job {sheep.job.job_id} for sheep {name}")
+                assert sheep.job is not None
+                shepherd.cancel_lazy(sheep)
+                name = main.get_name(sheep.xp)
+                log(f"Canceling job {sheep.job.job_id} for sheep {sheep.xp.sig}/{name}")
         if not args.dry_run:
             shepherd.commit()
-        return
+        return sheeps
 
     actions = [action for action in [args.folder, args.log, args.tail] if action is not None]
 
     if actions:
+        if not args._from_commandline:
+            raise RuntimeError("The folder, log, and tail "
+                               "flags are only supported from the command line.")
         assert len(actions) == 1
         index = actions[0]
         try:
@@ -125,12 +216,14 @@ def grid_action(args: tp.Any, main: DecoratedMain):
             if not sheep.log.exists():
                 fatal(f"Log file does not exist for sheep {name}.")
             shutil.copyfileobj(open(sheep.log), sys.stdout)
-        return
+        return sheeps
 
-    print(f"Monitoring Grid {args.grid}")
+    print(f"Monitoring Grid {grid_name}")
     while True:
         shepherd.update()
-        monitor(args, main, explorer, sheeps)
+        if monitor(args, main, explorer, sheeps):
+            # All jobs finished or failed, stop monitoring
+            break
         if not args.monitor:
             break
         sleep = int(args.interval * 60)
@@ -142,6 +235,7 @@ def grid_action(args: tp.Any, main: DecoratedMain):
             print(out, end='\r')
             time.sleep(1)
         print(' ' * 60)
+    return sheeps
 
 
 def _match_name(name, patterns):
@@ -161,8 +255,8 @@ def _match_name(name, patterns):
     return True
 
 
-def filter_grid_sheeps(args: tp.Any, main: DecoratedMain, sheeps: tp.List[Sheep]) -> tp.List[Sheep]:
-    patterns = args.patterns
+def _filter_grid_sheeps(patterns: tp.List[str], main: DecoratedMain,
+                        sheeps: tp.List[Sheep]) -> tp.List[Sheep]:
     indexes = []
     for p in list(patterns):
         try:
@@ -181,7 +275,10 @@ def filter_grid_sheeps(args: tp.Any, main: DecoratedMain, sheeps: tp.List[Sheep]
     return out
 
 
-def monitor(args: tp.Any, main: DecoratedMain, explorer: Explorer, herd: tp.List[Sheep]):
+def monitor(args: tp.Any, main: DecoratedMain, explorer: Explorer, herd: tp.List[Sheep]) -> bool:
+    """Single iteration of monitoring of the jobs in a Grid.
+    Returns `True` if all jobs are done or failed, and `False` otherwise.
+    """
     names, base_name = main.get_names([sheep.xp for sheep in herd])
     all_metrics = [main.get_xp_metrics(sheep.xp) for sheep in herd]
 
@@ -195,8 +292,11 @@ def monitor(args: tp.Any, main: DecoratedMain, explorer: Explorer, herd: tp.List
         all_metrics = [metrics[:trim] for metrics in all_metrics]
 
     lines = []
+    finished = True
     for index, (sheep, metrics, name) in enumerate(zip(herd, all_metrics, names)):
         state = sheep.state()
+        if not sheep.is_done():
+            finished = False
         if state is None:
             state = "N/A"
         else:
@@ -223,16 +323,9 @@ def monitor(args: tp.Any, main: DecoratedMain, explorer: Explorer, herd: tp.List
     table = tt.table(
         shorten=True,
         groups=[
-            tt.group("Meta", [
-                tt.leaf("index", align=">"),
-                tt.leaf("name"),
-                tt.leaf("state"),
-                tt.leaf("sig")] + (
-                    [tt.leaf("sid", align=">")] if args.job_id else []
-                ) + [
-                tt.leaf("epoch", align=">"),
-            ]),
+            tt.group("Meta", explorer.get_grid_meta()),
             tt.group("Metrics", explorer.get_grid_metrics()),
         ]
     )
     print(tt.treetable(lines, table, colors=explorer.get_colors()))
+    return finished

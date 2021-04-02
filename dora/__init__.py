@@ -1,5 +1,10 @@
 """
-Dora is an experiment launching tool which provides the following features:
+
+..include:: ../README.md
+
+.. image:: ../dora.jpg
+
+Dora is an experiment management tool which provides the following features:
 
 - Grid search management: automatic scheduling and canceling of the jobs
     to match what is specified in the grid search files. Grid search files
@@ -22,7 +27,9 @@ Some Dora concepts:
     based on those arguments, for easy deduplication.
 - A *Sheep* is the association of a Slurm/Submitit job, and an XP.
 """
+
 # flake8: noqa
 from .explore import Explorer, Launcher
 from .hydra import hydra_main
 from .main import argparse_main, get_xp
+from .shep import Sheep

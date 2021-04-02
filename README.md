@@ -146,7 +146,7 @@ dora.distrib.init()
 
 ## Running experiments locally
 
-You can debug and run everything locally by calling
+You can debug and run an XP locally with
 
 ```bash
 dora run [TRAINING_ARGS ...]
@@ -161,6 +161,8 @@ dora run -- [TRAINING_ARGS ...]
 `dora run` supports two flags:
 - `-d`: distributed training using all available gpus. The master worker output will be to the shell, and other workers will be redirected to a log file in the XP folder.
 - `-f sig`: this will inject the hyper-parameters from the XP with the given sig on top of the one provided on the command line. Useful to resume locally a remote job that failed.
+- `-D, --debug`: will activate the Python debugger when an exception occurs (when combined with
+    distributed, only for the master process.)
 
 ## Launching experiments remotely
 
@@ -175,13 +177,23 @@ This command will launch the command, and immediately tail its log and monitor i
 If you want to kill the command if you kill the local process, you can add the `-a`, `--attach` flag.
 To avoid tailing the log, just pass `--no_tail`.
 
+
+If a job already exist for the given XP, Dora will not schedule a second one, but reuse the existing job.
+
 If a previous run has failed or was canceled, Dora will not automatically start a new one, to give you a chance to inspect the logs.
 If you want to reschedule a run, use the `-r` flag.
+
+Other flags:
+    - `-f SIG`: injects the arguments from the XP matching this signature, on top of the one provided on the command line.
+    - `-R, --replace`: replace any running job (i.e. cancels, and schedules a new one).
+    - `-D, --replace_done`: also reschedule a job even if a previous one completed successfully.
+    - `-p, --partition PARTITION`: partition to use.
+    - `-c, --comment COMMENT`: comment for the job (e.g. if priority is used).
 
 
 ## Inspecting an experiment
 
-You can get information on an experiment with the `dora info` command:
+You can get information on an XP with the `dora info` command:
 
 ```bash
 dora info [TRAINING_ARGS ...]
@@ -196,4 +208,16 @@ The info command supports a number of flags:
 - `-t`: tail the log for the main task.
 
 ## Grid Files
+
+The main benefit from Dora is the ability to handle arbitarily complex grid searches.
+Each *grid* is defined by a grid file, inside a `grids` package (i.e. `mycode.grids.my_grid`).
+The grid file
+
+
+
+## Advanced configuration
+
+### Setting SLURM default parameters
+
+### Changing the namings of the XPs.
 
