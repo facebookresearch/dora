@@ -13,7 +13,7 @@ width="400px"></p>
 - [Installation](#Installation)
 - [Introduction](#Introduction)
 - [Making your code compatible with Dora](#making-your-code-compatible-with-dora)
-- [Making your code compatible with Dora](#making-your-code-compatible-with-dora)
+- [The `dora` command](#the-dora-command)
 
 ## Installation
 
@@ -134,11 +134,19 @@ dora:
 
 ## The `dora` command
 
-Every Dora command will start with `dora some_command ...`. In order for Dora to find your code, you must pass your training package
-(i.e. `mycode`) as `dora -P mycode some_command`.
+Dora will install a `dora` command that is the main way to interact with it.
+The `dora` command defines 4 sub-commands, detailed in the following sections:
+- `dora run`: run training code locally (e.g. for debugging).
+- `dora launch`: launch remote jobs, useful for one-off experiments.
+- `dora grid`: launch an entire grid search defined in a grid file. Only missing XP will be scheduled.
+    Will also reports status and latest metrics.
+- `dora info`: get information on a specific job/XP, logs etc.
+
+In order for Dora to find your code, you must pass your training package
+(i.e. `mycode`) as `dora -P mycode [run|launch|grid|info]`.
 This flag can be skipped if `mycode` is in the current working directory and is the only folder with a `train.py` file in it, in which
 case Dora will find it automatically.
-You can also export `DORA_PACKAGE` to avoid having to give the `-P` flag explicitely.
+You can also export `DORA_PACKAGE=mycode` to avoid having to give the `-P` flag explicitely.
 
 
 ## Distributed training support
