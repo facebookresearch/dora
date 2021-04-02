@@ -132,13 +132,6 @@ def get_parser():
 
 
 def main():
-    try:
-        import coverage
-    except ImportError:
-        pass
-    else:
-        coverage.process_startup()
-
     parser = get_parser()
     args = parser.parse_args()
     if args.verbose:

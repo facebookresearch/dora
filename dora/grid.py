@@ -158,7 +158,7 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
             assert old_sheep is not None
             if not old_sheep.is_done():
                 assert old_sheep.job is not None
-                shepherd.cancel_lazy(sheep)
+                shepherd.cancel_lazy(old_sheep)
                 name = main.get_name(old_sheep.xp)
                 log(f"Canceling job {old_sheep.job.job_id} for no longer required "
                     f"sheep {old_sheep.xp.sig}/{name}")
@@ -186,9 +186,9 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
         for sheep in sheeps:
             if not sheep.is_done():
                 assert sheep.job is not None
-                shepherd.cancel_lazy(sheep)
                 name = main.get_name(sheep.xp)
                 log(f"Canceling job {sheep.job.job_id} for sheep {sheep.xp.sig}/{name}")
+                shepherd.cancel_lazy(sheep)
         if not args.dry_run:
             shepherd.commit()
         return sheeps
