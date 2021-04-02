@@ -14,6 +14,7 @@ width="400px"></p>
 - [Introduction](#Introduction)
 - [Making your code compatible with Dora](#making-your-code-compatible-with-dora)
 - [The `dora` command](#the-dora-command)
+- [`dora run`: Running XP locally](#dora-run-running-xp-locally)
 
 ## Installation
 
@@ -158,7 +159,7 @@ case Dora will find it automatically.
 You can also export `DORA_PACKAGE=mycode` to avoid having to give the `-P` flag explicitely.
 
 
-## Running experiments locally
+## `dora run`: Running XP locally
 
 You can debug and run an XP locally with
 
