@@ -94,6 +94,7 @@ parser = argparse.ArgumentParser("mycode.train")
     parser=parser,
     exclude=["list_of_args_to_ignore_in_signature, e.g.", "num_workers",
              "can_be_pattern_*", "log_*"],
+    use_underscore=True,  # flags are --batch_size vs. --batch-size
 )
 def main():
     # No need to reparse args, you can directly access them from the current XP
@@ -232,12 +233,46 @@ The info command supports a number of flags:
 The main benefit from Dora is the ability to handle arbitarily complex grid searches.
 Each *grid* is defined by a grid file, inside a `grids` package (i.e. `mycode.grids.my_grid`).
 The grid file defines an `explore` function, decorated by an `Explorer` class.
-
 The `Explorer` class defines various metadata, in particular on which metrics
 to display when calling the grid command.
-
 The `explore` function takes a `dora.Launcher` as an argument, and
 should repeatidly call it to schedule experiments.
+
+Here is an example of grid search file, for instance `mycode.grids.mygrid`.
+
+```python
+from dora import Explorer, Launcher
+
+@Explorer
+def explore(launcher: Launcher):
+    launcher(batch_size=128)  # Schedule an experiments with the given batch size.
+    # For an argparse based project, this will get converted to the `--batch_size=128`
+    # flag, if `use_underscore=True`, else `--batch-size=128`.
+
+    sub = launcher.bind(lr=0.01)  # bind some parameter value, in a new launcher
+    sub.slurm_(gpus=8)  # all jobs scheduled with `sub` will use 8 gpus.
+
+    sub()  # Job with lr=0.01 and 8 gpus.
+    sub.bind_(epochs=40)  # in-place version of bind()
+    sub.slurm(partition="dev")(batch_size=64)  # lr=0.01, 8 gpus, dev, bs=64 and epochs=40.
+
+```
+
+You can then call
+
+```bash
+dora grid mygrid
+```
+
+This will do 3 thing:
+
+- Any XP defined in the `explore` function will be scheduled, if not already running
+    or completed.
+- Any XP that was previously defined in the grid file, but is no longer referenced
+    will be cancelled.
+    **If you just comment one line in the grid file, the corresponding job will automatically be killed.**
+- A table containing job status and metadata as well as the latest metrics will
+    be printed every 5 minutes.
 
 
 
