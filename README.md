@@ -239,6 +239,7 @@ should repeatidly call it to schedule experiments.
 Here is an example of grid search file, for instance `mycode.grids.mygrid`.
 
 ```python
+from itertools import product
 from dora import Explorer, Launcher
 
 @Explorer
@@ -253,6 +254,13 @@ def explore(launcher: Launcher):
     sub()  # Job with lr=0.01 and 8 gpus.
     sub.bind_(epochs=40)  # in-place version of bind()
     sub.slurm(partition="dev")(batch_size=64)  # lr=0.01, 8 gpus, dev, bs=64 and epochs=40.
+    
+    # Nice thing of native python, you can define arbitrary set of XP!
+    for lr, bs in product([0.1, 0.01, 0.001], [16, 32, 64]):
+        if bs > 32 and lr < 0.01:
+            # this is just too extreme, let's skip
+            continue
+        launcher(lr=lr, batch_size=bs)
 
 ```
 
