@@ -25,7 +25,7 @@ width="400px"></p>
 
 ```bash
 pip install -U git+https://github.com/facebookincubator/submitit@master#egg=submitit
-pip install git+ssh://git@github.com/fairinternal/dora
+pip install -U git+ssh://git@github.com/fairinternal/dora
 ```
 
 ## Introduction
