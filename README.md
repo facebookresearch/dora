@@ -8,6 +8,11 @@
 <img src="./dora.jpg" alt="Really cheesy effects applied on a Dora picture."
 width="400px"></p>
 
+## Table of Content
+
+- [Installation](#Installation)
+- [Introduction](#Introduction)
+
 ## Installation
 
 ```bash
