@@ -32,14 +32,14 @@ pip install -U git+ssh://git@github.com/fairinternal/dora
 
 Dora is an experiment launching tool which provides the following features:
 
-- Grid search management: automatic scheduling and canceling of the jobs
+- **Grid search management:** automatic scheduling and canceling of the jobs
     to match what is specified in the grid search files. Grid search files
     are pure Python, and can contain arbitrary loops, conditions etc.
-- Deduplication: experiments are assigned a signature based on their arguments.
+- **Deduplication:** experiments are assigned a signature based on their arguments.
     If you ask twice for the same experiment to be ran, it won't be scheduled twice,
     but merged to the same run. If your code handles checkpointing properly,
     any previous run will be automatically resumed.
-- Monitoring: Dora supports basic monitoring from inside the terminal.
+- **Monitoring:** Dora supports basic monitoring from inside the terminal.
     You can customize the metrics to display in the monitoring table,
     and easily track progress, and compare runs in a grid search.
 
