@@ -1,6 +1,7 @@
 .mypy_cache
 .pytest_cache
 __pycache__
+docs
 *.tar.gz
 *.egg-info
 build

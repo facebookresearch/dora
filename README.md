@@ -62,6 +62,15 @@ with a `train` module in it, (i.e. `myproj.train` module, stored in the `myproj/
 
 The `train.py` file must contain a `main` function that is properly decorated, as explained hereafter.
 
+### Distributed training support
+
+Dora supports distributed training, and makes a few assumptions for you.  You should initialize distributed training through Dora, by calling in your `main` function:
+
+```python
+import dora.distrib
+dora.distrib.init()
+```
+
 ### Argparse support
 
 Here is a template for the `train.py` file:
@@ -148,16 +157,6 @@ This flag can be skipped if `mycode` is in the current working directory and is 
 case Dora will find it automatically.
 You can also export `DORA_PACKAGE=mycode` to avoid having to give the `-P` flag explicitely.
 
-
-## Distributed training support
-
-Dora supports distributed training, and makes a few assumptions for you. It will schedule one task
-per GPU required. You should initialize distributed training through dora, by calling in your `main` function:
-
-```
-import dora.distrib
-dora.distrib.init()
-```
 
 ## Running experiments locally
 
