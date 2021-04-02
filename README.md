@@ -153,9 +153,9 @@ Dora will install a `dora` command that is the main way to interact with it.
 The `dora` command defines 4 sub-commands, detailed in the following sections:
 - `dora run`: run training code locally (e.g. for debugging).
 - `dora launch`: launch remote jobs, useful for one-off experiments.
+- `dora info`: get information on a specific job/XP, logs etc.
 - `dora grid`: launch an entire grid search defined in a grid file. Only missing XP will be scheduled.
     Will also reports status and latest metrics.
-- `dora info`: get information on a specific job/XP, logs etc.
 
 In order for Dora to find your code, you must pass your training package
 (i.e. `mycode`) as `dora -P mycode [run|launch|grid|info]`.
@@ -231,11 +231,19 @@ The info command supports a number of flags:
 
 The main benefit from Dora is the ability to handle arbitarily complex grid searches.
 Each *grid* is defined by a grid file, inside a `grids` package (i.e. `mycode.grids.my_grid`).
-The grid file
+The grid file defines an `explore` function, decorated by an `Explorer` class.
+
+The `Explorer` class defines various metadata, in particular on which metrics
+to display when calling the grid command.
+
+The `explore` function takes a `dora.Launcher` as an argument, and
+should repeatidly call it to schedule experiments.
 
 
 
 ## Advanced configuration
+
+TBD
 
 ### Setting SLURM default parameters
 
