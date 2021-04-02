@@ -167,7 +167,7 @@ You can also export `DORA_PACKAGE=mycode` to avoid having to give the `-P` flag 
 
 ## `dora run`: Running XP locally
 
-You can debug and run an XP locally with
+You can run an XP locally with
 
 ```bash
 dora run [TRAINING_ARGS ...]
@@ -182,8 +182,6 @@ dora run -- [TRAINING_ARGS ...]
 `dora run` supports two flags:
 - `-d`: distributed training using all available gpus. The master worker output will be to the shell, and other workers will be redirected to a log file in the XP folder.
 - `-f sig`: this will inject the hyper-parameters from the XP with the given sig on top of the one provided on the command line. Useful to resume locally a remote job that failed.
-- `-D, --debug`: will activate the Python debugger when an exception occurs (when combined with
-    distributed, only for the master process.)
 
 ## `dora launch`: Launching XP remotely
 
@@ -202,7 +200,7 @@ To avoid tailing the log, just pass `--no_tail`.
 If a job already exist for the given XP, Dora will not schedule a second one, but reuse the existing job.
 
 If a previous run has failed or was canceled, Dora will not automatically start a new one, to give you a chance to inspect the logs.
-If you want to reschedule a run, use the `-r` flag.
+If you want to reschedule a run, use the `-r, --retry` flag.
 
 Other flags:
     - `-f SIG`: injects the arguments from the XP matching this signature, on top of the one provided on the command line.
@@ -273,6 +271,39 @@ This will do 3 thing:
     **If you just comment one line in the grid file, the corresponding job will automatically be killed.**
 - A table containing job status and metadata as well as the latest metrics will
     be printed every 5 minutes.
+
+### Flags
+
+The `dora grid` command supports the following flags:
+
+- `-r, --retry`: failed or cancelled XP within one grid file will
+    be rescheduled.
+- `-R, --replace`: any running XP will be replaced by a new job.
+- `-D, --replace_done`: any XP in the grid that previously completed will be rescheduled.
+- `-C, --cancel`: cancel all XPs in a grid.
+- `-i, --interval INTERVAL`: the table monitoring all jobs will be updated every `INTERVAL`
+    minutes, until all jobs are finished or failed.
+- `-t, --trim IDX`: trim all the metrics to the number of epochs of the XP
+    with the given index inside the grid, i.e. pretend that all XPs have at most
+    as many epochs as the XP with the given index.
+- `-T, --trim_last`: trim all XPs to the least advanced XP i.e. if the least
+    advanced XP has only 3 epochs, show the metrics at epoch 3 for all XPs.
+- `-f, --folder IDX`: only print the folder of the XP with the given idnex.
+- `-l, --log IDX`: print the full log of the XP with the given index.
+- `-A, --tail IDX`: tail the log of the XP with the given index.
+- `--no_monitoring`: only show the table once and return.
+- `--dry_run`: only simulate actions.
+
+### Patterns
+
+You can also pass patterns to the `grid` command, for instance
+
+```
+dora grid mygrid bs=64
+```
+
+will only show XPs which have `bs=64` in their name.
+
 
 
 

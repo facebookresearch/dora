@@ -78,7 +78,7 @@ def get_parser():
                       help="Only simulate actions but does not run any call to Slurm.")
     grid.add_argument("-t", "--trim", type=int,
                       help="Trim history to the length of the exp with the given index.")
-    grid.add_argument("-T", "--trim-last", action="store_true",
+    grid.add_argument("-T", "--trim_last", action="store_true",
                       help="Trim history to the slowest.")
 
     group = grid.add_mutually_exclusive_group()
@@ -101,8 +101,6 @@ def get_parser():
     run = subparsers.add_parser("run", help="Run locally the given command.")
     run.add_argument("-f", "--from_sig", help="Signature of job to use as baseline.")
     run.add_argument("-d", "--ddp", action="store_true", help="Distributed training.")
-    run.add_argument("-D", "--debug", action="store_true",
-                     help="Activate Python debugger on exception.")
     run.add_argument("argv", nargs='*')
     run.set_defaults(action=run_action)
 
