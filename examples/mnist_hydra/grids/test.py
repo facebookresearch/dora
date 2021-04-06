@@ -19,3 +19,4 @@ def explorer(launcher):
     launcher.bind_(gamma=0.6)
     launcher.slurm_(mem_per_gpu=20)
     launcher()
+    launcher(plop=4)

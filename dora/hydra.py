@@ -109,10 +109,7 @@ class HydraMain(DecoratedMain):
 
     def get_xp(self, argv: tp.Sequence[str]):
         argv = list(argv)
-        import time
-        b = time.time()
         cfg = self._get_config(argv)
-        print(time.time() - b)
         delta = self._get_delta(self._base_cfg, cfg)
         xp = XP(dora=self.dora, cfg=cfg, argv=argv, delta=delta)
         return xp
