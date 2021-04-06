@@ -16,6 +16,9 @@ dora:
   exclude: ["save_model", "no_cuda", "dry_run", "log_interval"]
   dir: "outputs_complex"
 
+slurm:
+  cpus_per_task: 10
+
 hydra:
   job_logging:
     handlers:

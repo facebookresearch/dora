@@ -280,20 +280,20 @@ def monitor(args: tp.Any, main: DecoratedMain, explorer: Explorer, herd: tp.List
     Returns `True` if all jobs are done or failed, and `False` otherwise.
     """
     names, base_name = main.get_names([sheep.xp for sheep in herd])
-    all_metrics = [main.get_xp_metrics(sheep.xp) for sheep in herd]
+    histories = [main.get_xp_history(sheep.xp) for sheep in herd]
 
     trim = None
     if args.trim is not None:
-        trim = len(all_metrics[args.trim])
+        trim = len(histories[args.trim])
     elif args.trim_last:
-        trim = min(len(metrics) for metrics in all_metrics)
+        trim = min(len(metrics) for metrics in histories)
 
     if trim is not None:
-        all_metrics = [metrics[:trim] for metrics in all_metrics]
+        histories = [metrics[:trim] for metrics in histories]
 
     lines = []
     finished = True
-    for index, (sheep, metrics, name) in enumerate(zip(herd, all_metrics, names)):
+    for index, (sheep, history, name) in enumerate(zip(herd, histories, names)):
         state = sheep.state()
         if not sheep.is_done():
             finished = False
@@ -307,15 +307,10 @@ def monitor(args: tp.Any, main: DecoratedMain, explorer: Explorer, herd: tp.List
             'sid': sheep.job.job_id if sheep.job else '',
             'sig': sheep.xp.sig,
             'state': state,
-            'epoch': len(metrics),
         }
         line = {}
         line['Meta'] = meta
-        if metrics:
-            line['Metrics'] = metrics[-1]
-        else:
-            line['Metrics'] = {}
-
+        line.update(explorer.process_history(history))
         lines.append(line)
 
     if base_name:

@@ -65,6 +65,7 @@ class SlurmConfig:
     comment: tp.Optional[str] = None
     setup: tp.List[str] = field(default_factory=list)
     max_num_timeout: int = 20
+    constraint: str = ""
 
 
 @dataclass

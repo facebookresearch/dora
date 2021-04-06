@@ -123,7 +123,7 @@ class DecoratedMain(_NamesMixin):
         """
         raise NotImplementedError()
 
-    def get_xp_metrics(self, xp: XP) -> tp.List[dict]:
+    def get_xp_history(self, xp: XP) -> tp.List[dict]:
         """Return the metrics for a given XP. By default this will look into
         the `history.json` file, that can be populated with the Link class.
 

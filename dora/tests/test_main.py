@@ -66,7 +66,7 @@ def test_main(tmpdir):
     xp3 = main.get_xp_from_sig(xp2.sig)
     assert xp2 == xp3
 
-    metrics = main.get_xp_metrics(xp3)
+    metrics = main.get_xp_history(xp3)
     assert metrics[-1]["loss"] == 0.1
 
     name = main.get_name(xp3)
