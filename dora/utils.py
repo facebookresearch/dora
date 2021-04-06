@@ -13,7 +13,6 @@ from pathlib import Path
 import pickle
 import typing as tp
 
-import torch
 
 from .log import fatal
 
@@ -21,6 +20,8 @@ logger = logging.getLogger(__name__)
 
 
 def jsonable(value):
+    import torch
+
     if isinstance(value, dict):
         return {k: jsonable(v) for k, v in value.items()}
     elif isinstance(value, (list, tuple)):

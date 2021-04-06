@@ -102,7 +102,6 @@ def _get_explore(args, main):
 
 def grid_action(args: tp.Any, main: DecoratedMain):
     explorer = _get_explore(args, main)
-
     slurm = main.get_slurm_config()
     update_from_args(slurm, args)
     rules = SubmitRules()
