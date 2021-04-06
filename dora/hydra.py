@@ -3,7 +3,6 @@ This module provides support for Hydra, in particular the `main` wrapper between
 the end user `main` function and Hydra.
 """
 from collections import namedtuple, OrderedDict
-from contextlib import contextmanager
 from importlib.util import find_spec
 import logging
 from pathlib import Path
@@ -144,19 +143,6 @@ class HydraMain(DecoratedMain):
         finally:
             sys.argv.remove(run_dir)
 
-    @contextmanager
-    def _warmup_config(self):
-        # Used to speed up configuration calculations, e.g. with Hydra
-        if self._initialized:
-            yield
-        else:
-            self._initialized = True
-            with initialize_config_dir(str(self.full_config_path), job_name=self._job_name):
-                try:
-                    yield
-                finally:
-                    self._initialized = False
-
     def _get_config(self,
                     overrides: tp.List[str] = [],
                     return_hydra_config: bool = False) -> DictConfig:
@@ -164,7 +150,7 @@ class HydraMain(DecoratedMain):
         Internal method, returns the config for the given override,
         but without the dora.sig field filled.
         """
-        with self._warmup_config():
+        with initialize_config_dir(str(self.full_config_path), job_name=self._job_name):
             return compose(self.config_name, overrides, return_hydra_config=return_hydra_config)
 
     def _get_delta(self, init: DictConfig, other: DictConfig):
