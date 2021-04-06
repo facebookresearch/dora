@@ -141,6 +141,11 @@ class DecoratedMain(_NamesMixin):
         """
         return SlurmConfig()
 
+    @contextmanager
+    def _warmup_config(self):
+        # Used to speed up configuration calculations, e.g. with Hydra
+        yield
+
 
 class ArgparseMain(DecoratedMain):
     """Implementation of `DecoratedMain` for XP that uses argparse.

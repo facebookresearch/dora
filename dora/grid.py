@@ -143,7 +143,8 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
     herd: OrderedDict[str, tp.Tuple[Sheep, SlurmConfig]] = OrderedDict()
     shepherd = Shepherd(main, log=log if args.verbose else no_log)
     launcher = Launcher(shepherd, slurm, herd)
-    explorer(launcher)
+    with main._warmup_config():
+        explorer(launcher)
 
     shepherd.update()
 
