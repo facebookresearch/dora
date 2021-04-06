@@ -10,6 +10,7 @@ Slurm configuration, storage location, naming conventions etc.
 import argparse
 from collections import OrderedDict
 from contextlib import contextmanager
+import importlib
 import json
 from pathlib import Path
 import typing as tp
@@ -53,6 +54,12 @@ def get_xp() -> XP:
 MainFun = tp.Callable
 
 
+def _load_main(full_name):
+    module_name, fun_name = full_name.rsplit(".", 1)
+    module = importlib.import_module(module_name)
+    return getattr(module, fun_name)
+
+
 class DecoratedMain(_NamesMixin):
     """
     Main function that will actually run the XP, wrapped with tons of meta-informations.
@@ -67,6 +74,7 @@ class DecoratedMain(_NamesMixin):
         self.dora = dora
         self.dora.dir = self.dora.dir.resolve()
         self.name = main.__module__.rsplit(".", 1)[0]
+        self._full_name = main.__module__ + "." + main.__name__
 
     def __call__(self):
         argv = self._get_argv()
@@ -77,6 +85,9 @@ class DecoratedMain(_NamesMixin):
 
     def _main(self):
         return self.main()
+
+    def __reduce__(self):
+        return _load_main, (self._full_name,)
 
     def get_xp(self, argv: tp.Sequence[str]) -> XP:
         """Return an XP given a list of arguments.
