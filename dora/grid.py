@@ -93,7 +93,7 @@ def _get_explore(args, main):
     try:
         explorer = grid.explorer
     except AttributeError:
-        fatal(f"{grid_name} has no exploration function `explore`.")
+        fatal(f"{grid_name} has no exploration function `explorer`.")
     if not isinstance(explorer, Explorer):
         fatal(f"{explorer} must be an instance of `dora.Explorer`")
     return explorer
@@ -319,8 +319,7 @@ def monitor(args: tp.Any, main: DecoratedMain, explorer: Explorer, herd: tp.List
         shorten=True,
         groups=[
             tt.group("Meta", explorer.get_grid_meta()),
-            tt.group("Metrics", explorer.get_grid_metrics()),
-        ]
+        ] + explorer.get_grid_metrics()
     )
     print(tt.treetable(lines, table, colors=explorer.get_colors()))
     return finished

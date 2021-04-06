@@ -132,7 +132,7 @@ class Explorer:
             tt.leaf("index", align=">"),
             tt.leaf("name"),
             tt.leaf("state"),
-            tt.leaf("sig"),
+            tt.leaf("sig", align=">"),
             tt.leaf("sid", align=">"),
             tt.leaf("epoch", align=">"),
         ]

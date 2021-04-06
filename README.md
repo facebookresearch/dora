@@ -45,8 +45,8 @@ Dora is an experiment launching tool which provides the following features:
 
 Some Dora concepts:
 
-- A *Grid* is a python file with an `explore function`, wrapped in a `dora.Explorer`.
-    The explore function takes a `dora.Launcher` as argument. Call repeatidly
+- A *Grid* is a python file with an `explorer` function, wrapped in a `dora.Explorer`.
+    The explorer function takes a `dora.Launcher` as argument. Call repeatidly
     the `dora.Launcher` with a set of
     hyper-parameters to schedule different experiments.
 - An *XP* is a specific experiment. Each experiment is defined by the arguments
@@ -230,10 +230,10 @@ The info command supports a number of flags:
 
 The main benefit from Dora is the ability to handle arbitarily complex grid searches.
 Each *grid* is defined by a grid file, inside a `grids` package (i.e. `mycode.grids.my_grid`).
-The grid file defines an `explore` function, decorated by an `Explorer` class.
+The grid file defines an `explorer` function, decorated by an `Explorer` class.
 The `Explorer` class defines various metadata, in particular on which metrics
 to display when calling the grid command.
-The `explore` function takes a `dora.Launcher` as an argument, and
+The `explorer` function takes a `dora.Launcher` as an argument, and
 should repeatidly call it to schedule experiments.
 
 Here is an example of grid search file, for instance `mycode.grids.mygrid`.
@@ -243,7 +243,7 @@ from itertools import product
 from dora import Explorer, Launcher
 
 @Explorer
-def explore(launcher: Launcher):
+def explorer(launcher: Launcher):
     launcher(batch_size=128)  # Schedule an experiments with the given batch size.
     # For an argparse based project, this will get converted to the `--batch_size=128` flag
     # You can pass `use_underscore=False` to `argparse_main` to get instead `--batch-size=128`.
@@ -254,7 +254,7 @@ def explore(launcher: Launcher):
     sub()  # Job with lr=0.01 and 8 gpus.
     sub.bind_(epochs=40)  # in-place version of bind()
     sub.slurm(partition="dev")(batch_size=64)  # lr=0.01, 8 gpus, dev, bs=64 and epochs=40.
-    
+
     # Nice thing of native python, you can define arbitrary set of XP!
     for lr, bs in product([0.1, 0.01, 0.001], [16, 32, 64]):
         if bs > 32 and lr < 0.01:
@@ -272,7 +272,7 @@ dora grid mygrid
 
 This will do 3 thing:
 
-- Any XP defined in the `explore` function will be scheduled, if not already running
+- Any XP defined in the `explorer` function will be scheduled, if not already running
     or completed.
 - Any XP that was previously defined in the grid file, but is no longer referenced
     will be cancelled.
@@ -327,4 +327,3 @@ TBD
 ## Contributing
 
 Before submitting any change, please run `make` to run unit tests and code linting.
-

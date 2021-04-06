@@ -220,6 +220,7 @@ class Shepherd:
             kwargs['nodes'] = 1
         mem = slurm_config.mem_per_gpu * kwargs['ntasks_per_node']
         kwargs['mem'] = f"{mem}GB"
+        kwargs['gpus_per_task'] = 1
         del kwargs['gpus']
         del kwargs['mem_per_gpu']
         logger.debug("Slurm parameters %r", kwargs)

@@ -28,6 +28,7 @@ def launch_action(args, main: DecoratedMain):
     if args.tail or args.attach:
         done = False
         tail_process = None
+        wait = True
         try:
             while True:
                 if sheep.log.exists() and tail_process is None:
@@ -38,11 +39,13 @@ def launch_action(args, main: DecoratedMain):
                     break
                 time.sleep(30)
         except KeyboardInterrupt:
+            wait = False
             log("KeyboardInterrupt received...")
         finally:
             if tail_process:
-                # Give some time to tail to do its job.
-                time.sleep(1)
+                if wait:
+                    # Give some time to tail to do its job.
+                    time.sleep(2)
                 tail_process.kill()
             if args.attach and not done:
                 if sheep.job is not None:
