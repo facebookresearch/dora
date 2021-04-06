@@ -56,6 +56,10 @@ class _NamesMixin:
             for key, val in parts.items():
                 if key in reference and reference[key] != val:
                     reference.pop(key)
+
+            missing = set(reference.keys()) - set(parts.keys())
+            for key in missing:
+                reference.pop(key)
             all_xp_parts.append(parts)
 
         names = []

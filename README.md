@@ -291,14 +291,14 @@ The `dora grid` command supports the following flags:
 - `-C, --cancel`: cancel all XPs in a grid.
 - `-i, --interval INTERVAL`: the table monitoring all jobs will be updated every `INTERVAL`
     minutes, until all jobs are finished or failed.
-- `-t, --trim IDX`: trim all the metrics to the number of epochs of the XP
+- `-T, --trim IDX`: trim all the metrics to the number of epochs of the XP
     with the given index inside the grid, i.e. pretend that all XPs have at most
     as many epochs as the XP with the given index.
-- `-T, --trim_last`: trim all XPs to the least advanced XP i.e. if the least
+- `-L, --trim_last`: trim all XPs to the least advanced XP i.e. if the least
     advanced XP has only 3 epochs, show the metrics at epoch 3 for all XPs.
 - `-f, --folder IDX`: only print the folder of the XP with the given idnex.
 - `-l, --log IDX`: print the full log of the XP with the given index.
-- `-A, --tail IDX`: tail the log of the XP with the given index.
+- `-t, --tail IDX`: tail the log of the XP with the given index.
 - `--no_monitoring`: only show the table once and return.
 - `--dry_run`: only simulate actions.
 

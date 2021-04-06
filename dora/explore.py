@@ -134,7 +134,6 @@ class Explorer:
             tt.leaf("state"),
             tt.leaf("sig", align=">"),
             tt.leaf("sid", align=">"),
-            tt.leaf("epoch", align=">"),
         ]
 
     def get_colors(self):

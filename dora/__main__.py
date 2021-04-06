@@ -76,9 +76,9 @@ def get_parser():
 
     grid.add_argument("--dry_run", action="store_true",
                       help="Only simulate actions but does not run any call to Slurm.")
-    grid.add_argument("-t", "--trim", type=int,
+    grid.add_argument("-T", "--trim", type=int,
                       help="Trim history to the length of the exp with the given index.")
-    grid.add_argument("-T", "--trim_last", action="store_true",
+    grid.add_argument("-L", "--trim_last", action="store_true",
                       help="Trim history to the slowest.")
 
     group = grid.add_mutually_exclusive_group()
@@ -86,7 +86,7 @@ def get_parser():
                        help="Show the folder for the job with the given index")
     group.add_argument("-l", "--log", type=int,
                        help="Show the log for the job with the given index")
-    group.add_argument("-A", "--tail", type=int,
+    group.add_argument("-t", "--tail", type=int,
                        help="Show the log for the job with the given index")
 
     grid.add_argument(
