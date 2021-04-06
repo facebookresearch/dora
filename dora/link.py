@@ -30,7 +30,7 @@ class Link:
         if not distrib.is_master():
             return
         with utils.write_and_rename(self.history_file, "w") as tmp:
-            json.dump(self.history, tmp)
+            json.dump(self.history, tmp, indent=2)
 
     def update_history(self, history):
         history = utils.jsonable(history)
