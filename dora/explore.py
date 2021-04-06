@@ -8,7 +8,7 @@ and can be called repeatidly to schedule XPs.
 with the `dora grid` command.
 """
 from collections import OrderedDict
-from concurrent.futures import ProcessPoolExecutor, Future
+from concurrent.futures import ProcessPoolExecutor
 import typing as tp
 
 from treetable.table import _Node
@@ -105,10 +105,6 @@ class Launcher:
             setattr(self._slurm, key, value)
         return self
 
-    def _finalize(self, future: Future):
-        sheep, slurm = future.result()
-        self._herd[sheep.xp.sig] = (sheep, slurm)
-
     def __call__(self, *args, **kwargs):
         """
         Schedule an XP with the current default training hyper-parameters
@@ -121,7 +117,7 @@ class Launcher:
         else:
             future = self._pool.submit(_process, launcher._shepherd,
                                        launcher._argv, launcher._slurm)
-            future.add_done_callback(self._finalize)
+            self._herd[len(self._herd)] = future
 
 
 Explore = tp.Callable[[Launcher], None]

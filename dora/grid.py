@@ -6,7 +6,7 @@ When using the API, you can provide the equivalent of the command line flags
 with the `RunGridArgs` dataclass.
 """
 from collections import OrderedDict
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, Future
 from dataclasses import dataclass, field
 import fnmatch
 from functools import partial
@@ -143,9 +143,20 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
     herd: OrderedDict[str, tp.Tuple[Sheep, SlurmConfig]] = OrderedDict()
     shepherd = Shepherd(main, log=log if args.verbose else no_log)
     if main._slow:
+        pending: OrderedDict[int, Future] = OrderedDict
         with ProcessPoolExecutor(4) as pool:
-            launcher = Launcher(shepherd, slurm, herd, pool=pool)
+            launcher = Launcher(shepherd, slurm, pending, pool=pool)
             explorer(launcher)
+        for future in pending.values():
+            try:
+                sheep, slurm = future.result()
+            except Exception as exc:
+                if args._from_commandline:
+                    fatal("Got the following error when processing XP configuration:", str(exc))
+                else:
+                    raise
+            else:
+                herd[sheep.xp.sig] = (sheep, slurm)
     else:
         launcher = Launcher(shepherd, slurm, herd)
         explorer(launcher)
