@@ -143,7 +143,7 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
     herd: OrderedDict[str, tp.Tuple[Sheep, SlurmConfig]] = OrderedDict()
     shepherd = Shepherd(main, log=log if args.verbose else no_log)
     if main._slow:
-        pending: OrderedDict[int, Future] = OrderedDict
+        pending: OrderedDict[int, Future] = OrderedDict()
         with ProcessPoolExecutor(4) as pool:
             launcher = Launcher(shepherd, slurm, pending, pool=pool)
             explorer(launcher)
