@@ -76,12 +76,12 @@ def start_ddp_workers(package, main, argv):
             env['LOCAL_RANK'] = str(rank)
             env['RANK'] = str(rank)
             env['WORLD_SIZE'] = str(world_size)
-            args = ["-m", "dora", "-P", package]
+            args = ["-m", "dora", "-P", package, "run", "--"]
             args += argv
             if rank > 0:
                 kwargs['stdin'] = sp.DEVNULL
                 kwargs['stdout'] = open(run.folder / f'worker_{rank}.log', 'w')
                 kwargs['stderr'] = sp.STDOUT
             manager.add(
-                sp.Popen([sys.executable] + argv, env=env, **kwargs))
+                sp.Popen([sys.executable] + args, env=env, **kwargs))
     sys.exit(int(manager.failed))

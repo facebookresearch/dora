@@ -41,6 +41,8 @@ def launch_action(args, main: DecoratedMain):
             log("KeyboardInterrupt received...")
         finally:
             if tail_process:
+                # Give some time to tail to do its job.
+                time.sleep(1)
                 tail_process.kill()
             if args.attach and not done:
                 if sheep.job is not None:
