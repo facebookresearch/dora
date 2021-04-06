@@ -156,6 +156,8 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
                 else:
                     raise
             else:
+                assert isinstance(sheep, Sheep) and isinstance(slurm, SlurmConfig)
+                assert sheep.xp.sig is not None
                 herd[sheep.xp.sig] = (sheep, slurm)
     else:
         launcher = Launcher(shepherd, slurm, herd)
