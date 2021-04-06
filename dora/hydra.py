@@ -56,6 +56,8 @@ def _compare_config(ref, other, path=[]):
 
 
 class HydraMain(DecoratedMain):
+    _slow = True
+
     def __init__(self, main: MainFun, config_name: str, config_path: str):
         self.config_name = config_name
         self.config_path = config_path
@@ -107,7 +109,10 @@ class HydraMain(DecoratedMain):
 
     def get_xp(self, argv: tp.Sequence[str]):
         argv = list(argv)
+        import time
+        b = time.time()
         cfg = self._get_config(argv)
+        print(time.time() - b)
         delta = self._get_delta(self._base_cfg, cfg)
         xp = XP(dora=self.dora, cfg=cfg, argv=argv, delta=delta)
         return xp

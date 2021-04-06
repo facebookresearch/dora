@@ -8,6 +8,7 @@ and can be called repeatidly to schedule XPs.
 with the `dora grid` command.
 """
 from collections import OrderedDict
+from concurrent.futures import ProcessPoolExecutor, Future
 import typing as tp
 
 from treetable.table import _Node
@@ -15,6 +16,10 @@ import treetable as tt
 
 from .conf import SlurmConfig
 from .shep import Shepherd
+
+
+def _process(shepherd: Shepherd, argv: tp.List[str], slurm: SlurmConfig):
+    return (shepherd.get_sheep_from_argv(argv), slurm)
 
 
 class Launcher:
@@ -32,15 +37,16 @@ class Launcher:
     """
 
     def __init__(self, shepherd: Shepherd, slurm: SlurmConfig, herd: OrderedDict,
-                 argv: tp.List[str] = []):
+                 argv: tp.List[str] = [], pool: tp.Optional[ProcessPoolExecutor] = None):
         self._shepherd = shepherd
         self._main = self._shepherd.main
         self._herd = herd
         self._slurm = slurm
         self._argv = list(argv)
+        self._pool = pool
 
     def _copy(self):
-        return Launcher(self._shepherd, self._slurm, self._herd, self._argv)
+        return Launcher(self._shepherd, self._slurm, self._herd, self._argv, self._pool)
 
     def bind(self, *args, **kwargs):
         """
@@ -99,15 +105,23 @@ class Launcher:
             setattr(self._slurm, key, value)
         return self
 
+    def _finalize(self, future: Future):
+        sheep, slurm = future.result()
+        self._herd[sheep.xp.sig] = (sheep, slurm)
+
     def __call__(self, *args, **kwargs):
         """
         Schedule an XP with the current default training hyper-parameters
         and Slurm config. You can also provide extra overrides like in `bind()`.
         """
         launcher = self.bind(*args, **kwargs)
-        sheep = self._shepherd.get_sheep_from_argv(launcher._argv)
-        self._herd[sheep.xp.sig] = (sheep, launcher._slurm)
-        return sheep
+        if self._pool is None:
+            sheep = self._shepherd.get_sheep_from_argv(launcher._argv)
+            self._herd[sheep.xp.sig] = (sheep, launcher._slurm)
+        else:
+            future = self._pool.submit(_process, launcher._shepherd,
+                                       launcher._argv, launcher._slurm)
+            future.add_done_callback(self._finalize)
 
 
 Explore = tp.Callable[[Launcher], None]

@@ -1,4 +1,5 @@
 import os
+import pickle
 import subprocess as sp
 
 import pytest
@@ -16,3 +17,13 @@ def test_integration(tmpdir):
     run_cmd(["run"])
     run_cmd(["grid", "test", "--dry_run", "--no_monitor"])
     run_cmd(["info", "--", "--a=32"])
+
+
+def test_pickle(tmpdir):
+    os.environ['_DORA_TEST_TMPDIR'] = str(tmpdir)
+    from .integ.train import main
+
+    main._full_name = "dora.tests.integ.train.main"
+
+    other = pickle.loads(pickle.dumps(main))
+    assert other is main

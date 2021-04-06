@@ -6,6 +6,7 @@ When using the API, you can provide the equivalent of the command line flags
 with the `RunGridArgs` dataclass.
 """
 from collections import OrderedDict
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, field
 import fnmatch
 from functools import partial
@@ -142,8 +143,12 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
 
     herd: OrderedDict[str, tp.Tuple[Sheep, SlurmConfig]] = OrderedDict()
     shepherd = Shepherd(main, log=log if args.verbose else no_log)
-    launcher = Launcher(shepherd, slurm, herd)
-    with main._warmup_config():
+    if main._slow:
+        with ProcessPoolExecutor(4) as pool:
+            launcher = Launcher(shepherd, slurm, herd, pool=pool)
+            explorer(launcher)
+    else:
+        launcher = Launcher(shepherd, slurm, herd)
         explorer(launcher)
 
     shepherd.update()
@@ -168,7 +173,7 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
     if not args.dry_run:
         for sig, (sheep, _) in herd.items():
             link = (grid_folder / sig)
-            if link.exists():
+            if link.exists() or link.is_symlink():
                 assert link.is_symlink() and link.resolve() == sheep.xp.folder
             else:
                 link.symlink_to(sheep.xp.folder)
