@@ -15,7 +15,6 @@ def init(backend='nccl'):
     """
     Initialize DDP.
     """
-    global rank, world_size
     if 'WORLD_SIZE' in os.environ:
         local_rank = int(os.environ['LOCAL_RANK'])
         rank = int(os.environ['RANK'])
