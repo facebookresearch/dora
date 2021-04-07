@@ -42,7 +42,7 @@ def _compare_config(ref, other, path=[]):
     for key in keys:
         path[-1] = key
         ref_value = ref[key]
-        assert key in other, "Structure of config should be identical between XPs."
+        assert key in other, f"Structure of config should be identical between XPs. Extra key {key}"
         other_value = other[key]
 
         if isinstance(ref_value, DictConfig):
@@ -51,7 +51,8 @@ def _compare_config(ref, other, path=[]):
             yield from _compare_config(ref_value, other_value, path)
         elif other_value != ref_value:
             yield _Difference(list(path), key, ref, other, ref_value, other_value)
-    assert len(remaining) == 0, "Structure of config should be identical between XPs."
+    assert len(remaining) == 0, "Structure of config should be identical between XPs. "\
+                                f"Missing keys: {remaining}"
     path.pop(-1)
     return delta
 
