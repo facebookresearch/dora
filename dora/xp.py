@@ -15,7 +15,7 @@ def _get_sig(delta: tp.List[tp.Tuple[str, tp.Any]]) -> str:
     return sha1(json.dumps(sorted_delta).encode('utf8')).hexdigest()[:8]
 
 
-@dataclass
+@dataclass(init=False)
 class XP:
     """
     Represent a single experiment, i.e. a specific set of parameters
@@ -26,18 +26,24 @@ class XP:
     dora: DoraConfig
     cfg: tp.Any
     argv: tp.List[str]
-    delta: tp.Optional[tp.List[tp.Tuple[str, tp.Any]]] = None
-    sig: tp.Optional[str] = None
+    sig: str
+    delta: tp.Optional[tp.List[tp.Tuple[str, tp.Any]]]
+    link: Link = field(compare=False)
 
-    link: tp.Optional[Link] = field(default=None, compare=False)
-
-    def __post_init__(self):
-        if self.delta is not None:
-            self.delta = jsonable([(k, v) for k, v in self.delta if not self.dora.is_excluded(k)])
-        if self.sig is None:
-            assert self.delta is not None
-            self.sig = _get_sig(self.delta)
-        self.link = Link(self)
+    def __init__(self, dora: DoraConfig, cfg: tp.Any, argv: tp.List[str],
+                 delta: tp.Optional[tp.List[tp.Tuple[str, tp.Any]]] = None,
+                 sig: tp.Optional[str] = None):
+        self.dora = dora
+        self.cfg = cfg
+        self.argv = argv
+        if delta is not None:
+            delta = jsonable([(k, v) for k, v in delta if not dora.is_excluded(k)])
+        self.delta = delta
+        if sig is None:
+            assert delta is not None
+            sig = _get_sig(delta)
+        self.sig = sig
+        self.link = Link(self.folder / self.dora.history)
 
     @property
     def folder(self) -> Path:
