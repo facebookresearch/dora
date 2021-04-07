@@ -65,9 +65,10 @@ def start_ddp_workers(package, main, argv):
             "DDP is only available on GPU. Make sure GPUs are properly configured with cuda.")
         sys.exit(1)
 
-    run = main.get_xp(argv)
-    if run.rendezvous_file.exists():
-        run.rendezvous_file.unlink()
+    xp = main.get_xp(argv)
+    xp.folder.mkdir(exist_ok=True, parents=True)
+    if xp.rendezvous_file.exists():
+        xp.rendezvous_file.unlink()
     log(f"Starting {world_size} worker processes for DDP.")
     with ChildrenManager() as manager:
         for rank in range(world_size):
@@ -80,7 +81,7 @@ def start_ddp_workers(package, main, argv):
             args += argv
             if rank > 0:
                 kwargs['stdin'] = sp.DEVNULL
-                kwargs['stdout'] = open(run.folder / f'worker_{rank}.log', 'w')
+                kwargs['stdout'] = open(xp.folder / f'worker_{rank}.log', 'w')
                 kwargs['stderr'] = sp.STDOUT
             manager.add(
                 sp.Popen([sys.executable] + args, env=env, **kwargs))
