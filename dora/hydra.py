@@ -156,6 +156,7 @@ class HydraMain(DecoratedMain):
         """
         with initialize_config_dir(str(self.full_config_path), job_name=self._job_name):
             gh = GlobalHydra.instance().hydra
+            assert gh is not None
             groups = gh.list_all_config_groups()
             to_keep = []
             delta = []
@@ -163,7 +164,8 @@ class HydraMain(DecoratedMain):
                 for group in groups:
                     if arg.startswith(f'{group}='):
                         to_keep.append(arg)
-                        delta.append(tuple(arg.split('=', 1)))
+                        _, value = arg.split('=', 1)
+                        delta.append((group, value))
             if not to_keep:
                 return self._base_cfg, []
             return compose(self.config_name, to_keep, return_hydra_config=False), delta
