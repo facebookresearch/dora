@@ -17,6 +17,9 @@ import typing as tp
 import shutil
 import sys
 import time
+from unittest import mock
+
+from omegaconf.dictconfig import DictConfig
 
 from .conf import SlurmConfig, SubmitRules, update_from_args
 from .explore import Explorer, Launcher
@@ -100,6 +103,10 @@ def _get_explore(args, main):
     return explorer
 
 
+def _no_copy(self: tp.Any, memo: tp.Any):
+    return self
+
+
 def grid_action(args: tp.Any, main: DecoratedMain):
     explorer = _get_explore(args, main)
     slurm = main.get_slurm_config()
@@ -109,7 +116,8 @@ def grid_action(args: tp.Any, main: DecoratedMain):
     grid_args = RunGridArgs()
     grid_args._from_commandline = True
     update_from_args(grid_args, args)
-    run_grid(main, explorer, args.grid, rules, slurm, grid_args)
+    with mock.patch.object(DictConfig, "__deepcopy__", _no_copy):
+        run_grid(main, explorer, args.grid, rules, slurm, grid_args)
 
 
 def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
