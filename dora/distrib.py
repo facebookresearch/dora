@@ -12,7 +12,7 @@ import torch
 
 from .main import get_xp
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 def init(backend='nccl'):
