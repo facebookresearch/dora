@@ -111,6 +111,8 @@ def get_parser():
                              "kill the remote job.")
     launch.add_argument("--no_tail", action="store_false", dest="tail", default=True,
                         help="Does not tail the log once job is started.")
+    grid.add_argument("-C", "--cancel", action='store_true',
+                      help="Cancel any existing job and return.")
     add_submit_rules(launch)
     add_slurm_config(launch)
     launch.add_argument("argv", nargs='*')
