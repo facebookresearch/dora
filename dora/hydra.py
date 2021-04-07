@@ -10,6 +10,7 @@ import sys
 import typing as tp
 
 import hydra
+from hydra.core.global_hydra import GlobalHydra
 from hydra.experimental import compose, initialize_config_dir
 from omegaconf.dictconfig import DictConfig
 
@@ -110,7 +111,8 @@ class HydraMain(DecoratedMain):
     def get_xp(self, argv: tp.Sequence[str]):
         argv = list(argv)
         cfg = self._get_config(argv)
-        delta = self._get_delta(self._base_cfg, cfg)
+        base, delta = self._get_base_config(argv)
+        delta += self._get_delta(base, cfg)
         xp = XP(dora=self.dora, cfg=cfg, argv=argv, delta=delta)
         return xp
 
@@ -144,6 +146,27 @@ class HydraMain(DecoratedMain):
                 config_path=self.config_path)(self.main)()
         finally:
             sys.argv.remove(run_dir)
+
+    def _get_base_config(
+            self, overrides: tp.List[str] = []
+            ) -> tp.Tuple[DictConfig, tp.List[tp.Tuple[str, str]]]:
+        """
+        Return base config based on composition, along with delta for the
+        composition overrides.
+        """
+        with initialize_config_dir(str(self.full_config_path), job_name=self._job_name):
+            gh = GlobalHydra.instance().hydra
+            groups = gh.list_all_config_groups()
+            to_keep = []
+            delta = []
+            for arg in overrides:
+                for group in groups:
+                    if arg.startswith(f'{group}='):
+                        to_keep.append(arg)
+                        delta.append(tuple(arg.split('=', 1)))
+            if not to_keep:
+                return self._base_cfg, []
+            return compose(self.config_name, to_keep, return_hydra_config=False), delta
 
     def _get_config(self,
                     overrides: tp.List[str] = [],

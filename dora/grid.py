@@ -104,6 +104,8 @@ def _get_explore(args, main):
 
 
 def _no_copy(self: tp.Any, memo: tp.Any):
+    # Dirty trick to speed up Hydra, will remove when Hydra 1.1
+    # is released, which solves the issues.
     return self
 
 
