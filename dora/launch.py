@@ -22,6 +22,15 @@ def launch_action(args, main: DecoratedMain):
     sheep = shepherd.get_sheep_from_argv(args.argv)
     log(f"Fetched sheep {sheep}")
     shepherd.update()
+    if args.cancel:
+        if sheep.job is None:
+            log("Could not cancel non existing job")
+        elif sheep.is_done():
+            log("Job is not running")
+        else:
+            sheep.job.cancel()
+        return
+
     shepherd.maybe_submit_lazy(sheep, slurm, rules)
     shepherd.commit()
 
