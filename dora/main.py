@@ -51,6 +51,11 @@ def get_xp() -> XP:
         return _context._run
 
 
+def is_xp() -> bool:
+    """Return True if running within an XP."""
+    return _context._run is not None
+
+
 MainFun = tp.Callable
 
 

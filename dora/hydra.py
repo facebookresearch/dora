@@ -15,7 +15,7 @@ from hydra.experimental import compose, initialize_config_dir
 from omegaconf.dictconfig import DictConfig
 
 from .conf import DoraConfig, SlurmConfig, update_from_hydra
-from .main import DecoratedMain, MainFun, get_xp
+from .main import DecoratedMain, MainFun, get_xp, is_xp
 from .xp import XP
 
 logger = logging.getLogger(__name__)
@@ -139,16 +139,18 @@ class HydraMain(DecoratedMain):
         return parts
 
     def _main(self):
-        run_dir = f"hydra.run.dir={get_xp().folder}"
-        sys.argv.append(run_dir)
+        if is_xp():
+            run_dir = f"hydra.run.dir={get_xp().folder}"
+            sys.argv.append(run_dir)
         try:
             return hydra.main(
                 config_name=self.config_name,
                 config_path=self.config_path)(self.main)()
         finally:
-            sys.argv.remove(run_dir)
+            if is_xp():
+                sys.argv.remove(run_dir)
 
-    def is_active(self, argv: tp.List[str]) -> bool:
+    def _is_active(self, argv: tp.List[str]) -> bool:
         if '-m' in argv or '--multirun' in argv:
             return False
         return True
