@@ -25,9 +25,11 @@ def update_from_hydra(data: tp.Any, cfg: DictConfig):
 
     dct = OmegaConf.to_container(cfg)
     assert isinstance(dct, dict)
-    for key, value in dct.items():
+    for key in dct:
         if hasattr(data, key):
-            setattr(data, key, value)
+            # Need to go through getattr on original object
+            # otherwise we don't get interpolation.
+            setattr(data, key, getattr(cfg, key))
         else:
             raise AttributeError(f"Object of type {data.__class__} "
                                  f"does not have an attribute {key}")
