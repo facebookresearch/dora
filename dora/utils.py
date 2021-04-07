@@ -13,6 +13,8 @@ from pathlib import Path
 import pickle
 import typing as tp
 
+from omegaconf.basecontainer import BaseContainer
+from omegaconf import OmegaConf
 
 from .log import fatal
 
@@ -32,6 +34,8 @@ def jsonable(value):
         return str(value)
     elif value is None or isinstance(value, (int, float, str, bool)):
         return value
+    elif isinstance(value, BaseContainer):
+        return OmegaConf.to_container(value)
     else:
         raise ValueError(f"{repr(value)} is not jsonable.")
 
