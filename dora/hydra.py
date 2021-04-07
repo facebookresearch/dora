@@ -148,6 +148,11 @@ class HydraMain(DecoratedMain):
         finally:
             sys.argv.remove(run_dir)
 
+    def is_active(self, argv: tp.List[str]) -> bool:
+        if '-m' in argv or '--multirun' in argv:
+            return False
+        return True
+
     def _get_base_config(
             self, overrides: tp.List[str] = []
             ) -> tp.Tuple[DictConfig, tp.List[tp.Tuple[str, str]]]:

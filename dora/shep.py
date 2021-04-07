@@ -7,7 +7,7 @@ import sys
 import typing as tp
 
 
-from submitit import SlurmJob, JobEnvironment
+from submitit import SlurmJob
 import submitit
 
 from .conf import SlurmConfig, SubmitRules
@@ -21,12 +21,6 @@ logger = logging.getLogger(__name__)
 
 class _SubmitItTarget:
     def __call__(self, main: DecoratedMain, argv: tp.Sequence[str]):
-        env = JobEnvironment()
-        rank = env.global_rank
-        world_size = env.num_tasks
-        os.environ['LOCAL_RANK'] = str(env.local_rank)
-        os.environ['RANK'] = str(rank)
-        os.environ['WORLD_SIZE'] = str(world_size)
         sys.argv[1:] = argv
         main()
 

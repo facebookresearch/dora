@@ -80,10 +80,15 @@ class DecoratedMain(_NamesMixin):
 
     def __call__(self):
         argv = self._get_argv()
+        if not self._is_active(argv):
+            return self._main()
         xp = self.get_xp(argv)
         self.init_xp(xp)
         with _context.enter_run(xp):
             return self._main()
+
+    def _is_active(self, argv: tp.List[str]) -> bool:
+        return True
 
     def _main(self):
         return self.main()
