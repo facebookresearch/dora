@@ -47,7 +47,8 @@ def _compare_config(ref, other, path=[]):
 
         if isinstance(ref_value, DictConfig):
             assert isinstance(other_value, DictConfig), \
-                "Structure of config should be identical between XPs."
+                "Structure of config should be identical between XPs. "\
+                f"Wrong type for {key}, expected DictConfig, got {type(other_value)}."
             yield from _compare_config(ref_value, other_value, path)
         elif other_value != ref_value:
             yield _Difference(list(path), key, ref, other, ref_value, other_value)
