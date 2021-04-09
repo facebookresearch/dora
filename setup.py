@@ -41,6 +41,7 @@ setup(
     python_requires=REQUIRES_PYTHON,
     url=URL,
     packages=find_packages(),
+    package_data={"dora": ["py.typed"]},
     install_requires=['hydra-core', 'submitit', 'treetable', 'torch'],
     include_package_data=True,
     entry_points={
