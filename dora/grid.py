@@ -67,6 +67,9 @@ class RunGridArgs:
     # Scheduling
     cancel: bool = False
 
+    # jupyter display?
+    jupyter: bool = False
+
     # Other flags, supported only from the command line.
     folder: tp.Optional[int] = None
     log: tp.Optional[int] = None
@@ -238,6 +241,9 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
 
     print(f"Monitoring Grid {grid_name}")
     while True:
+        if args.jupyter:
+            from IPython import display
+            display.clear_output(wait=True)
         shepherd.update()
         if monitor(args, main, explorer, sheeps):
             # All jobs finished or failed, stop monitoring
