@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from hashlib import sha1
 import json
@@ -65,3 +66,48 @@ class XP:
     @property
     def _argv_cache(self) -> Path:
         return self.folder / ".argv.json"
+
+    @contextmanager
+    def enter(self):
+        """Context manager, fake being in the XP for its duration.
+
+        ..Warning:: For hydra experiment, this will not convert any path
+            automatically, or setup loggers etc.
+        """
+        with _context.enter_xp(self):
+            yield
+
+
+class _Context:
+    # Used to keep track of a running XP and be able to provide
+    # it on demand with `get_xp`.
+    def __init__(self):
+        self._xp: XP = None
+
+    @contextmanager
+    def enter_xp(self, xp: XP):
+        if self._xp is not None:
+            raise RuntimeError("Already in a xp.")
+        self._xp = xp
+        try:
+            yield
+        finally:
+            self._xp = None
+
+
+_context = _Context()
+
+
+def get_xp() -> XP:
+    """When running from within an XP, returns the XP object.
+    Otherwise, raises RuntimeError.
+    """
+    if _context._xp is None:
+        raise RuntimeError("Not in a xp!")
+    else:
+        return _context._xp
+
+
+def is_xp() -> bool:
+    """Return True if running within an XP."""
+    return _context._xp is not None

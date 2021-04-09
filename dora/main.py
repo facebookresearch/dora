@@ -9,7 +9,6 @@ Slurm configuration, storage location, naming conventions etc.
 
 import argparse
 from collections import OrderedDict
-from contextlib import contextmanager
 import importlib
 import json
 from pathlib import Path
@@ -18,42 +17,7 @@ import sys
 
 from .conf import DoraConfig, SlurmConfig
 from .names import _NamesMixin
-from .xp import XP
-
-
-class _Context:
-    # Used to keep track of a running XP and be able to provide
-    # it on demand with `get_xp`.
-    def __init__(self):
-        self._run: XP = None
-
-    @contextmanager
-    def enter_run(self, run: XP):
-        if self._run is not None:
-            raise RuntimeError("Already in a run.")
-        self._run = run
-        try:
-            yield
-        finally:
-            self._run = None
-
-
-_context = _Context()
-
-
-def get_xp() -> XP:
-    """When running from within an XP, returns the XP object.
-    Otherwise, raises RuntimeError.
-    """
-    if _context._run is None:
-        raise RuntimeError("Not in a run!")
-    else:
-        return _context._run
-
-
-def is_xp() -> bool:
-    """Return True if running within an XP."""
-    return _context._run is not None
+from .xp import XP, _context
 
 
 MainFun = tp.Callable
@@ -89,7 +53,7 @@ class DecoratedMain(_NamesMixin):
             return self._main()
         xp = self.get_xp(argv)
         self.init_xp(xp)
-        with _context.enter_run(xp):
+        with _context.enter_xp(xp):
             return self._main()
 
     def _is_active(self, argv: tp.List[str]) -> bool:

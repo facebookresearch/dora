@@ -1,3 +1,6 @@
+defaults:
+  - group: plop
+
 epochs: 40
 optim:
   loss: mse

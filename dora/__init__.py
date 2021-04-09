@@ -58,7 +58,7 @@ __pdoc__['tests'] = False
 from .explore import Explorer, Launcher
 from .hydra import hydra_main
 from .link import Link
-from .main import argparse_main, get_xp, is_xp
+from .main import argparse_main
 from .shep import Sheep
-from .xp import XP
+from .xp import get_xp, is_xp, XP
 

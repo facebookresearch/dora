@@ -4,8 +4,8 @@ import sys
 
 import pytest
 
-from ..main import argparse_main, get_xp
-from ..xp import XP
+from ..main import argparse_main
+from ..xp import XP, get_xp
 
 
 parser = ArgumentParser("test_main")

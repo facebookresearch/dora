@@ -10,7 +10,7 @@ import os
 import submitit
 import torch
 
-from .main import get_xp
+from .xp import get_xp
 
 logger = logging.getLogger(__name__)
 

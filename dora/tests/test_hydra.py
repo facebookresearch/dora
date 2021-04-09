@@ -3,9 +3,8 @@ import sys
 
 import pytest
 
-from ..main import get_xp
 from ..hydra import hydra_main
-from ..xp import XP
+from ..xp import get_xp, XP
 
 _ret = None
 
@@ -79,3 +78,17 @@ def test_hydra(tmpdir):
 
     with pytest.raises(ValueError):
         main.value_to_argv(0.5)
+
+    argv = ["plop.b=5"]
+    xp2 = call(main, argv)
+    assert xp2.cfg.plop.b == 5
+    assert not hasattr(xp2.cfg, 'lapin')
+
+    argv = ["group=lapin"]
+    xp2 = call(main, argv)
+    assert xp2.cfg.lapin.a == 5
+    assert not hasattr(xp2.cfg, 'plop')
+
+    argv = ["group=lapin", "plop.b=5"]
+    with pytest.raises(Exception):
+        xp2 = call(main, argv)

@@ -2,12 +2,14 @@
 This module provides support for Hydra, in particular the `main` wrapper between
 the end user `main` function and Hydra.
 """
+import copy
 from collections import namedtuple, OrderedDict
 from importlib.util import find_spec
 import logging
 from pathlib import Path
 import sys
 import typing as tp
+from unittest import mock
 
 import hydra
 from hydra.core.global_hydra import GlobalHydra
@@ -15,17 +17,18 @@ from hydra.experimental import compose, initialize_config_dir
 from omegaconf.dictconfig import DictConfig
 
 from .conf import DoraConfig, SlurmConfig, update_from_hydra
-from .main import DecoratedMain, MainFun, get_xp, is_xp
-from .xp import XP
+from .main import DecoratedMain, MainFun
+from .xp import XP, get_xp, is_xp
 
 logger = logging.getLogger(__name__)
 
 
-class _NotThere:
-    pass
+def _no_copy(self: tp.Any, memo: tp.Any):
+    # Dirty trick to speed up Hydra, will remove when Hydra 1.1
+    # is released, which solves the issues.
+    return self
 
 
-NotThere = _NotThere()
 _Difference = namedtuple("_Difference", "path key ref other ref_value other_value")
 
 
@@ -33,7 +36,6 @@ def _compare_config(ref, other, path=[]):
     """
     Given two configs, gives an iterator over all the differences. For each difference,
     this will give a _Difference namedtuple.
-    The value `NotThere` is used when a key is missing on one side.
     """
     keys = sorted(ref.keys())
     remaining = sorted(set(other.keys()) - set(ref.keys()))
@@ -177,17 +179,22 @@ class HydraMain(DecoratedMain):
                         delta.append((group, value))
             if not to_keep:
                 return self._base_cfg, []
-            return compose(self.config_name, to_keep, return_hydra_config=False), delta
+            cfg = self._get_config_noinit(to_keep)
+            return cfg, delta
 
     def _get_config(self,
-                    overrides: tp.List[str] = [],
-                    return_hydra_config: bool = False) -> DictConfig:
+                    overrides: tp.List[str] = []) -> DictConfig:
         """
         Internal method, returns the config for the given override,
         but without the dora.sig field filled.
         """
         with initialize_config_dir(str(self.full_config_path), job_name=self._job_name):
-            return compose(self.config_name, overrides, return_hydra_config=return_hydra_config)
+            return self._get_config_noinit(overrides)
+
+    def _get_config_noinit(self, overrides: tp.List[str] = []) -> DictConfig:
+        with mock.patch.object(DictConfig, "__deepcopy__", _no_copy):
+            cfg = compose(self.config_name, overrides)
+        return copy.deepcopy(cfg)
 
     def _get_delta(self, init: DictConfig, other: DictConfig):
         """
