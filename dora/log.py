@@ -58,10 +58,11 @@ class LogProgress:
         else:
             return value
         finally:
-            log_every = max(self.min_interval, self.total // self.updates)
-            # logging is delayed by 1 it, in order to have the metrics from update
-            if self._index >= 1 and self._index % log_every == 0:
-                self._log()
+            if self.updates > 0:
+                log_every = max(self.min_interval, self.total // self.updates)
+                # logging is delayed by 1 it, in order to have the metrics from update
+                if self._index >= 1 and self._index % log_every == 0:
+                    self._log()
 
     def _log(self):
         self._speed = (1 + self._index) / (time.time() - self._begin)
