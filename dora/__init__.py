@@ -60,4 +60,5 @@ from .hydra import hydra_main
 from .link import Link
 from .main import argparse_main, get_xp, is_xp
 from .shep import Sheep
+from .xp import XP
 
