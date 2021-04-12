@@ -1,6 +1,7 @@
 """
 """
 from functools import partial
+import shutil
 import subprocess as sp
 import time
 
@@ -30,6 +31,14 @@ def launch_action(args, main: DecoratedMain):
         else:
             sheep.job.cancel()
         return
+
+    if args.clear:
+        log("Canceling current job...")
+        shepherd.cancel_lazy(sheep)
+        shepherd.commit()
+        log("Deleting XP folder...")
+        shutil.rmtree(sheep.xp.folder)
+        sheep.job = None
 
     shepherd.maybe_submit_lazy(sheep, slurm, rules)
     shepherd.commit()

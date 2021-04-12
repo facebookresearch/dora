@@ -208,7 +208,7 @@ Other flags:
     - `-D, --replace_done`: also reschedule a job even if a previous one completed successfully.
     - `-p, --partition PARTITION`: partition to use.
     - `-c, --comment COMMENT`: comment for the job (e.g. if priority is used).
-
+    - `--clear`: cancel any previous job, clear the XP folder (i.e. delete checkpoints) and reschedule.
 
 ## `dora info`: Inspecting an XP
 
@@ -289,6 +289,8 @@ The `dora grid` command supports the following flags:
 - `-R, --replace`: any running XP will be replaced by a new job.
 - `-D, --replace_done`: any XP in the grid that previously completed will be rescheduled.
 - `-C, --cancel`: cancel all XPs in a grid.
+- `--clear`: cancel any previous jobs, clear all XP folders (i.e. delete checkpoints) and reschedule. This will ask confirmation first, because this is quite dangerous.
+
 - `-i, --interval INTERVAL`: the table monitoring all jobs will be updated every `INTERVAL`
     minutes, until all jobs are finished or failed.
 - `-T, --trim IDX`: trim all the metrics to the number of epochs of the XP
