@@ -196,6 +196,7 @@ class Shepherd:
         xp = sheep.xp
         self.main.init_xp(xp)
         folder = xp.folder / xp.dora.shep.submitit_folder
+        folder.mkdir(exist_ok=True)
         dirty = folder / "dirty"  # Dirty flag, will be cleaned at the end.
         name = self.main.name + "_" + sheep.xp.sig
         if dirty.exists():
@@ -206,7 +207,7 @@ class Shepherd:
                            f"for sheep {sheep.xp.sig}/{long_name}.")
             proc = sp.run(["squeue", "-n", name, "-o", "%i", "-h"],
                           capture_output=True, check=True)
-            ids = [line.strip() for line in proc.output.split("\n")]
+            ids = [line.strip() for line in proc.stdout.decode().split("\n")]
             logger.warning(f"Found orphan job ids {ids}, will cancel")
             sp.run(["scancel"] + ids, check=True)
 

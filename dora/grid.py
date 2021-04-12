@@ -22,7 +22,7 @@ from .conf import SlurmConfig, SubmitRules, update_from_args
 from .explore import Explorer, Launcher
 from .main import DecoratedMain
 from .log import colorize, simple_log, fatal
-from .shep import Sheep, Shepherd, no_log
+from .shep import Sheep, Shepherd
 from .utils import import_or_fatal
 
 import treetable as tt
