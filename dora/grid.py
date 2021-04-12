@@ -45,7 +45,6 @@ class RunGridArgs:
             the XP with the provided index. Useful to compare XP started at different
             times.
         trim_last (bool): if True, will trim all XP to the least advanced XP.
-        verbose (bool): if True, Dora will details how scheduling decisions are made.
         dry_run (bool): if True, Dora will simulate the run of the grid, without scheduling
             or canceling any XP.
         cancel (bool): if True, will cancel all XPs in the grid. If `patterns` is provided,
@@ -151,15 +150,8 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
         with ProcessPoolExecutor(4) as pool:
             launcher = Launcher(shepherd, slurm, pending, pool=pool)
             explorer(launcher)
-        for future in pending.values():
-            try:
+            for future in pending.values():
                 sheep, slurm = future.result()
-            except Exception as exc:
-                if args._from_commandline:
-                    fatal("Got the following error when processing XP configuration:", str(exc))
-                else:
-                    raise
-            else:
                 assert isinstance(sheep, Sheep) and isinstance(slurm, SlurmConfig)
                 assert sheep.xp.sig is not None
                 herd[sheep.xp.sig] = (sheep, slurm)

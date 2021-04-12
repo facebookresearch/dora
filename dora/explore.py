@@ -18,8 +18,15 @@ from .conf import SlurmConfig
 from .shep import Shepherd
 
 
+class ProcessException(RuntimeError):
+    pass
+
+
 def _process(shepherd: Shepherd, argv: tp.List[str], slurm: SlurmConfig):
-    return (shepherd.get_sheep_from_argv(argv), slurm)
+    try:
+        return (shepherd.get_sheep_from_argv(argv), slurm)
+    except Exception as exc:
+        raise ProcessException(repr(exc))
 
 
 class Launcher:
