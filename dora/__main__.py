@@ -116,7 +116,7 @@ def get_parser():
     launch.add_argument("-C", "--cancel", action='store_true',
                         help="Cancel any existing job and return.")
     launch.add_argument("--clear", action='store_true',
-                      help="Remove XP folder, reschedule job, starting from scratch.")
+                        help="Remove XP folder, reschedule job, starting from scratch.")
     add_submit_rules(launch)
     add_slurm_config(launch)
     launch.add_argument("argv", nargs='*')
