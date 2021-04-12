@@ -248,7 +248,7 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
             fatal(f"Invalid index {args.folder}")
         name = main.get_name(sheep.xp)
         if args.folder is not None:
-            log(f"Folder for sheep {name}: {sheep.xp.folder}")
+            print(sheep.xp.folder)
         elif args.tail is not None:
             if not sheep.log.exists():
                 fatal(f"Log {sheep.log} does not exist")

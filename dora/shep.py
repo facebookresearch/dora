@@ -207,7 +207,7 @@ class Shepherd:
                            f"for sheep {sheep.xp.sig}/{long_name}.")
             proc = sp.run(["squeue", "-n", name, "-o", "%i", "-h"],
                           capture_output=True, check=True)
-            ids = [line.strip() for line in proc.stdout.decode().split("\n")]
+            ids = [line for line in proc.stdout.decode().strip().split("\n")]
             logger.warning(f"Found orphan job ids {ids}, will cancel")
             sp.run(["scancel"] + ids, check=True)
 
