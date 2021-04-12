@@ -87,7 +87,8 @@ def _get_explore(args, main):
     if args.grid is None:
         candidates = []
         for info in pkgutil.walk_packages([Path(grids.__file__).parent]):
-            candidates.append(info.name)
+            if not info.name.startswith('_'):
+                candidates.append(info.name)
         log(f"Potential grids are: {', '.join(candidates)}")
         sys.exit(0)
 
