@@ -146,15 +146,15 @@ class Shepherd:
             state = sheep.state()
             if state == 'COMPLETED':
                 if rules.replace_done:
-                    self.log(f"Ignoring previously completed job {sheep.job.job_id}")
+                    logger.debug(f"Ignoring previously completed job {sheep.job.job_id}")
                     sheep.job = None
             elif state in ["FAILED", "CANCELLED"]:
-                self.log(f"Previous job {sheep.job.job_id} failed or was canceled")
+                logger.debug(f"Previous job {sheep.job.job_id} failed or was canceled")
                 if rules.retry:
                     sheep.job = None
             else:
                 if rules.replace:
-                    self.log(f"Cancelling previous job {sheep.job.job_id} with status {state}")
+                    logger.debug(f"Cancelling previous job {sheep.job.job_id} with status {state}")
                     self.cancel_lazy(sheep)
                     sheep.job = None
 
@@ -180,7 +180,8 @@ class Shepherd:
         while self._to_submit:
             sheep, slurm_config = self._to_submit.pop(0)
             self._submit(sheep, slurm_config)
-            self.log(f"Job created with id {sheep.job.job_id}")
+            name = self.main.get_name(sheep.xp)
+            self.log(f"Scheduled job {sheep.job.job_id} for sheep {sheep.xp.sig}/{name}")
 
     @property
     def _by_id(self) -> Path:
@@ -195,6 +196,22 @@ class Shepherd:
         xp = sheep.xp
         self.main.init_xp(xp)
         folder = xp.folder / xp.dora.shep.submitit_folder
+        folder.mkdir(exist_ok=True)
+        dirty = folder / "dirty"  # Dirty flag, will be cleaned at the end.
+        name = self.main.name + "_" + sheep.xp.sig
+        if dirty.exists():
+            # Previous tentative for submission might have failed
+            # with an orphan job.
+            long_name = self.main.get_name(sheep.xp)
+            logger.warning("Dirty tag is still here, we might have an orphan job "
+                           f"for sheep {sheep.xp.sig}/{long_name}.")
+            proc = sp.run(["squeue", "-n", name, "-o", "%i", "-h"],
+                          capture_output=True, check=True)
+            ids = [line for line in proc.stdout.decode().strip().split("\n") if line]
+            logger.warning(f"Found orphan job ids {ids}, will cancel")
+            sp.run(["scancel"] + ids, check=True)
+
+        dirty.touch()
         if xp.rendezvous_file.exists():
             xp.rendezvous_file.unlink()
 
@@ -219,7 +236,6 @@ class Shepherd:
         del kwargs['mem_per_gpu']
         logger.debug("Slurm parameters %r", kwargs)
 
-        name = self.main.name + ":" + sheep.xp.sig
         executor.update_parameters(
             job_name=name,
             stderr_to_stdout=True,
@@ -232,3 +248,5 @@ class Shepherd:
         link = self._by_id / job.job_id
         link = link
         link.symlink_to(sheep.xp.folder.resolve())
+
+        dirty.unlink()

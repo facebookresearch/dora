@@ -68,6 +68,8 @@ def get_parser():
     add_slurm_config(grid)
     grid.add_argument("-C", "--cancel", action='store_true',
                       help="Cancel all running jobs.")
+    grid.add_argument("--clear", action='store_true',
+                      help="Remove XP folder, reschedule all jobs, starting from scratch.")
     grid.add_argument("-i", "--interval", default=5, type=float,
                       help="Update status and metrics every that number of minutes. "
                            "Default is 5 min.")
@@ -113,6 +115,8 @@ def get_parser():
                         help="Does not tail the log once job is started.")
     launch.add_argument("-C", "--cancel", action='store_true',
                         help="Cancel any existing job and return.")
+    launch.add_argument("--clear", action='store_true',
+                        help="Remove XP folder, reschedule job, starting from scratch.")
     add_submit_rules(launch)
     add_slurm_config(launch)
     launch.add_argument("argv", nargs='*')
@@ -134,8 +138,8 @@ def get_parser():
 def main():
     parser = get_parser()
     args = parser.parse_args()
-    if args.verbose:
-        logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+    log_level = logging.DEBUG if args.verbose else logging.INFO
+    logging.basicConfig(stream=sys.stderr, level=log_level)
 
     if args.action is None:
         fatal("You must give an action.")

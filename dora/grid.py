@@ -22,7 +22,7 @@ from .conf import SlurmConfig, SubmitRules, update_from_args
 from .explore import Explorer, Launcher
 from .main import DecoratedMain
 from .log import colorize, simple_log, fatal
-from .shep import Sheep, Shepherd, no_log
+from .shep import Sheep, Shepherd
 from .utils import import_or_fatal
 
 import treetable as tt
@@ -50,6 +50,8 @@ class RunGridArgs:
             or canceling any XP.
         cancel (bool): if True, will cancel all XPs in the grid. If `patterns` is provided,
             only XP matching the patterns will be canceled.
+        clear (bool): This will cancel any previous job, clear the XP folder,
+            and reschedule a new experiment.
 
     """
     patterns: tp.List[str] = field(default_factory=list)
@@ -60,12 +62,10 @@ class RunGridArgs:
     trim: tp.Optional[int] = None
     trim_last: bool = False
 
-    # Debug flags
-    verbose: bool = False
-    dry_run: bool = False
-
     # Scheduling
+    dry_run: bool = False
     cancel: bool = False
+    clear: bool = False
 
     # jupyter display?
     jupyter: bool = False
@@ -145,7 +145,7 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
     grid_folder.mkdir(exist_ok=True, parents=True)
 
     herd: OrderedDict[str, tp.Tuple[Sheep, SlurmConfig]] = OrderedDict()
-    shepherd = Shepherd(main, log=log if args.verbose else no_log)
+    shepherd = Shepherd(main, log=log)
     if main._slow:
         pending: OrderedDict[int, Future] = OrderedDict()
         with ProcessPoolExecutor(4) as pool:
@@ -168,6 +168,24 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
         explorer(launcher)
 
     shepherd.update()
+
+    if args.clear:
+        if args.dry_run:
+            fatal("--dry_run is incompatible with --clear.")
+        log(f"You are about to restart ALL {len(herd)} experiments in the grid {grid_name} "
+            "from scratch. This cannot be reverted.")
+        if args._from_commandline:
+            repl = input("Confirm [yN]: ")
+            if repl.lower() != "y":
+                fatal("Abort...")
+        log("Canceling all current jobs...")
+        for sheep, _ in herd.values():
+            shepherd.cancel_lazy(sheep)
+        shepherd.commit()
+        log("Deleting XP folders...")
+        for sheep, _ in herd.values():
+            shutil.rmtree(sheep.xp.folder)
+            sheep.job = None
 
     for sheep, slurm in herd.values():
         if not args.cancel:
@@ -194,6 +212,7 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
             else:
                 link.symlink_to(sheep.xp.folder)
         shepherd.commit()
+
         for child in to_unlink:
             child.unlink()
 
@@ -229,7 +248,7 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
             fatal(f"Invalid index {args.folder}")
         name = main.get_name(sheep.xp)
         if args.folder is not None:
-            log(f"Folder for sheep {name}: {sheep.xp.folder}")
+            print(sheep.xp.folder)
         elif args.tail is not None:
             if not sheep.log.exists():
                 fatal(f"Log {sheep.log} does not exist")
