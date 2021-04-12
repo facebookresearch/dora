@@ -51,4 +51,4 @@ def info_action(args, main: DecoratedMain):
     if args.tail:
         if not sheep.log.exists():
             fatal(f"Log {sheep.log} does not exist")
-        os.execvp("tail", ["tail", "-n", "200", "-f", args.log])
+        os.execvp("tail", ["tail", "-n", "200", "-f", sheep.log])
