@@ -208,8 +208,9 @@ class Shepherd:
             proc = sp.run(["squeue", "-n", name, "-o", "%i", "-h"],
                           capture_output=True, check=True)
             ids = [line for line in proc.stdout.decode().strip().split("\n") if line]
-            logger.warning(f"Found orphan job ids {ids}, will cancel")
-            sp.run(["scancel"] + ids, check=True)
+            if ids:
+                logger.warning(f"Found orphan job ids {ids}, will cancel")
+                sp.run(["scancel"] + ids, check=True)
 
         dirty.touch()
         if xp.rendezvous_file.exists():
