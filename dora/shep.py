@@ -148,7 +148,7 @@ class Shepherd:
                 if rules.replace_done:
                     logger.debug(f"Ignoring previously completed job {sheep.job.job_id}")
                     sheep.job = None
-            elif state in ["FAILED", "CANCELLED"]:
+            elif state in ["FAILED", "CANCELLED", "OUT_OF_MEMORY"]:
                 logger.debug(f"Previous job {sheep.job.job_id} failed or was canceled")
                 if rules.retry:
                     sheep.job = None
