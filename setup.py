@@ -18,7 +18,7 @@ URL = 'https://github.com/fairinternal/dora'
 EMAIL = 'defossez@fb.com'
 AUTHOR = 'Alexandre Défossez'
 REQUIRES_PYTHON = '>=3.7.0'
-VERSION = "0.1.0dev1"
+VERSION = "0.1.0dev2"
 
 HERE = Path(__file__).parent
 
