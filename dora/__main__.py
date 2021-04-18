@@ -28,7 +28,7 @@ def _find_package():
     if len(candidates) == 0:
         fatal("Could not find a training package. Use -P, or set DORA_PACKAGE.")
     elif len(candidates) == 1:
-        return candidates[0] / "train"
+        return candidates[0] + ".train"
     else:
         fatal(f"Found multiple candidates: {', '.join(candidates)}. "
               "Use -P, or set DORA_PACKAGE.")
