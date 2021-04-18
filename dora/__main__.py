@@ -146,7 +146,7 @@ def main():
 
     if args.package is None:
         args.package = _find_package()
-    module_name = args.package + ".train"
+    module_name = args.package
     sys.path.insert(0, str(Path(".").resolve()))
     module = import_or_fatal(module_name)
     try:
