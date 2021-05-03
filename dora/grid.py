@@ -23,7 +23,7 @@ from .explore import Explorer, Launcher
 from .main import DecoratedMain
 from .log import colorize, simple_log, fatal
 from .shep import Sheep, Shepherd
-from .utils import import_or_fatal
+from .utils import import_or_fatal, try_load
 
 import treetable as tt
 
@@ -172,7 +172,8 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
                 fatal("Abort...")
         log("Canceling all current jobs...")
         for sheep, _ in herd.values():
-            shepherd.cancel_lazy(sheep)
+            if sheep.job is not None:
+                shepherd.cancel_lazy(sheep.job)
         shepherd.commit()
         log("Deleting XP folders...")
         for sheep, _ in herd.values():
@@ -184,17 +185,32 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
             shepherd.maybe_submit_lazy(sheep, slurm, rules)
 
     to_unlink = []
+    old_sheeps = []
     for child in grid_folder.iterdir():
         if child.name not in herd:
-            old_sheep = shepherd.get_sheep_from_sig(child.name)
-            assert old_sheep is not None
-            if not old_sheep.is_done():
-                assert old_sheep.job is not None
-                shepherd.cancel_lazy(old_sheep)
-                name = main.get_name(old_sheep.xp)
-                log(f"Canceling job {old_sheep.job.job_id} for no longer required "
-                    f"sheep {old_sheep.xp.sig}/{name}")
             to_unlink.append(child)
+            try:
+                old_sheep = shepherd.get_sheep_from_sig(child.name)
+            except Exception as error:
+                log(f"Error when trying to load old sheep {child.name}: {error}")
+                # We fallback on manually loading the job file.
+                job_file = child / main.dora.shep.job_file
+                job = try_load(job_file)
+                if job is not None:
+                    log(f"Canceling job {job.job_id} from unloadable sheep {child.name}.")
+                    shepherd.cancel_lazy(job)
+            else:
+                assert old_sheep is not None
+                old_sheeps.append(old_sheep)
+
+    shepherd.update()
+    for old_sheep in old_sheeps:
+        if not old_sheep.is_done():
+            assert old_sheep.job is not None
+            shepherd.cancel_lazy(old_sheep.job)
+            name = main.get_name(old_sheep.xp)
+            log(f"Canceling job {old_sheep.job.job_id} for no longer required "
+                f"sheep {old_sheep.xp.sig}/{name}")
 
     if not args.dry_run:
         for sig, (sheep, _) in herd.items():
@@ -221,7 +237,7 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
                 assert sheep.job is not None
                 name = main.get_name(sheep.xp)
                 log(f"Canceling job {sheep.job.job_id} for sheep {sheep.xp.sig}/{name}")
-                shepherd.cancel_lazy(sheep)
+                shepherd.cancel_lazy(sheep.job)
         if not args.dry_run:
             shepherd.commit()
         return sheeps

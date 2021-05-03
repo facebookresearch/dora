@@ -37,7 +37,7 @@ class Sheep:
         self.xp = xp
         self.job: tp.Optional[submitit.SlurmJob] = None
         if self._job_file.exists():
-            self.job = try_load(self._job_file, load=pickle.load)
+            self.job = try_load(self._job_file)
 
     @property
     def _job_file(self) -> Path:
@@ -155,18 +155,17 @@ class Shepherd:
             else:
                 if rules.replace:
                     logger.debug(f"Cancelling previous job {sheep.job.job_id} with status {state}")
-                    self.cancel_lazy(sheep)
+                    self.cancel_lazy(sheep.job)
                     sheep.job = None
 
         if sheep.job is None:
             self._to_submit.append((sheep, slurm_config))
 
-    def cancel_lazy(self, sheep: Sheep):
+    def cancel_lazy(self, job: submitit.SlurmJob):
         """
-        Cancel a sheep. The job is actually cancelled only when `commit()` is called.
+        Cancel a job. The job is actually cancelled only when `commit()` is called.
         """
-        if sheep.job is not None:
-            self._to_cancel.append(sheep.job)
+        self._to_cancel.append(job)
 
     def commit(self):
         """

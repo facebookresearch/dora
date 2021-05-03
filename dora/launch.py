@@ -34,7 +34,8 @@ def launch_action(args, main: DecoratedMain):
 
     if args.clear:
         log("Canceling current job...")
-        shepherd.cancel_lazy(sheep)
+        if sheep.job is not None:
+            shepherd.cancel_lazy(sheep.job)
         shepherd.commit()
         log("Deleting XP folder...")
         shutil.rmtree(sheep.xp.folder)

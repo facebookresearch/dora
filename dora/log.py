@@ -86,7 +86,13 @@ def bold(text: str) -> str:
     return colorize(text, "1")
 
 
-def simple_log(first: str, *args):
+def red(text: str) -> str:
+    """Display text in red.
+    """
+    return colorize(text, "31")
+
+
+def simple_log(first: str, *args, color=None):
     print(bold(first), *args, file=sys.stderr)
 
 

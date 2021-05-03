@@ -103,6 +103,8 @@ def get_parser():
     run = subparsers.add_parser("run", help="Run locally the given command.")
     run.add_argument("-f", "--from_sig", help="Signature of job to use as baseline.")
     run.add_argument("-d", "--ddp", action="store_true", help="Distributed training.")
+    run.add_argument("--clear", action='store_true',
+                     help="Remove XP folder, reschedule job, starting from scratch.")
     run.add_argument("argv", nargs='*')
     run.set_defaults(action=run_action)
 
