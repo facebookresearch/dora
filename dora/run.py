@@ -3,6 +3,7 @@ import os
 from shutil import rmtree
 import sys
 import typing as tp
+import time
 
 from .executor import start_ddp_workers
 from .main import DecoratedMain
@@ -29,11 +30,15 @@ def check_job_and_clear(argv: tp.List[str], main: DecoratedMain, clear: bool = F
                 log("Cancelling the existing job.")
                 shepherd.cancel_lazy(sheep.job)
                 shepherd.commit()
+                time.sleep(3)
             else:
                 log(red("PLEASE ABORT NOW UNLESS YOU ARE SURE OF WHAT YOU DO."))
     if clear and sheep.xp.folder.exists():
         log("Removing existing XP folder.")
-        rmtree(sheep.xp.folder)
+        try:
+            rmtree(sheep.xp.folder)
+        except OSError:
+            log("Failed to properly remove folder, but things should be okay...")
 
 
 def run_action(args, main: DecoratedMain):
