@@ -311,8 +311,17 @@ You can also pass patterns to the `grid` command, for instance
 ```
 dora grid mygrid bs=64
 ```
+will only show XPs which have `bs=64` in their name. You can see the name by launching
+the grid normally. Names are heavily shorten to avoid running out of space, in particular
+nested structure will have all their components but the leaf be shorten. You
+can negate a query with `!`, for instance `dora grid mygrid '!bs=64'` (use quotes
+because `!` will be interpreted by the shell otherwise).
+Multiple patterns are interpreted as logical AND between them.
 
-will only show XPs which have `bs=64` in their name.
+
+Note that with the latest version (be sure to update), the `--clear`, or `-C, --cancel` flags
+will only apply to the XP matching the pattern. Similarly, only XP matching those patterns
+will be scheduled.
 
 
 
@@ -322,6 +331,29 @@ will only show XPs which have `bs=64` in their name.
 TBD
 
 ### Setting SLURM default parameters
+
+Slurm configuration is detailed in [dora/conf.py](https://github.com/fairinternal/dora/blob/main/dora/conf.py#L37).
+You can pass an instance of `SlurmConfig` to `argparse_main` that will be used as the default
+config for all `dora launch` commands and grid files.
+Grid files can override any field defined on `SlurmConfig` with the `launcher.slurm` (return new launcher) and
+`launcher.slurm_` (in-place) methods.
+
+For Hydra, the default slurm configuration is taken from the `slurm` entry in the yaml file, for instance, you can
+have their:
+
+```yaml
+my_param: whatever
+batch_size: 42
+
+dora:
+    dir: outputs
+
+slurm:
+    partition: devlab
+    mem_per_gpu: 30  # this is in GB
+```
+
+
 
 ### Changing the namings of the XPs.
 

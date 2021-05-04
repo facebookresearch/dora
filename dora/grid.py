@@ -160,28 +160,31 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
         explorer(launcher)
 
     shepherd.update()
+    sheeps = [sheep for sheep, _ in herd.values()]
+    sheeps = _filter_grid_sheeps(args.patterns, main, sheeps)
 
     if args.clear:
         if args.dry_run:
             fatal("--dry_run is incompatible with --clear.")
-        log(f"You are about to restart ALL {len(herd)} experiments in the grid {grid_name} "
+        log(f"You are about to restart {len(sheeps)} experiments from the grid {grid_name} "
             "from scratch. This cannot be reverted.")
         if args._from_commandline:
             repl = input("Confirm [yN]: ")
             if repl.lower() != "y":
                 fatal("Abort...")
         log("Canceling all current jobs...")
-        for sheep, _ in herd.values():
+        for sheep in sheeps:
             if sheep.job is not None:
                 shepherd.cancel_lazy(sheep.job)
         shepherd.commit()
         log("Deleting XP folders...")
-        for sheep, _ in herd.values():
+        for sheep in sheeps:
             shutil.rmtree(sheep.xp.folder)
             sheep.job = None
 
-    for sheep, slurm in herd.values():
-        if not args.cancel:
+    if not args.cancel:
+        for sheep in sheeps:
+            _, slurm = herd[sheep.xp.sig]
             shepherd.maybe_submit_lazy(sheep, slurm, rules)
 
     to_unlink = []
@@ -212,9 +215,17 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
             log(f"Canceling job {old_sheep.job.job_id} for no longer required "
                 f"sheep {old_sheep.xp.sig}/{name}")
 
+    if args.cancel:
+        for sheep in sheeps:
+            if not sheep.is_done():
+                assert sheep.job is not None
+                name = main.get_name(sheep.xp)
+                log(f"Canceling job {sheep.job.job_id} for sheep {sheep.xp.sig}/{name}")
+                shepherd.cancel_lazy(sheep.job)
+
     if not args.dry_run:
-        for sig, (sheep, _) in herd.items():
-            link = (grid_folder / sig)
+        for sheep in sheeps:
+            link = (grid_folder / sheep.xp.sig)
             if link.exists() or link.is_symlink():
                 assert link.is_symlink() and link.resolve() == sheep.xp.folder
             else:
@@ -224,22 +235,11 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
         for child in to_unlink:
             child.unlink()
 
-    sheeps = [sheep for sheep, _ in herd.values()]
-    sheeps = _filter_grid_sheeps(args.patterns, main, sheeps)
+    if args.cancel:
+        return sheeps
 
     if not sheeps:
         log("No sheep to handle.")
-        return sheeps
-
-    if args.cancel:
-        for sheep in sheeps:
-            if not sheep.is_done():
-                assert sheep.job is not None
-                name = main.get_name(sheep.xp)
-                log(f"Canceling job {sheep.job.job_id} for sheep {sheep.xp.sig}/{name}")
-                shepherd.cancel_lazy(sheep.job)
-        if not args.dry_run:
-            shepherd.commit()
         return sheeps
 
     actions = [action for action in [args.folder, args.log, args.tail] if action is not None]

@@ -61,7 +61,7 @@ class SlurmConfig:
     mem_per_gpu: float = 10
     time: int = 1200
     cpus_per_task: int = 10
-    partition: str = "learnfair"
+    partition: str = "learnlab"
     comment: tp.Optional[str] = None
     setup: tp.List[str] = field(default_factory=list)
     max_num_timeout: int = 20
