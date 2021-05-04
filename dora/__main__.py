@@ -46,7 +46,7 @@ def add_submit_rules(parser):
 def add_slurm_config(parser):
     parser.add_argument("-g", "--gpus", type=int, help="Number of gpus.", default=1)
     parser.add_argument("-p", "--partition", default="learnfair", help="Partition.")
-    parser.add_argument("--dev", action="store_const", dest="partition", const="dev",
+    parser.add_argument("--dev", action="store_const", dest="partition", const="devlab",
                         help="Use dev partition.")
     parser.add_argument("-c", "--comment", help="Comment.")
 
