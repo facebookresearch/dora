@@ -179,7 +179,8 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
         shepherd.commit()
         log("Deleting XP folders...")
         for sheep in sheeps:
-            shutil.rmtree(sheep.xp.folder)
+            if sheep.xp.folder.exists():
+                shutil.rmtree(sheep.xp.folder)
             sheep.job = None
 
     if not args.cancel:

@@ -38,7 +38,8 @@ def launch_action(args, main: DecoratedMain):
             shepherd.cancel_lazy(sheep.job)
         shepherd.commit()
         log("Deleting XP folder...")
-        shutil.rmtree(sheep.xp.folder)
+        if sheep.xp.folder.exists():
+            shutil.rmtree(sheep.xp.folder)
         sheep.job = None
 
     shepherd.maybe_submit_lazy(sheep, slurm, rules)
