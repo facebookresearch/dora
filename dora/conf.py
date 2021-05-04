@@ -58,7 +58,7 @@ class SlurmConfig:
         Same for no GPU tasks.
     """
     gpus: int = 1
-    mem_per_gpu: float = 10
+    mem_per_gpu: float = 40
     time: int = 1200
     cpus_per_task: int = 10
     partition: str = "learnlab"
