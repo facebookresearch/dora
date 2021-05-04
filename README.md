@@ -323,7 +323,10 @@ Note that with the latest version (be sure to update), the `--clear`, or `-C, --
 will only apply to the XP matching the pattern. Similarly, only XP matching those patterns
 will be scheduled.
 
+### Explorer class
 
+The `Explorer` class allows to customize which metric to report, and with what precision. It also gives you a chance to reorganize metrics or further post process them (for instance, extracting max, min etc.).
+For an example with detailed comments, go checkout [the Explorer classes for BrainMagick](https://github.com/fairinternal/brainmagick/blob/main/bm/grids/_explorers.py#L7). By convention, files starting with `_` inside the `grids` folder are ignored by Dora, and are a good place to put utility code.
 
 
 ## Advanced configuration
