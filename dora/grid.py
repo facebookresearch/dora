@@ -265,7 +265,10 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
         else:
             if not sheep.log.exists():
                 fatal(f"Log file does not exist for sheep {name}.")
-            shutil.copyfileobj(open(sheep.log), sys.stdout)
+            try:
+                shutil.copyfileobj(open(sheep.log), sys.stdout)
+            except BrokenPipeError:
+                pass
         return sheeps
 
     print(f"Monitoring Grid {grid_name}")
