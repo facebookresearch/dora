@@ -21,9 +21,7 @@ def check_job_and_clear(argv: tp.List[str], main: DecoratedMain, clear: bool = F
     sheep = shepherd.get_sheep_from_argv(argv)
     if sheep.job is not None:
         shepherd.update()
-        if sheep.is_done():
-            return
-        else:
+        if not sheep.is_done():
             job = sheep.job
             log(red(f"Found existing slurm job {job.job_id} with status {job.state}."))
             if clear:
