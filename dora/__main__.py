@@ -54,12 +54,19 @@ def add_slurm_config(parser):
 def get_parser():
     parser = argparse.ArgumentParser()
     module = os.environ.get('DORA_PACKAGE')
+    runfile = os.environ.get('DORA_RUNFILE') or 'train'
     parser.add_argument(
         '--package', '-P',
         default=module,
-        help='Training module.'
+        help='Training module. '
              'You can also set the DORA_PACKAGE env. In last resort, '
-             'Dora will look for a package in the current folder with a train.py module.')
+             'Dora will look for a package in the current folder with module defined '
+             'at --runfile flag.')
+    parser.add_argument(
+        '--runfile',
+        default=runfile,
+        help='Training exec name. '
+             'You can also set DORA_RUNFILE env. Otherwise, defaults to train.py module.')
     parser.add_argument('--verbose', '-v', action='store_true', help="Show debug info.")
     subparsers = parser.add_subparsers(
         title="command", help="Command to execute", required=True, dest='command')
@@ -146,7 +153,7 @@ def main():
 
     if args.package is None:
         args.package = _find_package()
-    module_name = args.package
+    module_name = args.package + "." + args.runfile
     sys.path.insert(0, str(Path(".").resolve()))
     module = import_or_fatal(module_name)
     try:
