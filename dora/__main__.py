@@ -71,7 +71,7 @@ def get_parser():
         default=main_module,
         help='Training exec name. '
              'Dora will search for this module to run within the package provided by --package '
-             'flag. You can also set DORA_MAIN_MODULE env. Otherwise, defaults to \'train\' module.')
+             'flag. You can also set DORA_MAIN_MODULE env. Defaults to \'train\' module.')
     parser.add_argument('--verbose', '-v', action='store_true', help="Show debug info.")
     subparsers = parser.add_subparsers(
         title="command", help="Command to execute", required=True, dest='command')
