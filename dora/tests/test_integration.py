@@ -17,6 +17,7 @@ def test_integration(tmpdir):
     run_cmd(["run"])
     run_cmd(["grid", "test", "--dry_run", "--no_monitor"])
     run_cmd(["info", "--", "--a=32"])
+    run_cmd(["--main_module", "other_train", "run"])
 
 
 def test_pickle(tmpdir):

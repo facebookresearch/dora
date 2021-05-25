@@ -18,20 +18,24 @@ from .run import run_action
 from .utils import import_or_fatal
 
 
-def _find_package():
+def _find_package(main_module):
     cwd = Path(".")
     candidates = []
     for child in cwd.iterdir():
         if child.is_dir() and (child / "__init__.py").exists():
-            if (child / "train.py").exists():
+            if (child / f"{main_module}.py").exists():
                 candidates.append(child.name)
     if len(candidates) == 0:
-        fatal("Could not find a training package. Use -P, or set DORA_PACKAGE.")
+        fatal("Could not find a training package. Use -P, or set DORA_PACKAGE to set the "
+              "package. Use --main_module or set DORA_MAIN_MODULE to set the module to "
+              "be excecuted inside the defined package.")
     elif len(candidates) == 1:
         return candidates[0]
     else:
         fatal(f"Found multiple candidates: {', '.join(candidates)}. "
-              "Use -P, or set DORA_PACKAGE.")
+              "Use -P, or set DORA_PACKAGE to set package being searched. "
+              "Use --main_module or set DORA_MAIN_MODULE to set the module being searched "
+              "inside the package.")
 
 
 def add_submit_rules(parser):
@@ -54,12 +58,20 @@ def add_slurm_config(parser):
 def get_parser():
     parser = argparse.ArgumentParser()
     module = os.environ.get('DORA_PACKAGE')
+    main_module = os.environ.get('DORA_MAIN_MODULE') or 'train'
     parser.add_argument(
         '--package', '-P',
         default=module,
-        help='Training module.'
+        help='Training module. '
              'You can also set the DORA_PACKAGE env. In last resort, '
-             'Dora will look for a package in the current folder with a train.py module.')
+             'Dora will look for a package in the current folder with module defined '
+             'at --runfile flag.')
+    parser.add_argument(
+        '--main_module',
+        default=main_module,
+        help='Training exec name. '
+             'Dora will search for this module to run within the package provided by --package '
+             'flag. You can also set DORA_MAIN_MODULE env. Defaults to \'train\' module.')
     parser.add_argument('--verbose', '-v', action='store_true', help="Show debug info.")
     subparsers = parser.add_subparsers(
         title="command", help="Command to execute", required=True, dest='command')
@@ -147,8 +159,8 @@ def main():
         fatal("You must give an action.")
 
     if args.package is None:
-        args.package = _find_package()
-    module_name = args.package + ".train"
+        args.package = _find_package(args.main_module)
+    module_name = args.package + "." + args.main_module
     sys.path.insert(0, str(Path(".").resolve()))
     module = import_or_fatal(module_name)
     try:
