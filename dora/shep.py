@@ -225,15 +225,26 @@ class Shepherd:
             if gpus % 8 != 0:
                 raise ValueError("Can only take <= 8 gpus, or multiple of 8 gpus")
             kwargs['nodes'] = gpus // 8
-            kwargs['ntasks_per_node'] = 8
+            gpus_per_node = 8
         else:
-            kwargs['ntasks_per_node'] = gpus
+            gpus_per_node = gpus
             kwargs['nodes'] = 1
-        mem = slurm_config.mem_per_gpu * kwargs['ntasks_per_node']
+        mem = slurm_config.mem_per_gpu * gpus_per_node
         kwargs['mem'] = f"{mem}GB"
-        kwargs['gpus_per_task'] = 1
+        if slurm_config.one_task_per_node:
+            kwargs['gpus_per_task'] = gpus_per_node
+            kwargs['ntasks_per_node'] = 1
+            if slurm_config.cpus_per_task is None:
+                kwargs['cpus_per_task'] = gpus_per_node * slurm_config['cpus_per_gpu']
+        else:
+            kwargs['gpus_per_task'] = 1
+            kwargs['ntasks_per_node'] = 8
+            if slurm_config.cpus_per_task is None:
+                kwargs['cpus_per_task'] = slurm_config['cpus_per_gpu']
         del kwargs['gpus']
         del kwargs['mem_per_gpu']
+        del kwargs['cpus_per_gpu']
+        del kwargs['one_task_per_node']
         logger.debug("Slurm parameters %r", kwargs)
 
         executor.update_parameters(

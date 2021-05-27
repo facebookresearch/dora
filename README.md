@@ -105,6 +105,11 @@ def main():
                # to this folder, so that it is automatically resumed!
     xp.link  # link object, can send back metrics to Dora
 
+    # If you load a previous checkpoint, you should always make sure
+    # That the Dora Link is consistent with what is in the checkpoint with
+    # history = checkpoint['history']
+    # xp.link.update_history(history)
+
     for t in range(10):
         xp.link.push_metrics({"loss": 1/(t + 1)})
     ...
@@ -128,6 +133,10 @@ def main(cfg):
     # Hydra run folder will automatically be set to xp.folder!
 
     xp.link  # link object, can send back metrics to Dora
+    # If you load a previous checkpoint, you should always make sure
+    # That the Dora Link is consistent with what is in the checkpoint with
+    # history = checkpoint['history']
+    # xp.link.update_history(history)
 
     for t in range(10):
         xp.link.push_metrics({"loss": 1/(t + 1)})
@@ -331,11 +340,12 @@ For an example with detailed comments, go checkout [the Explorer classes for Bra
 
 ## Advanced configuration
 
-TBD
 
 ### Setting SLURM default parameters
 
 Slurm configuration is detailed in [dora/conf.py](https://github.com/fairinternal/dora/blob/main/dora/conf.py#L37).
+It is a bit different from the usual Slurm config, as it tries to make it as easy as possible to change the number of GPUs without requiring to manually compute the number of nodes, tasks per nodes etc.
+
 You can pass an instance of `SlurmConfig` to `argparse_main` that will be used as the default
 config for all `dora launch` commands and grid files.
 Grid files can override any field defined on `SlurmConfig` with the `launcher.slurm` (return new launcher) and
@@ -356,10 +366,73 @@ slurm:
     mem_per_gpu: 30  # this is in GB
 ```
 
+### Customize metrics displayed in Explorer
+
+Metrics are formatted with the [treetable](https://github.com/adefossez/treetable),
+which is not heavily documented, but it should be easy enough to get how it works
+with this example:
+```python
+from dora import Explorer
+import treetable as tt
 
 
-### Changing the namings of the XPs.
+class MyExplorer(Explorer):
+    test_metrics = ['sisnr', 'pesq']
 
+    def get_grid_metrics(self):
+        """Return the structure of the metrics that should be displayed in the tracking table.
+        """
+        # This will return a list of `tt.group`, each group will
+        # be in separate parts of the table.
+        return [
+            tt.group("train", [
+                tt.leaf("epoch"),
+                tt.leaf("loss", ".3f"),  # The second argument of tt.leaf is a formatting string.
+             ], align=">"),  # Align can be left (<) or right (>) and will apply on all
+                             # leaves inside the group.
+            tt.group("valid", [
+                tt.leaf("best", ".3f"),
+                tt.leaf("loss", ".3f"),
+             ], align=">"),
+            tt.group("test", [
+                tt.leaf(name, ".3f")
+                for name in self.test_metrics
+             ], align=">")
+        ]
+        # In practice you can even have deeply nested groups etc. but honestly
+        # you probably don't need that.
+
+    def process_history(self, history):
+        """This process the history obtained from the Dora Link
+        into the right format for the `get_grid_metrics()` layout.
+        This should return a dictionary, with one key per group, each
+        being a sub-dict with one key per metric.
+
+        It is fine for a key to be absent, things won't crash, and it will
+        just not show anything there in the table.
+        """
+        train = {
+            'epoch': len(history),
+        }
+        valid = {}
+        test = {}
+        best = float('inf')
+        for metrics in history:
+            train.update(metrics['train'])
+            valid.update(metrics['valid'])
+            # Let say you forgot to compute best valid loss, you can
+            # fill in it here on the fly.
+            best = min(valid['loss'], best)
+            valid['best'] = best
+
+            # The reason for having this for loop is also if some metrics
+            # are not defined with every epoch. Let say you compute test metrics
+            # only every 10 epochs, then this will automatically fill the
+            # test metrics of the last epoch which evaluated them.
+            if 'test' in metrics:
+                test.update(metrics['test'])
+        return {"train": train, "valid": valid, "test": test}
+```
 
 ## Contributing
 
