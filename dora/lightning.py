@@ -2,6 +2,7 @@
 Support for PyTorch lightning. You should just replace the call
 to `Trainer(...)` with `get_trainer(...)`.
 """
+import argparse
 import inspect
 import typing as tp
 
@@ -26,6 +27,9 @@ class DoraEnvironment(ClusterEnvironment):
 
     def master_address(self) -> str:
         return ""
+
+    def master_port(self) -> int:
+        assert False
 
     def world_size(self) -> int:
         return self.spec.world_size
@@ -56,12 +60,15 @@ class DoraDDPPlugin(DDPPlugin):
 class RestoreDoraHistory(Callback):
     """Make sure Dora history, and checkpoint state are in sync.
     """
+    def __init__(self):
+        self.link = get_xp().link
+
     def on_load_checkpoint(self, trainer, pl_module, checkpoint):
         history = checkpoint['dora_link_history']
-        get_xp().link.update_history(history)
+        self.link.update_history(history)
 
     def on_save_checkpoint(self, trainer, pl_module, checkpoint):
-        checkpoint['dora_link_history'] = get_xp().link.history
+        checkpoint['dora_link_history'] = self.link.history
         return checkpoint
 
 
@@ -84,9 +91,10 @@ class _DummySLURMConnector:
 
 
 class DoraHistoryLogger(LightningLoggerBase):
-    def __init__(self, link):
+    def __init__(self):
         super().__init__()
-        self.link = link
+        self.link = get_xp().link
+        self.folder = get_xp().folder
         # Some metrics are per step, some per epoch, I want only the per epoch.
         # At the moment this is not supported by PL, so I'll "arm" the logger
         # on the end epoch event, so that the next call to log_metrics
@@ -100,11 +108,23 @@ class DoraHistoryLogger(LightningLoggerBase):
 
     @property
     def save_dir(self):
-        return get_xp().folder
+        return self.folder
 
     @property
     def name(self):
         return "DoraHistoryLogger"
+
+    def experiment(self) -> tp.Any:
+        """Return the experiment object associated with this logger."""
+        pass
+
+    def log_hyperparams(self, params: argparse.Namespace, *args, **kwargs):
+        pass
+
+    @property
+    def version(self) -> int:
+        """Return the experiment version."""
+        return 0
 
 
 def get_trainer(*args, add_dora_logger=True, no_unfinished_epochs=True, **kwargs):
@@ -127,17 +147,21 @@ def get_trainer(*args, add_dora_logger=True, no_unfinished_epochs=True, **kwargs
     if not is_xp():
         raise RuntimeError("This can only be called from inside a Dora XP.")
 
-    # Convert all to kwargs
-    kwargs = inspect.getcallargs(Trainer.__init__, *args, **kwargs)
+    # Convert all to kwargs, add [None] dummy for self which is missing.
+    init = Trainer.__init__
+    while hasattr(init, '__wrapped__'):
+        init = init.__wrapped__
+    kwargs = inspect.getcallargs(init, [None] + list(args), **kwargs)
+    del kwargs['self']
 
     plugins = kwargs.pop("plugins", [])
     env = DoraEnvironment()
 
-    gpus = 1
+    gpus = torch.cuda.device_count()
     if env.world_size() > 1:
         # Dora always use all available GPUs, either through `-d` flag locally,
         # or through Slurm (that will mask the other ones).
-        devices = [torch.device("cuda", i) for i in range(torch.cuda.device_count())]
+        devices = [torch.device("cuda", i) for i in range(gpus)]
         gpus = len(devices)
         ddp = DoraDDPPlugin(cluster_environment=env, parallel_devices=devices)
         plugins += [env, ddp]
@@ -145,16 +169,15 @@ def get_trainer(*args, add_dora_logger=True, no_unfinished_epochs=True, **kwargs
 
     callbacks = kwargs.pop("callbacks", [])
     callbacks.append(RestoreDoraHistory())
-    callbacks.append(_ArmDoraLogger())
     kwargs['callbacks'] = callbacks
 
-    if 'gpus' in kwargs:
+    if kwargs['gpus'] is not None:
         raise RuntimeError("You cannot specify the number of GPUs, as this is provided by Dora.")
-    if 'num_nodes' in kwargs:
+    if kwargs['num_nodes'] != 1:
         raise RuntimeError("You cannot specify the number of nodes, as this is provided by Dora.")
 
     kwargs['gpus'] = gpus
-    kwargs['num_nodes'] = env.num_nodes
+    kwargs['num_nodes'] = env.spec.num_nodes
 
     if 'default_root_dir' not in kwargs:
         kwargs['default_root_dir'] = get_xp().folder
@@ -171,3 +194,5 @@ def get_trainer(*args, add_dora_logger=True, no_unfinished_epochs=True, **kwargs
 
     if no_unfinished_epochs:
         trainer.slurm_connector = _DummySLURMConnector()
+
+    return trainer
