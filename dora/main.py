@@ -14,6 +14,7 @@ import json
 from pathlib import Path
 import typing as tp
 import sys
+from retrying import retry
 
 from .conf import DoraConfig, SlurmConfig
 from .names import _NamesMixin
@@ -110,6 +111,8 @@ class DecoratedMain(_NamesMixin):
         """
         raise NotImplementedError()
 
+    # Retry operation as history file might be stale for  update by running XP
+    @retry(stop_max_attempt_number=10)
     def get_xp_history(self, xp: XP) -> tp.List[dict]:
         """Return the metrics for a given XP. By default this will look into
         the `history.json` file, that can be populated with the Link class.
