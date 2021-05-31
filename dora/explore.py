@@ -157,7 +157,11 @@ class Explorer:
         return ["0", "38;5;245"]
 
     def process_history(self, history: tp.List[dict]) -> dict:
-        if history:
-            return history[-1]
-        else:
-            return {}
+        """Process history to return a dict (with possibly nested dict inside)
+        matching the schema given by `get_grid_metrics`.
+        """
+        out = {}
+        for metrics in history:
+            out.update(metrics)
+        out['epoch'] = len(history)
+        return out

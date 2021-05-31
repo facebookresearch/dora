@@ -178,9 +178,7 @@ def get_trainer(*args, add_dora_logger=True, no_unfinished_epochs=True, **kwargs
 
     kwargs['gpus'] = gpus
     kwargs['num_nodes'] = env.spec.num_nodes
-
-    if 'default_root_dir' not in kwargs:
-        kwargs['default_root_dir'] = get_xp().folder
+    kwargs['default_root_dir'] = get_xp().folder
 
     if add_dora_logger:
         logger = kwargs.pop('logger', [])

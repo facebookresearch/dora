@@ -1,6 +1,6 @@
 import argparse
 
-from dora import argparse_main, get_xp
+from dora import argparse_main, get_xp, distrib
 from dora.lightning import get_trainer
 import torch
 import torch.nn.functional as F
@@ -47,6 +47,7 @@ def get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data', default='./data')
     parser.add_argument('-b', '--batch_size', type=int, default=32)
+    parser.add_argument('--dummy')  # used to create multiple XP with same args.
     return parser
 
 
@@ -56,6 +57,10 @@ EXCLUDE = ['data']
 @argparse_main(parser=get_parser(), dir='pl_outputs', exclude=EXCLUDE)
 def main():
     args = get_xp().cfg
+    world_size = distrib.get_distrib_spec().world_size
+    assert args.batch_size % world_size == 0
+    # Let us make sure the batch size is correct
+    args.batch_size //= world_size
 
     data = DataModule(args.data, args.batch_size)
     module = MainModule(10)
