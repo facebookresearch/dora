@@ -54,7 +54,7 @@ def get_parser():
 EXCLUDE = ['data']
 
 
-@argparse_main(parser=get_parser(), dir='pl_outputs', exclude=EXCLUDE)
+@argparse_main(parser=get_parser(), dir='outputs_pl', exclude=EXCLUDE)
 def main():
     args = get_xp().cfg
     world_size = distrib.get_distrib_spec().world_size
