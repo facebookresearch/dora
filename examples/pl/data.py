@@ -45,10 +45,10 @@ class DataModule(pl.LightningDataModule):
 
     # return the dataloader for each split
     def train_dataloader(self):
-        return DataLoader(self.train, batch_size=self.batch_size)
+        return DataLoader(self.train, batch_size=self.batch_size, num_workers=10)
 
     def val_dataloader(self):
-        return DataLoader(self.test, batch_size=self.batch_size)
+        return DataLoader(self.test, batch_size=self.batch_size, num_workers=10)
 
     def test_dataloader(self):
-        return DataLoader(self.test, batch_size=self.batch_size)
+        return DataLoader(self.test, batch_size=self.batch_size, num_workers=10)

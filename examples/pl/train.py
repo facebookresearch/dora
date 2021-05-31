@@ -25,7 +25,7 @@ class MainModule(pl.LightningModule):
         scores = self(x)
         loss = F.cross_entropy(scores, y)
         # Logging to TensorBoard by default
-        self.log('train_loss', loss, per_epoch=True)
+        self.log('train_loss', loss, on_epoch=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -34,8 +34,8 @@ class MainModule(pl.LightningModule):
         loss = F.cross_entropy(scores, y)
         acc = (y == scores.argmax(-1)).float().mean()
         # Logging to TensorBoard by default
-        self.log('valid_loss', loss, per_epoch=True, sync_dist=True)
-        self.log('valid_acc', acc, per_epoch=True, sync_dist=True)
+        self.log('valid_loss', loss, on_epoch=True, sync_dist=True)
+        self.log('valid_acc', acc, on_epoch=True, sync_dist=True)
         return loss
 
     def configure_optimizers(self):
