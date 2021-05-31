@@ -2,3 +2,5 @@ hydra-core
 git+https://github.com/facebookincubator/submitit@master#egg=submitit
 torch
 treetable
+retrying
+
