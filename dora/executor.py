@@ -74,7 +74,6 @@ def start_ddp_workers(package, main, argv):
         for rank in range(world_size):
             kwargs = {}
             env = dict(os.environ)
-            env['LOCAL_RANK'] = str(rank)
             env['RANK'] = str(rank)
             env['WORLD_SIZE'] = str(world_size)
             args = ["-m", "dora", "-P", package, "run", "--"]

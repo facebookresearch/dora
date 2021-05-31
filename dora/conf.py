@@ -57,11 +57,11 @@ class SlurmConfig:
             before the actual command. Use it for `module load`.
         max_num_timeout (int): maximum number of requeue.
         one_task_per_node (bool): if True, schedules a single task
-            per node, otherwise, will schedule one task per gpu.
+            per node, otherwise, will schedule one task per gpu (default is False).
 
-    ..warning:: this assumes one task per GPU. Support for
-        multiple GPUs per task might be added in the future.
-        Same for no GPU tasks.
+    ..warning:: this assumes one task per GPU.
+        Set `one_task_per_node` if you do not want that.
+        Tasks without any gpus are not really supported at the moment.
     """
     gpus: int = 1
     mem_per_gpu: float = 40
