@@ -1,7 +1,7 @@
 import argparse
 
 from dora import argparse_main, get_xp, distrib
-from dora.lightning import get_trainer
+from dora.lightning import trainer_from_argparse_args
 import torch
 import torch.nn.functional as F
 from torchvision import models
@@ -25,7 +25,7 @@ class MainModule(pl.LightningModule):
         scores = self(x)
         loss = F.cross_entropy(scores, y)
         # Logging to TensorBoard by default
-        self.log('train_loss', loss, on_epoch=True)
+        self.mylog('train_loss', loss, train=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -34,27 +34,32 @@ class MainModule(pl.LightningModule):
         loss = F.cross_entropy(scores, y)
         acc = (y == scores.argmax(-1)).float().mean()
         # Logging to TensorBoard by default
-        self.log('valid_loss', loss, on_epoch=True, sync_dist=True)
-        self.log('valid_acc', acc, on_epoch=True, sync_dist=True)
+        self.mylog('valid_loss', loss)
+        self.mylog('valid_acc', acc)
         return loss
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
         return optimizer
 
+    def mylog(self, name, value, train=False):
+        self.log(name, value, on_epoch=True, sync_dist=not train, on_step=False)
+
 
 def get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data', default='./data')
+    parser.add_argument('--restart', action='store_true')
     parser.add_argument('-b', '--batch_size', type=int, default=32)
     parser.add_argument('--dummy')  # used to create multiple XP with same args.
+    pl.Trainer.add_argparse_args(parser)
     return parser
 
 
-EXCLUDE = ['data']
+EXCLUDE = ['data', 'restart']
 
 
-@argparse_main(parser=get_parser(), dir='outputs_pl', exclude=EXCLUDE)
+@argparse_main(parser=get_parser(), dir='outputs_pl', exclude=EXCLUDE, use_underscore=True)
 def main():
     args = get_xp().cfg
     world_size = distrib.get_distrib_spec().world_size
@@ -67,8 +72,10 @@ def main():
 
     last = get_xp().folder / 'last.ckpt'
     resume = None
-    if last.is_file():
+    if last.is_file() and not args.restart:
         resume = str(last)
-    checkpoint_callback = ModelCheckpoint(monitor='val_loss', save_last=True)
-    trainer = get_trainer(resume_from_checkpoint=resume, callbacks=[checkpoint_callback])
+    checkpoint_callback = ModelCheckpoint(
+        dirpath=get_xp().folder, monitor='valid_loss', save_last=True)
+    trainer = trainer_from_argparse_args(
+        args, resume_from_checkpoint=resume, callbacks=[checkpoint_callback])
     trainer.fit(module, data)

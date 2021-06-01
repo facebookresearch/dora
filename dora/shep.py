@@ -235,12 +235,12 @@ class Shepherd:
             kwargs['gpus_per_task'] = gpus_per_node
             kwargs['ntasks_per_node'] = 1
             if slurm_config.cpus_per_task is None:
-                kwargs['cpus_per_task'] = gpus_per_node * slurm_config['cpus_per_gpu']
+                kwargs['cpus_per_task'] = gpus_per_node * slurm_config.cpus_per_gpu
         else:
             kwargs['gpus_per_task'] = 1
             kwargs['ntasks_per_node'] = 8
             if slurm_config.cpus_per_task is None:
-                kwargs['cpus_per_task'] = slurm_config['cpus_per_gpu']
+                kwargs['cpus_per_task'] = slurm_config.cpus_per_gpu
         del kwargs['gpus']
         del kwargs['mem_per_gpu']
         del kwargs['cpus_per_gpu']
