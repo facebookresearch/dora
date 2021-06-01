@@ -61,10 +61,12 @@ Some Dora concepts:
 
 ## Making your code compatible with Dora
 
-Dora supports two backend: `argparse` based code, and `hydra` based code. On top of that, Dora provides a compatibility
-layer with PytorchLightning for a smooth integration.
+In order to derive the XP signature, Dora must know about the configuration schema your project is following, as well as 
+the parsed arguments for a run.
+Dora supports two backends for that : `argparse`, and `hydra`. On top of that, Dora provides a smooth integration
+with Pytorch Lightning for projects that uses it.
 
-For both case, you must have a specific python package (which we will call here `myproj`),
+In all cases, you must have a specific python package (which we will call here `myproj`),
 with a `train` module in it, (i.e. `myproj.train` module, stored in the `myproj/train.py` file.)
 
 The `train.py` file must contain a `main` function that is properly decorated, as explained hereafter.
