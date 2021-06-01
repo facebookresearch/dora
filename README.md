@@ -395,7 +395,7 @@ It is a bit different from the usual Slurm config, as it tries to make it as eas
 
 #### Slurm config flags
 
-- `gpus (int)`: number of total GPUs to schedule. Number of nodes
+- `gpus (int)`: number of GPUs to schedule. Number of nodes
         and tasks per nodes will be automatically inferred.
 - `mem_per_gpu (float)`: amount of memory in GB to schedule per gpus.
 - `time (int)`: maximum duration for the job in minutes.
