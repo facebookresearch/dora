@@ -65,6 +65,8 @@ else:
 try:
     import pytorch_lightning
 except ImportError:
+    pass
+else:
     from . import lightning
 from . import conf, grid
 from .link import Link
