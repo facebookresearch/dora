@@ -265,12 +265,13 @@ If a previous run has failed or was canceled, Dora will not automatically start 
 If you want to reschedule a run, use the `-r, --retry` flag.
 
 Other flags:
-    - `-f SIG`: injects the arguments from the XP matching this signature, on top of the one provided on the command line.
-    - `-R, --replace`: replace any running job (i.e. cancels, and schedules a new one).
-    - `-D, --replace_done`: also reschedule a job even if a previous one completed successfully.
-    - `-p, --partition PARTITION`: partition to use.
-    - `-c, --comment COMMENT`: comment for the job (e.g. if priority is used).
-    - `--clear`: cancel any previous job, clear the XP folder (i.e. delete checkpoints) and reschedule.
+
+- `-f SIG`: injects the arguments from the XP matching this signature, on top of the one provided on the command line.
+- `-R, --replace`: replace any running job (i.e. cancels, and schedules a new one).
+- `-D, --replace_done`: also reschedule a job even if a previous one completed successfully.
+- `-p, --partition PARTITION`: partition to use.
+- `-c, --comment COMMENT`: comment for the job (e.g. if priority is used).
+- `--clear`: cancel any previous job, clear the XP folder (i.e. delete checkpoints) and reschedule.
 
 ## `dora info`: Inspecting an XP
 
@@ -389,7 +390,10 @@ will be scheduled.
 ### Explorer class
 
 The `Explorer` class allows to customize which metric to report, and with what precision. It also gives you a chance to reorganize metrics or further post process them (for instance, extracting max, min etc.).
-For an example with detailed comments, go checkout [the Explorer classes for BrainMagick](https://github.com/fairinternal/brainmagick/blob/main/bm/grids/_explorers.py#L7). By convention, files starting with `_` inside the `grids` folder are ignored by Dora, and are a good place to put utility code.
+See [Customize metrics displayed](#customize-metrics-displayed-in-explorer) hereafter for more explanation.
+
+By convention, files starting with `_` inside the `grids` folder are ignored by Dora, and are a good place to put utility code such as your custom `Explorer` classes.
+For an example with detailed comments, go checkout [the Explorer classes for BrainMagick](https://github.com/fairinternal/brainmagick/blob/main/bm/grids/_explorers.py#L7). 
 
 ## The Dora API
 
