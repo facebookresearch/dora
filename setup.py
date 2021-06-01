@@ -42,7 +42,7 @@ setup(
     url=URL,
     packages=find_packages(),
     package_data={"dora": ["py.typed"]},
-    install_requires=['submitit', 'treetable', 'torch'],
+    install_requires=['retrying', 'submitit', 'treetable', 'torch'],
     include_package_data=True,
     entry_points={
         'console_scripts': ['dora=dora.__main__:main'],
