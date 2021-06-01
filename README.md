@@ -191,9 +191,10 @@ automatic reloading of the last checkpoint, logging etc.
 
 **Important:** Dora deactivates the default PL behavior of dumping a mid-epoch
 checkpoint upon preemption, as this lead to non deterministic behavior
-(this epoch will be skipped upon restart). Dora assumes you save checkpoints
+(as PL would skip this epoch upon restart). Dora assumes you save checkpoints
 from time to time (e.g. every epoch). To get back the old behavior,
-pass `no_unfinished_epochs=False` to `get_trainer`.
+pass `no_unfinished_epochs=False` to `get_trainer`. See [examples/pl/train.py](examples/pl/train.py)
+for an example of how to implement checkpointing in a reliable manner.
 
 ## The `dora` command
 
