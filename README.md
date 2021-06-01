@@ -105,6 +105,11 @@ def main():
                # to this folder, so that it is automatically resumed!
     xp.link  # link object, can send back metrics to Dora
 
+    # If you load a previous checkpoint, you should always make sure
+    # That the Dora Link is consistent with what is in the checkpoint with
+    # history = checkpoint['history']
+    # xp.link.update_history(history)
+
     for t in range(10):
         xp.link.push_metrics({"loss": 1/(t + 1)})
     ...
@@ -128,6 +133,10 @@ def main(cfg):
     # Hydra run folder will automatically be set to xp.folder!
 
     xp.link  # link object, can send back metrics to Dora
+    # If you load a previous checkpoint, you should always make sure
+    # That the Dora Link is consistent with what is in the checkpoint with
+    # history = checkpoint['history']
+    # xp.link.update_history(history)
 
     for t in range(10):
         xp.link.push_metrics({"loss": 1/(t + 1)})
@@ -148,6 +157,36 @@ dora:
     dir: "./outputs"
 ```
 
+### PyTorch Lightning support
+
+Dora supports PyTorch Lightning (PL) out of the box. Dora will automatically
+capture logged metrics (make sure to use `per_epoch=True`), and handles distribution
+(you should not pass `gpus=...` or `num_nodes=...` to PL).
+
+```python
+import dora
+
+
+@dora.argparse_main(...)
+def main():
+    xp = dora.get_xp()
+    args = xp.cfg
+    # Replace Pytorch lightning `Trainer(...)` with the following:
+    trainer = dora.lightning.get_trainer(...)
+    # Or when using argparse parsing:
+    trainer = dora.lightning.trainer_from_argparse_args(args)
+```
+
+See [examples/pl/train.py](examples/pl/train.py) for a full example including
+automatic reloading of the last checkpoint, logging etc.
+
+
+**Important:** Dora deactivates the default PL behavior of dumping a mid-epoch
+checkpoint upon preemption, as this lead to non deterministic behavior
+(this epoch will be skipped upon restart). Dora assumes you save checkpoints
+from time to time (e.g. every epoch). To get back the old behavior,
+pass `no_unfinished_epochs=False` to `get_trainer`.
+
 ## The `dora` command
 
 Dora will install a `dora` command that is the main way to interact with it.
@@ -163,6 +202,19 @@ In order for Dora to find your code, you must pass your training package
 This flag can be skipped if `mycode` is in the current working directory and is the only folder with a `train.py` file in it, in which
 case Dora will find it automatically.
 You can also export `DORA_PACKAGE=mycode` to avoid having to give the `-P` flag explicitely.
+
+You can use a different script name than `train.py` with `-M, --main_module`,
+or setting the `DORA_MAIN_MODULE` env variable.
+
+**Attention:** those flags should be specified BEFORE the `run | launch |info |grid` part: `dora -P mycode run`, not `dora run -P mycode`.
+
+### Examples
+
+See the [examples](examples/) folder for a few examples using argparse, Hydra
+and Pytorch Lightning, in order to test the commands described here.
+To play with them, first install Dora (`pip install .` from the top-level of the repo), then `cd examples`, and use `dora -P example_name ...`
+to let Dora know which example to use!
+
 
 
 ## `dora run`: Running XP locally
@@ -191,7 +243,9 @@ Dora supports scheduling experiments on Slurm. If you need to schedule many of t
 dora launch [--dev] [-g NUMBER_OF_GPUS] [TRAINING_ARGS ...]
 ```
 
-Dora will automatically select the appropriate number of nodes and tasks per nodes based on the number of GPU required, as well as scale required memory.
+Dora will automatically select the appropriate number of nodes and tasks per nodes based on the number of GPUs required, as well as scale required memory.
+For instance, if `-g 16`, Dora will schedule on 2 nodes with 8 gpus each.
+
 This command will launch the command, and immediately tail its log and monitor its progress, just like if it were running in locally.
 If you want to kill the command if you kill the local process, you can add the `-a`, `--attach` flag.
 To avoid tailing the log, just pass `--no_tail`.
@@ -255,6 +309,7 @@ def explorer(launcher: Launcher):
     sub.bind_(epochs=40)  # in-place version of bind()
     sub.slurm(partition="dev")(batch_size=64)  # lr=0.01, 8 gpus, dev, bs=64 and epochs=40.
 
+    launcher.slurm_(gpus=16)  # Now using 16 gpus per job, i.e. 2 full nodes.
     # Nice thing of native python, you can define arbitrary set of XP!
     for lr, bs in product([0.1, 0.01, 0.001], [16, 32, 64]):
         if bs > 32 and lr < 0.01:
@@ -331,11 +386,34 @@ For an example with detailed comments, go checkout [the Explorer classes for Bra
 
 ## Advanced configuration
 
-TBD
 
 ### Setting SLURM default parameters
 
 Slurm configuration is detailed in [dora/conf.py](https://github.com/fairinternal/dora/blob/main/dora/conf.py#L37).
+It is a bit different from the usual Slurm config, as it tries to make it as easy as possible to change the number of GPUs without requiring to manually compute the number of nodes, tasks per nodes etc.
+
+
+#### Slurm config flags
+
+- `gpus (int)`: number of GPUs to schedule. Number of nodes
+        and tasks per nodes will be automatically inferred.
+- `mem_per_gpu (float)`: amount of memory in GB to schedule per gpus.
+- `time (int)`: maximum duration for the job in minutes.
+- `cpus_per_gpu (int)`: number of cpus per gpu, this will set
+        the `cpus_per_task` automatically, based on the
+        number of gpus and `one_task_per_node`, unless `cpus_per_task`
+        is explicitely provided.
+- `cpus_per_task (int or None)`: number of cpus per task.
+- `partition (str)`: partition name.
+- `comment (str)`: comment for the job.
+- `setup (List[str])`: list of shell commands to execute
+    before the actual command. Use it for `module load`.
+- `max_num_timeout (int)`: maximum number of requeue.
+- `one_task_per_node (bool)`: if True, schedules a single task
+    per node, otherwise, will schedule one task per gpu (default is False).
+
+#### Default Slurm config
+
 You can pass an instance of `SlurmConfig` to `argparse_main` that will be used as the default
 config for all `dora launch` commands and grid files.
 Grid files can override any field defined on `SlurmConfig` with the `launcher.slurm` (return new launcher) and
@@ -356,10 +434,73 @@ slurm:
     mem_per_gpu: 30  # this is in GB
 ```
 
+### Customize metrics displayed in Explorer
+
+Metrics are formatted with the [treetable](https://github.com/adefossez/treetable),
+which is not heavily documented, but it should be easy enough to get how it works
+with this example:
+```python
+from dora import Explorer
+import treetable as tt
 
 
-### Changing the namings of the XPs.
+class MyExplorer(Explorer):
+    test_metrics = ['sisnr', 'pesq']
 
+    def get_grid_metrics(self):
+        """Return the structure of the metrics that should be displayed in the tracking table.
+        """
+        # This will return a list of `tt.group`, each group will
+        # be in separate parts of the table.
+        return [
+            tt.group("train", [
+                tt.leaf("epoch"),
+                tt.leaf("loss", ".3f"),  # The second argument of tt.leaf is a formatting string.
+             ], align=">"),  # Align can be left (<) or right (>) and will apply on all
+                             # leaves inside the group.
+            tt.group("valid", [
+                tt.leaf("best", ".3f"),
+                tt.leaf("loss", ".3f"),
+             ], align=">"),
+            tt.group("test", [
+                tt.leaf(name, ".3f")
+                for name in self.test_metrics
+             ], align=">")
+        ]
+        # In practice you can even have deeply nested groups etc. but honestly
+        # you probably don't need that.
+
+    def process_history(self, history):
+        """This process the history obtained from the Dora Link
+        into the right format for the `get_grid_metrics()` layout.
+        This should return a dictionary, with one key per group, each
+        being a sub-dict with one key per metric.
+
+        It is fine for a key to be absent, things won't crash, and it will
+        just not show anything there in the table.
+        """
+        train = {
+            'epoch': len(history),
+        }
+        valid = {}
+        test = {}
+        best = float('inf')
+        for metrics in history:
+            train.update(metrics['train'])
+            valid.update(metrics['valid'])
+            # Let say you forgot to compute best valid loss, you can
+            # fill in it here on the fly.
+            best = min(valid['loss'], best)
+            valid['best'] = best
+
+            # The reason for having this for loop is also if some metrics
+            # are not defined with every epoch. Let say you compute test metrics
+            # only every 10 epochs, then this will automatically fill the
+            # test metrics of the last epoch which evaluated them.
+            if 'test' in metrics:
+                test.update(metrics['test'])
+        return {"train": train, "valid": valid, "test": test}
+```
 
 ## Contributing
 

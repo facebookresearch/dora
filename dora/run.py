@@ -46,7 +46,6 @@ def run_action(args, main: DecoratedMain):
     else:
         if 'WORLD_SIZE' not in os.environ:
             check_job_and_clear(args.argv, main, args.clear)
-            os.environ['LOCAL_RANK'] = '0'
             os.environ['RANK'] = '0'
             os.environ['WORLD_SIZE'] = '1'
         sys.argv[1:] = args.argv

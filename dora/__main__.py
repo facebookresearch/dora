@@ -169,7 +169,6 @@ def main():
         fatal(f"Could not find function `main` in {module_name}.")
 
     if not isinstance(main, DecoratedMain):
-        breakpoint()
         fatal(f"{module_name}.main was not decorated with `dora.main`.")
 
     if getattr(args, 'from_sig', None) is not None:

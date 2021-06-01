@@ -17,7 +17,7 @@ dora:
   dir: "outputs_complex"
 
 slurm:
-  cpus_per_task: 10
+  cpus_per_gpu: 10
 
 hydra:
   job_logging:

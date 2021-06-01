@@ -46,26 +46,34 @@ class SlurmConfig:
         mem_per_gpu (float): amount of memory in GB to schedule
             per gpus.
         time (int): maximum duration for the job in minutes.
-        cpus_per_task (int): number of cpus per task.
+        cpus_per_gpu (int): number of cpus per gpu, this will set
+            the `cpus_per_task` automatically, based on the
+            number of gpus and `one_task_per_node`, unless `cpus_per_task`
+            is explicitely provided.
+        cpus_per_task (int or None): number of cpus per task.
         partition (str): partition name
         comment (str): comment for the job.
         setup (List[str]): list of shell commands to execute
             before the actual command. Use it for `module load`.
         max_num_timeout (int): maximum number of requeue.
+        one_task_per_node (bool): if True, schedules a single task
+            per node, otherwise, will schedule one task per gpu (default is False).
 
-    ..warning:: this assumes one task per GPU. Support for
-        multiple GPUs per task might be added in the future.
-        Same for no GPU tasks.
+    ..warning:: this assumes one task per GPU.
+        Set `one_task_per_node` if you do not want that.
+        Tasks without any gpus are not really supported at the moment.
     """
     gpus: int = 1
     mem_per_gpu: float = 40
     time: int = 1200
-    cpus_per_task: int = 10
+    cpus_per_gpu: int = 10
+    cpus_per_task: tp.Optional[int] = None
     partition: str = "learnlab"
     comment: tp.Optional[str] = None
     setup: tp.List[str] = field(default_factory=list)
     max_num_timeout: int = 20
     constraint: str = ""
+    one_task_per_node: bool = False
 
 
 @dataclass
