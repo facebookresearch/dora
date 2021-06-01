@@ -392,11 +392,11 @@ For an example with detailed comments, go checkout [the Explorer classes for Bra
 Slurm configuration is detailed in [dora/conf.py](https://github.com/fairinternal/dora/blob/main/dora/conf.py#L37).
 It is a bit different from the usual Slurm config, as it tries to make it as easy as possible to change the number of GPUs without requiring to manually compute the number of nodes, tasks per nodes etc.
 
-Here is a summary of the flags:
+
+#### Slurm config flags
 
 - `gpus (int)`: number of total GPUs to schedule. Number of nodes
         and tasks per nodes will be automatically inferred.
-
 - `mem_per_gpu (float)`: amount of memory in GB to schedule per gpus.
 - `time (int)`: maximum duration for the job in minutes.
 - `cpus_per_gpu (int)`: number of cpus per gpu, this will set
@@ -411,6 +411,8 @@ Here is a summary of the flags:
 - `max_num_timeout (int)`: maximum number of requeue.
 - `one_task_per_node (bool)`: if True, schedules a single task
     per node, otherwise, will schedule one task per gpu (default is False).
+
+#### Default Slurm config
 
 You can pass an instance of `SlurmConfig` to `argparse_main` that will be used as the default
 config for all `dora launch` commands and grid files.
