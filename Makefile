@@ -18,6 +18,9 @@ docs:
 	pdoc3 --html -o docs -f dora
 	cp dora.jpg docs/dora/
 
+upload: docs
+	rsync -ar docs bob:www/share/dora/
+
 live:
 	pdoc3 --http : dora
 

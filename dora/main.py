@@ -17,7 +17,7 @@ import sys
 from retrying import retry
 
 from .conf import DoraConfig, SlurmConfig
-from .names import _NamesMixin
+from .names import NamesMixin
 from .xp import XP, _context
 
 
@@ -30,7 +30,7 @@ def _load_main(full_name):
     return getattr(module, fun_name)
 
 
-class DecoratedMain(_NamesMixin):
+class DecoratedMain(NamesMixin):
     """
     Main function that will actually run the XP, wrapped with tons of meta-informations.
 

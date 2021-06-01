@@ -18,6 +18,7 @@ width="400px"></p>
 - [`dora launch`: Launching XP remotely](#dora-launch-launching-xp-remotely)
 - [`dora info`: Inspecting an XP](#dora-info-inspecting-an-xp)
 - [`dora grid`: Managing a grid search](#dora-grid-managing-a-grid-search)
+- [The Dora API](#the-dora-api)
 - [Advanced configuration](#advanced-configuration)
 - [Contributing](#contributing)
 
@@ -385,6 +386,30 @@ will be scheduled.
 
 The `Explorer` class allows to customize which metric to report, and with what precision. It also gives you a chance to reorganize metrics or further post process them (for instance, extracting max, min etc.).
 For an example with detailed comments, go checkout [the Explorer classes for BrainMagick](https://github.com/fairinternal/brainmagick/blob/main/bm/grids/_explorers.py#L7). By convention, files starting with `_` inside the `grids` folder are ignored by Dora, and are a good place to put utility code.
+
+## The Dora API
+
+Dora provides some API, including the possibility to run grid searches
+directly from an IPython notebook. See the
+[Dora API](https://share.honu.io/dora/docs/dora/).
+
+The most useful class is the
+[DecoratedMain](https://share.honu.io/dora/docs/dora/main.html#dora.main.DecoratedMain), which is the decorated main function in your project. You can use it
+to retrieve an [XP object](https://share.honu.io/dora/docs/dora/xp.html#dora.xp.XP)
+from a list of argv, or a signature:
+
+```python
+
+from myproj.train import main
+
+xp = main.get_xp_from_sig('ae43f645')
+xp2 = main.get_xp_from_argv(xp.argv + ['batch_size=32'])
+with xp2.enter():
+    # You can pretend to be in an XP with this.
+    ...
+```
+
+
 
 
 ## Advanced configuration

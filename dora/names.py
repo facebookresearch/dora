@@ -5,7 +5,7 @@ import typing as tp
 from .xp import XP
 
 
-class _NamesMixin:
+class NamesMixin:
     """Mixin that handles everything related to the naming of experiments.
     """
 
