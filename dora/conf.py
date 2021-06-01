@@ -46,7 +46,7 @@ class SlurmConfig:
         mem_per_gpu (float): amount of memory in GB to schedule
             per gpus.
         time (int): maximum duration for the job in minutes.
-        cpus_per_gpu (int): number of cpus per gpu, this will override
+        cpus_per_gpu (int): number of cpus per gpu, this will set
             the `cpus_per_task` automatically, based on the
             number of gpus and `one_task_per_node`, unless `cpus_per_task`
             is explicitely provided.
