@@ -6,6 +6,10 @@
 
 <p align="center">
 <img src="./dora.jpg" alt="Really cheesy effects applied on a Dora picture."
+width="200px"></p>
+
+<p align="center">
+<img src="./demo.png" alt="A demo of a Dora grid search"
 width="400px"></p>
 
 ## Table of Content
