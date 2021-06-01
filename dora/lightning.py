@@ -88,14 +88,10 @@ class _ArmDoraLogger(Callback):
         self._first = True
 
     def on_train_epoch_start(self, trainer, pl_module):
-        self.up = 0
         if self._first:
             self._first = False
             return
         self.logger._push()
-
-    def on_train_batch_start(self, *args, **kwargs):
-        self.up += 1
 
     def on_train_end(self, trainer, pl_module):
         self.logger._push()
