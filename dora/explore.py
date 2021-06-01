@@ -160,8 +160,9 @@ class Explorer:
         """Process history to return a dict (with possibly nested dict inside)
         matching the schema given by `get_grid_metrics`.
         """
-        out = {}
+        out = {
+            'epoch': len(history)
+        }
         for metrics in history:
             out.update(metrics)
-        out['epoch'] = len(history)
         return out
