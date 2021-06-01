@@ -56,7 +56,16 @@ __pdoc__['tests'] = False
 
 # flake8: noqa
 from .explore import Explorer, Launcher
-from .hydra import hydra_main
+try:
+    import hydra
+except ImportError:
+    pass
+else:
+    from .hydra import hydra_main
+try:
+    import pytorch_lightning
+except ImportError:
+    from . import lightning
 from .link import Link
 from .main import argparse_main
 from .shep import Sheep

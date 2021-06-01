@@ -18,7 +18,7 @@ URL = 'https://github.com/fairinternal/dora'
 EMAIL = 'defossez@fb.com'
 AUTHOR = 'Alexandre Défossez'
 REQUIRES_PYTHON = '>=3.7.0'
-VERSION = "0.1.0dev5"
+VERSION = "0.1.1"
 
 HERE = Path(__file__).parent
 
@@ -42,13 +42,14 @@ setup(
     url=URL,
     packages=find_packages(),
     package_data={"dora": ["py.typed"]},
-    install_requires=['hydra-core', 'submitit', 'treetable', 'torch'],
+    install_requires=['submitit', 'treetable', 'torch'],
     include_package_data=True,
     entry_points={
         'console_scripts': ['dora=dora.__main__:main'],
     },
     extras_require={
-        'dev': ['coverage', 'flake8', 'mypy', 'pdoc3', 'pytest', 'hydra_colorlog'],
+        'dev': ['coverage', 'flake8', 'hydra-core', 'hydra_colorlog',
+                'mypy', 'pdoc3', 'pytest', 'pytorch_lightning'],
     },
     license='Creative Commons Attribution-NonCommercial 4.0 International',
     classifiers=[

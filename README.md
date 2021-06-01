@@ -157,6 +157,36 @@ dora:
     dir: "./outputs"
 ```
 
+### PyTorch Lightning support
+
+Dora supports PyTorch Lightning (PL) out of the box. Dora will automatically
+capture logged metrics (make sure to use `per_epoch=True`), and handles distribution
+(you should not pass `gpus=...` or `num_nodes=...` to PL).
+
+```python
+import dora
+
+
+@dora.argparse_main(...)
+def main():
+    xp = dora.get_xp()
+    args = xp.cfg
+    # Replace Pytorch lightning `Trainer(...)` with the following:
+    trainer = dora.lightning.get_trainer(...)
+    # Or when using argparse parsing:
+    trainer = dora.lightning.trainer_from_argparse_args(args)
+```
+
+See [examples/pl/train.py](examples/pl/train.py) for a full example including
+automatic reloading of the last checkpoint, logging etc.
+
+
+**Important:** Dora deactivates the default PL behavior of dumping a mid-epoch
+checkpoint upon preemption, as this lead to non deterministic behavior
+(this epoch will be skipped upon restart). Dora assumes you save checkpoints
+from time to time (e.g. every epoch). To get back the old behavior,
+pass `no_unfinished_epochs=False` to `get_trainer`.
+
 ## The `dora` command
 
 Dora will install a `dora` command that is the main way to interact with it.
@@ -172,6 +202,19 @@ In order for Dora to find your code, you must pass your training package
 This flag can be skipped if `mycode` is in the current working directory and is the only folder with a `train.py` file in it, in which
 case Dora will find it automatically.
 You can also export `DORA_PACKAGE=mycode` to avoid having to give the `-P` flag explicitely.
+
+You can use a different script name than `train.py` with `-M, --main_module`,
+or setting the `DORA_MAIN_MODULE` env variable.
+
+**Attention:** those flags should be specified BEFORE the `run | launch |info |grid` part: `dora -P mycode run`, not `dora run -P mycode`.
+
+### Examples
+
+See the [examples](examples/) folder for a few examples using argparse, Hydra
+and Pytorch Lightning, in order to test the commands described here.
+To play with them, first install Dora (`pip install .` from the top-level of the repo), then `cd examples`, and use `dora -P example_name ...`
+to let Dora know which example to use!
+
 
 
 ## `dora run`: Running XP locally
@@ -200,7 +243,9 @@ Dora supports scheduling experiments on Slurm. If you need to schedule many of t
 dora launch [--dev] [-g NUMBER_OF_GPUS] [TRAINING_ARGS ...]
 ```
 
-Dora will automatically select the appropriate number of nodes and tasks per nodes based on the number of GPU required, as well as scale required memory.
+Dora will automatically select the appropriate number of nodes and tasks per nodes based on the number of GPUs required, as well as scale required memory.
+For instance, if `-g 16`, Dora will schedule on 2 nodes with 8 gpus each.
+
 This command will launch the command, and immediately tail its log and monitor its progress, just like if it were running in locally.
 If you want to kill the command if you kill the local process, you can add the `-a`, `--attach` flag.
 To avoid tailing the log, just pass `--no_tail`.
@@ -264,6 +309,7 @@ def explorer(launcher: Launcher):
     sub.bind_(epochs=40)  # in-place version of bind()
     sub.slurm(partition="dev")(batch_size=64)  # lr=0.01, 8 gpus, dev, bs=64 and epochs=40.
 
+    launcher.slurm_(gpus=16)  # Now using 16 gpus per job, i.e. 2 full nodes.
     # Nice thing of native python, you can define arbitrary set of XP!
     for lr, bs in product([0.1, 0.01, 0.001], [16, 32, 64]):
         if bs > 32 and lr < 0.01:

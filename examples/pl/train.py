@@ -24,7 +24,7 @@ class MainModule(pl.LightningModule):
         x, y = batch
         scores = self(x)
         loss = F.cross_entropy(scores, y)
-        # Logging to TensorBoard by default
+        # Those metrics will be forwarded to Dora Link automatically.
         self.mylog('train_loss', loss, train=True)
         return loss
 
@@ -33,7 +33,7 @@ class MainModule(pl.LightningModule):
         scores = self(x)
         loss = F.cross_entropy(scores, y)
         acc = (y == scores.argmax(-1)).float().mean()
-        # Logging to TensorBoard by default
+        # Those metrics will be forwarded to Dora Link automatically.
         self.mylog('valid_loss', loss)
         self.mylog('valid_acc', acc)
         return loss
