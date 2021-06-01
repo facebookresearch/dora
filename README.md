@@ -393,6 +393,8 @@ Dora provides some API, including the possibility to run grid searches
 directly from an IPython notebook. See the
 [Dora API](https://share.honu.io/dora/docs/dora/).
 
+### DecoratedMain
+
 The most useful class is the
 [DecoratedMain](https://share.honu.io/dora/docs/dora/main.html#dora.main.DecoratedMain), which is the decorated main function in your project. You can use it
 to retrieve an [XP object](https://share.honu.io/dora/docs/dora/xp.html#dora.xp.XP)
@@ -404,12 +406,59 @@ from myproj.train import main
 
 xp = main.get_xp_from_sig('ae43f645')
 xp2 = main.get_xp_from_argv(xp.argv + ['batch_size=32'])
+xp2_name = main.get_name(xp2)  # See API in dora.names.NameMixin
 with xp2.enter():
     # You can pretend to be in an XP with this.
     ...
 ```
 
+#### Advanced customization
 
+If you want to do some advance customization of the behavior of `DecoratedMain`
+(e.g. custom naming for XP, or weird parsing of flags), feel free
+to inherit `dora.main.ArgparseMain` or `dora.hydra.HydraMain` and use your
+custom class instead.
+
+### Grid API
+
+You can schedule and manage grids from the Dora API rather than the command-line.
+This is useful to manage XPs from a notebook for instance!
+See the [dora.grid.run_grid](https://share.honu.io/dora/docs/dora/grid.html#dora.grid.run_grid).
+Flags are passed with as an instance of  [dora.grid.RunGridArgs](https://share.honu.io/dora/docs/dora/grid.html#dora.grid.RunGridArgs).
+Submission rules (e.g. cancel, retry etc.) are passed as a [dora.conf.SubmitRules](https://share.honu.io/dora/docs/dora/conf.html#dora.conf.SubmitRules).
+
+```python
+import dora
+
+from myproj.train import main
+
+
+@dora.Explorer
+def explorer(launcher):
+    launcher.slurm_(gpus=2, partition='learnlab')
+    launcher.bind_({
+        'epochs': 200,
+        'model.depth': 10,
+        'batch_size': 128
+    })
+    launcher()
+    for p in [0.005, 0.01, 0.05, 0.1]:
+        sub = launcher.bind({'task.penalty': p})
+        sub()
+        sub(lr=1e-4)
+
+
+args = dora.grid.RunGridArgs(jupyter=True, monitor=False, interval=1)
+rules = dora.conf.SubmitRules(retry=True)  # Should we reschedule failed jobs?
+# The run_grid function returns a list of sheeps
+# each sheep as 2 attributues: sheep.xp and sheep.job_id.
+sheeps = dora.grid.run_grid(main, explorer, grid_name='jupy', rules=rules, args=args)
+args.monitor = True
+# The jupyter flag will make the grid API use the display API to clear the cell
+# output and update it regularly. This one will not return until all jobs
+# are done or failed.
+dora.grid.run_grid(main, explorer, grid_name='jupy', rules=rules, args=args)
+```
 
 
 ## Advanced configuration

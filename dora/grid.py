@@ -35,6 +35,7 @@ class RunGridArgs:
     """
     Arguments to tune the behavior of the `run_grid` function.
 
+    Args:
         patterns (list[str]): List of patterns used to filter by name
             the XPs.
         monitor (bool): if True, will monitor the advances of the XPs

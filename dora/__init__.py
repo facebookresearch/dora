@@ -66,6 +66,7 @@ try:
     import pytorch_lightning
 except ImportError:
     from . import lightning
+from . import conf, grid
 from .link import Link
 from .main import argparse_main
 from .shep import Sheep
