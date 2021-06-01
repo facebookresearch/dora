@@ -134,9 +134,18 @@ class DecoratedMain(NamesMixin):
 
 class ArgparseMain(DecoratedMain):
     """Implementation of `DecoratedMain` for XP that uses argparse.
+
+    Args:
+        main : main function to wrap.
+        dora : Dora config, containing the exclude and dir fields.
+        parser : parser to use, and to derive default values from.
+        slurm : default slurm config for scheduling jobs.
+        use_underscore : if False, scheduling a job as `launcher(batch_size=32)`
+            will translate to the command-line `--batch-size=32`,
+            otherwise, it will stay as `--batch_size=32`.
     """
     def __init__(self, main: MainFun, dora: DoraConfig, parser: argparse.ArgumentParser,
-                 slurm: tp.Optional[SlurmConfig] = None, use_underscore: bool = False):
+                 slurm: tp.Optional[SlurmConfig] = None, use_underscore: bool = True):
         super().__init__(main, dora)
         self.parser = parser
         self.use_underscore = use_underscore
@@ -186,12 +195,22 @@ class ArgparseMain(DecoratedMain):
         return super().get_slurm_config()
 
 
-def argparse_main(parser: argparse.ArgumentParser, *, use_underscore: bool = False,
+def argparse_main(parser: argparse.ArgumentParser, *, use_underscore: bool = True,
                   exclude: tp.Sequence[str] = None,
                   slurm: tp.Optional[SlurmConfig] = None,
                   dir: tp.Union[str, Path] = "./outputs"):
     """Nicer version of `ArgparseMain` that acts like a decorator, and directly
     exposes the most useful configs to override.
+
+    Args:
+        parser : parser to use, and to derive default values from.
+        exclude : list of patterns of arguments to exclude from the computation
+            of the XP signature.
+        dir : path to store logs, checkpoints, etc. to.
+        slurm : default slurm config for scheduling jobs.
+        use_underscore : if False, scheduling a job as `launcher(batch_size=32)`
+            will translate to the command-line `--batch-size=32`,
+            otherwise, it will stay as `--batch_size=32`.
     """
     def _decorator(main: MainFun):
         dora = DoraConfig(

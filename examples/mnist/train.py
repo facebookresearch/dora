@@ -104,7 +104,7 @@ def get_parser():
 EXCLUDE = ["--log-interval", "--save-model", "--no-cuda"]
 
 
-@argparse_main(parser=get_parser(), exclude=EXCLUDE)
+@argparse_main(parser=get_parser(), exclude=EXCLUDE, use_underscore=False)
 def main():
     xp = get_xp()
     args = xp.cfg
