@@ -61,14 +61,15 @@ Some Dora concepts:
 
 ## Making your code compatible with Dora
 
-Dora supports two backend: `argparse` based code, and `hydra` based code.
+Dora supports two backend: `argparse` based code, and `hydra` based code. On top of that, Dora provides a compatibility
+layer with PytorchLightning for a smooth integration.
 
 For both case, you must have a specific python package (which we will call here `myproj`),
 with a `train` module in it, (i.e. `myproj.train` module, stored in the `myproj/train.py` file.)
 
 The `train.py` file must contain a `main` function that is properly decorated, as explained hereafter.
 
-### Distributed training support
+### Distributed training support (non PyTorch Lightning)
 
 Dora supports distributed training, and makes a few assumptions for you.  You should initialize distributed training through Dora, by calling in your `main` function:
 
