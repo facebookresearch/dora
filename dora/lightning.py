@@ -3,14 +3,18 @@ Support for PyTorch lightning. You should just replace the call
 to `Trainer(...)` with `get_trainer(...)`.
 """
 import argparse
+import functools
 import inspect
+import os
 import typing as tp
 
 from pytorch_lightning.callbacks import Callback
-from pytorch_lightning.loggers import LightningLoggerBase
+from pytorch_lightning.loggers import LightningLoggerBase, TensorBoardLogger
 from pytorch_lightning.plugins.environments import ClusterEnvironment
+from pytorch_lightning.plugins import TrainingTypePluginsRegistry
 from pytorch_lightning.plugins.training_type.ddp import DDPPlugin
 from pytorch_lightning.trainer import Trainer
+from pytorch_lightning.utilities.argparse import from_argparse_args
 import torch
 
 from . import distrib
@@ -50,10 +54,12 @@ class DoraEnvironment(ClusterEnvironment):
         return self.spec.node_rank
 
 
+@TrainingTypePluginsRegistry.register("dora_ddp")
 class DoraDDPPlugin(DDPPlugin):
     """DDP plugin for compatibility with Dora.
     """
-    def init_ddp_connection(self, global_rank: int, world_size: int) -> None:
+    def init_ddp_connection(self, global_rank: tp.Optional[int] = None,
+                            world_size: tp.Optional[int] = None) -> None:
         distrib.init(self.torch_distributed_backend)
 
 
@@ -73,14 +79,29 @@ class RestoreDoraHistory(Callback):
 
 
 class _ArmDoraLogger(Callback):
-    # See DoraHistoryLogger hereafter. This should go away once
-    # PL supports filtering per epoch metrics only.
+    # Some metrics are per step, some per epoch, I want only the per epoch.
+    # At the moment this is not supported by PL, so I manually trigger the logger
+    # save on some events that are registered with this callback.
     def __init__(self, logger):
         super().__init__()
         self.logger = logger
+        self._first = True
 
-    def on_train_epoch_end(self, trainer, pl_module, outputs):
-        self.logger._armed = True
+    def on_train_epoch_start(self, trainer, pl_module):
+        self.up = 0
+        if self._first:
+            self._first = False
+            return
+        self.logger._push()
+
+    def on_train_batch_start(self, *args, **kwargs):
+        self.up += 1
+
+    def on_train_end(self, trainer, pl_module):
+        self.logger._push()
+
+    def on_test_end(self, trainer, pl_module):
+        self.logger._repush()
 
 
 class _DummySLURMConnector:
@@ -95,16 +116,20 @@ class DoraHistoryLogger(LightningLoggerBase):
         super().__init__()
         self.link = get_xp().link
         self.folder = get_xp().folder
-        # Some metrics are per step, some per epoch, I want only the per epoch.
-        # At the moment this is not supported by PL, so I'll "arm" the logger
-        # on the end epoch event, so that the next call to log_metrics
-        # is actually going through.
-        self._armed = False
+        self._metrics = {}
 
     def log_metrics(self, metrics, step):
-        if self._armed:
-            self._armed = False
-            self.link.push_metrics(metrics)
+        self._metrics.update(metrics)
+
+    def _push(self):
+        self.link.push_metrics(self._metrics)
+        self._metrics = {}
+
+    def _repush(self):
+        history = self.link.history
+        history[-1].update(self._metrics)
+        self.link.update_history(history)
+        self._metrics = {}
 
     @property
     def save_dir(self):
@@ -154,17 +179,12 @@ def get_trainer(*args, add_dora_logger=True, no_unfinished_epochs=True, **kwargs
     kwargs = inspect.getcallargs(init, [None] + list(args), **kwargs)
     del kwargs['self']
 
-    plugins = kwargs.pop("plugins", [])
+    plugins = kwargs.pop("plugins") or []
     env = DoraEnvironment()
 
-    gpus = torch.cuda.device_count()
+    gpus = min(torch.cuda.device_count(), env.world_size())
     if env.world_size() > 1:
-        # Dora always use all available GPUs, either through `-d` flag locally,
-        # or through Slurm (that will mask the other ones).
-        devices = [torch.device("cuda", i) for i in range(gpus)]
-        gpus = len(devices)
-        ddp = DoraDDPPlugin(cluster_environment=env, parallel_devices=devices)
-        plugins += [env, ddp]
+        plugins += [env, 'dora_ddp']
     kwargs['plugins'] = plugins
 
     callbacks = kwargs.pop("callbacks", [])
@@ -181,12 +201,20 @@ def get_trainer(*args, add_dora_logger=True, no_unfinished_epochs=True, **kwargs
     kwargs['default_root_dir'] = get_xp().folder
 
     if add_dora_logger:
-        logger = kwargs.pop('logger', [])
+        logger = kwargs['logger']
+        if logger is True:
+            version = os.environ.get('PL_EXP_VERSION')
+            if version is None:
+                version = os.environ.get('SLURM_JOB_ID')
+            # Create default logger as in PL logger_connector.py
+            logger = TensorBoardLogger(
+                save_dir=get_xp().folder, version=version, name='lightning_logs')
         if not isinstance(logger, tp.Iterable):
             logger = [logger]
         dora_logger = DoraHistoryLogger()
         kwargs['callbacks'].append(_ArmDoraLogger(dora_logger))
         logger.append(dora_logger)
+        kwargs['logger'] = logger
 
     trainer = Trainer(**kwargs)
 
@@ -194,3 +222,15 @@ def get_trainer(*args, add_dora_logger=True, no_unfinished_epochs=True, **kwargs
         trainer.slurm_connector = _DummySLURMConnector()
 
     return trainer
+
+
+class _Intercept:
+    @functools.wraps(Trainer.__init__)
+    def __init__(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+
+
+def trainer_from_argparse_args(args, **kwargs):
+    intercept = from_argparse_args(_Intercept, args, **kwargs)
+    return get_trainer(*intercept.args, **intercept.kwargs)
