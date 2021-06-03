@@ -85,6 +85,8 @@ import dora.distrib
 dora.distrib.init()
 ```
 
+**Note:** This is not required for Pytorch Lightning users, see the PL section hereafter, everything will be setup automatically for you :)
+
 ### Argparse support
 
 Here is a template for the `train.py` file:
