@@ -11,6 +11,7 @@ from submitit import SlurmJob
 import submitit
 
 from .conf import SlurmConfig, SubmitRules
+from .distrib import get_distrib_spec
 from .main import DecoratedMain
 from .utils import try_load
 from .xp import XP
@@ -21,10 +22,15 @@ logger = logging.getLogger(__name__)
 
 class _SubmitItTarget:
     def __call__(self, main: DecoratedMain, argv: tp.Sequence[str]):
+        self.xp = main.get_xp(argv)
         sys.argv[1:] = argv
         main()
 
     def checkpoint(self, *args, **kwargs):
+        if get_distrib_spec().rank == 0:
+            # cleanup rendezvous file on requeue, otherwise things will fail.
+            if self.xp.rendezvous_file.exists():
+                self.xp.rendezvous_file.unlink()
         return submitit.helpers.DelayedSubmission(self, *args, **kwargs)
 
 

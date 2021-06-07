@@ -22,6 +22,8 @@ DistribSpec = namedtuple(
 
 def get_distrib_spec():
     """Return information on the distributed setup, i.e. world size, rank etc.
+    This can be used even before distributed training is initialized, which is useful for
+    PytorchLightning for instance.
     """
     if 'WORLD_SIZE' in os.environ:
         rank = int(os.environ['RANK'])
