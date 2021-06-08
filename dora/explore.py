@@ -7,6 +7,7 @@ and can be called repeatidly to schedule XPs.
 `Explorer`: defines some metadata, in particular the metrics to display
 with the `dora grid` command.
 """
+from copy import deepcopy
 from collections import OrderedDict
 from concurrent.futures import ProcessPoolExecutor
 import typing as tp
@@ -48,7 +49,7 @@ class Launcher:
         self._shepherd = shepherd
         self._main = self._shepherd.main
         self._herd = herd
-        self._slurm = slurm
+        self._slurm = deepcopy(slurm)
         self._argv = list(argv)
         self._pool = pool
 
