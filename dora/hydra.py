@@ -170,12 +170,13 @@ class HydraMain(DecoratedMain):
             assert gh is not None
             groups = gh.list_all_config_groups()
             to_keep = []
-            delta = []
+            delta: tp.List[tp.Tuple[str, str]] = []
             for arg in overrides:
                 for group in groups:
                     if arg.startswith(f'{group}='):
                         to_keep.append(arg)
                         _, value = arg.split('=', 1)
+                        delta = [(g, v) for g, v in delta if g != group]
                         delta.append((group, value))
             if not to_keep:
                 return self._base_cfg, []
