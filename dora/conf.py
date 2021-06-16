@@ -15,7 +15,7 @@ def update_from_args(data: tp.Any, args: Namespace):
     """Update the given dataclass from the argument parser args.
     """
     for key in data.__dict__:
-        if hasattr(args, key):
+        if hasattr(args, key) and getattr(args, key) is not None:
             setattr(data, key, getattr(args, key))
 
 
