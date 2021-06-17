@@ -82,17 +82,21 @@ class _Context:
     # Used to keep track of a running XP and be able to provide
     # it on demand with `get_xp`.
     def __init__(self):
-        self._xp: XP = None
+        self._xps: tp.List[XP] = []
 
     @contextmanager
-    def enter_xp(self, xp: XP):
-        if self._xp is not None:
+    def enter_xp(self, xp: XP, stack: bool = False):
+        """Simulate that the given XP is the current xp.
+        Set `stack=True` if you want to allow this to happen from within
+        another experiment.
+        """
+        if self._xps and not stack:
             raise RuntimeError("Already in a xp.")
-        self._xp = xp
+        self._xps.append(xp)
         try:
             yield
         finally:
-            self._xp = None
+            self._xps.pop(-1)
 
 
 _context = _Context()
@@ -102,12 +106,12 @@ def get_xp() -> XP:
     """When running from within an XP, returns the XP object.
     Otherwise, raises RuntimeError.
     """
-    if _context._xp is None:
+    if not _context._xps:
         raise RuntimeError("Not in a xp!")
     else:
-        return _context._xp
+        return _context._xps[-1]
 
 
 def is_xp() -> bool:
     """Return True if running within an XP."""
-    return _context._xp is not None
+    return bool(_context._xps)
