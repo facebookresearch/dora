@@ -77,7 +77,7 @@ class XP:
         ..Warning:: For hydra experiment, this will not convert any path
             automatically, or setup loggers etc.
         """
-        with _context.enter_xp(self):
+        with _context.enter_xp(self, stack):
             yield
 
 
