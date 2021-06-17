@@ -1,4 +1,4 @@
-hydra-core<1.1
+hydra-core
 pytorch_lightning
 git+https://github.com/facebookincubator/submitit@master#egg=submitit
 torch

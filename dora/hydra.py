@@ -13,7 +13,10 @@ from unittest import mock
 
 import hydra
 from hydra.core.global_hydra import GlobalHydra
-from hydra.experimental import compose, initialize_config_dir
+try:
+    from hydra import compose, initialize_config_dir
+except ImportError:
+    from hydra.experimental import compose, initialize_config_dir  # type: ignore
 
 from omegaconf.dictconfig import DictConfig
 
