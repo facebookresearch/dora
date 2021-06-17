@@ -68,8 +68,11 @@ class XP:
         return self.folder / ".argv.json"
 
     @contextmanager
-    def enter(self):
+    def enter(self, stack: bool = False):
         """Context manager, fake being in the XP for its duration.
+
+        Set `stack=True` if you want to allow this to happen from within
+        another experiment.
 
         ..Warning:: For hydra experiment, this will not convert any path
             automatically, or setup loggers etc.
@@ -86,10 +89,6 @@ class _Context:
 
     @contextmanager
     def enter_xp(self, xp: XP, stack: bool = False):
-        """Simulate that the given XP is the current xp.
-        Set `stack=True` if you want to allow this to happen from within
-        another experiment.
-        """
         if self._xps and not stack:
             raise RuntimeError("Already in a xp.")
         self._xps.append(xp)
