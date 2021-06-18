@@ -16,7 +16,9 @@ def update_from_args(data: tp.Any, args: Namespace):
     """
     for key in data.__dict__:
         if hasattr(args, key):
-            setattr(data, key, getattr(args, key))
+            value = getattr(args, key)
+            if value is not None:
+                setattr(data, key, value)
 
 
 def update_from_hydra(data: tp.Any, cfg: DictConfig):
