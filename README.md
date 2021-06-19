@@ -288,9 +288,9 @@ dora info -j SLURM_ID
 
 You can either specify the XP by listing all of its training arguments, by passing its signature, or even the latest Slurm id associated with it.
 The info command supports a number of flags:
-- `-f`: print the folder for the XP
 - `-l`: print the entire log for the main task (this only work for remote jobs, not XP ran locally with `dora run`)
 - `-t`: tail the log for the main task.
+
 
 ## `dora grid`: Managing a grid search
 
