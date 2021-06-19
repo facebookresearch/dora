@@ -469,6 +469,8 @@ args.monitor = True
 # output and update it regularly. This one will not return until all jobs
 # are done or failed.
 dora.grid.run_grid(main, explorer, grid_name='jupy', rules=rules, args=args)
+# You can retrieve the short names by using `main.get_names()`
+short_names, ref_name = main.get_names([sheep.xp for sheep in sheeps])
 ```
 
 
