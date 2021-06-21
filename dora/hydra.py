@@ -17,6 +17,9 @@ try:
     from hydra import compose, initialize_config_dir
 except ImportError:
     from hydra.experimental import compose, initialize_config_dir  # type: ignore
+    old_hydra = True
+else:
+    old_hydra = False
 
 from omegaconf.dictconfig import DictConfig
 
@@ -197,9 +200,13 @@ class HydraMain(DecoratedMain):
             return self._get_config_noinit(overrides)
 
     def _get_config_noinit(self, overrides: tp.List[str] = []) -> DictConfig:
-        with mock.patch.object(DictConfig, "__deepcopy__", _no_copy):
+        if old_hydra:
+            with mock.patch.object(DictConfig, "__deepcopy__", _no_copy):
+                cfg = compose(self.config_name, overrides)
+            cfg = copy.deepcopy(cfg)
+        else:
             cfg = compose(self.config_name, overrides)
-        return copy.deepcopy(cfg)
+        return cfg
 
     def _get_delta(self, init: DictConfig, other: DictConfig):
         """

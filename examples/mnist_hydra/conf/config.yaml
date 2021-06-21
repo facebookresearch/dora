@@ -1,5 +1,5 @@
 defaults:
-  - hydra/job_logging: colorlog
+  - override hydra/job_logging: colorlog
 
 batch_size: 64
 test_batch_size: 1000

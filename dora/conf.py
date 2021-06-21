@@ -15,6 +15,7 @@ def update_from_args(data: tp.Any, args: Namespace):
     """Update the given dataclass from the argument parser args.
     """
     for key in data.__dict__:
+        assert isinstance(key, str)
         if hasattr(args, key):
             value = getattr(args, key)
             if value is not None:
@@ -28,6 +29,7 @@ def update_from_hydra(data: tp.Any, cfg: DictConfig):
     dct = OmegaConf.to_container(cfg, resolve=True)
     assert isinstance(dct, dict)
     for key, value in dct.items():
+        assert isinstance(key, str)
         if hasattr(data, key):
             setattr(data, key, value)
         else:
