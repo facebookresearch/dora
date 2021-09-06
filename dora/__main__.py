@@ -104,6 +104,9 @@ def get_parser():
     group.add_argument("-t", "--tail", type=int,
                        help="Show the log for the job with the given index")
 
+    group.add_argument("--init", action='store_true',
+                       help="Init the given XPs so that their signature can be referenced.")
+
     grid.add_argument(
         'grid', nargs='?',
         help='Name of the grid to run. Name of the module will be `package`.grids.`name`.')

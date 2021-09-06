@@ -66,6 +66,7 @@ class RunGridArgs:
     dry_run: bool = False
     cancel: bool = False
     clear: bool = False
+    init: tp.Optional[bool] = False
 
     # jupyter display?
     jupyter: bool = False
@@ -236,6 +237,9 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
 
         for child in to_unlink:
             child.unlink()
+    if args.init:
+        for sheep in sheeps:
+            main.init_xp(sheep.xp)
 
     if args.cancel:
         return sheeps
