@@ -16,7 +16,7 @@ clean:
 
 docs:
 	pdoc3 --html -o docs -f dora
-	cp dora.jpg docs/dora/
+	cp dora.png docs/dora/
 
 upload: docs
 	rsync -ar docs bob:www/share/dora/

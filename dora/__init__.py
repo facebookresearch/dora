@@ -45,7 +45,7 @@ As a Dora user, the following documentation will prove useful to you:
 - `dora.main.get_xp`: get the current `dora.xp.XP`.
 
 <p align="center">
-<img src="./dora.jpg" alt="Really cheesy effects applied on a Dora picture."
+<img src="./dora.png" alt="Dora logo, picturing a schematic dora in front of a computer."
 width="400px"></p>
 
 

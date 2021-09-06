@@ -5,7 +5,7 @@
 
 
 <p align="center">
-<img src="./dora.jpg" alt="Really cheesy effects applied on a Dora picture."
+<img src="./dora.png" alt="Dora logo, picturing a schematic Dora in front of a computer."
 width="300px"></p>
 
 <p align="center">
