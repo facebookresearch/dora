@@ -28,6 +28,7 @@ def get_main(tmpdir):
         xp = get_xp()
         if xp.dora.clean_git:
             assert '/code' in str(Path('.').resolve()), Path('.').resolve()
+            assert False, __file__
         xp.link.push_metrics({"loss": 0.1})
         return xp
 
