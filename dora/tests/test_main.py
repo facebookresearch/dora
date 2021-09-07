@@ -26,13 +26,13 @@ def get_main(tmpdir):
     @argparse_main(parser=parser, exclude=EXCLUDE, dir=tmpdir, use_underscore=True)
     def main():
         xp = get_xp()
-
+        if xp.dora.clean_git:
+            assert '/code/' in str(Path('.').resolve()), Path('.').resolve()
         xp.link.push_metrics({"loss": 0.1})
         return xp
 
     if os.environ.get('_DORA_CLEAN_GIT') == '1':
         main.dora.clean_git = True
-        assert '/code/' in str(Path('.').resolve()), Path('.').resolve()
     return main
 
 
