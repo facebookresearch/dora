@@ -4,7 +4,7 @@ lint:
 	flake8 dora && mypy -p dora
 
 tests:
-	coverage run -m pytest || exit 1
+	coverage run -m pytest dora || exit 1
 	coverage report --include 'dora/*'
 	coverage html --include 'dora/*'
 

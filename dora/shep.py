@@ -268,7 +268,7 @@ class Shepherd:
         exec_dir = Path('.')
         if xp.dora.clean_git:
             # Let's move to the right folder
-            exec_dir = clean_git.get_clone_exec_dir(self.xp)
+            exec_dir = clean_git.get_clone_exec_dir(xp)
 
         with tmp_chdir(exec_dir):
             job = executor.submit(
