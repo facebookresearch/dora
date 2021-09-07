@@ -15,6 +15,7 @@ save_model: false
 dora:
   exclude: ["save_model", "no_cuda", "dry_run", "log_interval"]
   dir: "outputs_complex"
+  clean_git: true
 
 slurm:
   cpus_per_gpu: 10

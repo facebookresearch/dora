@@ -11,7 +11,6 @@ def run_cmd(argv):
 
 def test_integration(tmpdir):
     os.environ['_DORA_TEST_TMPDIR'] = str(tmpdir)
-    os.environ['_DORA_CLEAN_GIT'] = '0'
     with pytest.raises(sp.SubprocessError):
         run_cmd(["info", "--", "a=32"])
     run_cmd(["info"])
@@ -24,7 +23,15 @@ def test_integration(tmpdir):
         run_cmd(["run", "--clean_git"])
 
     os.environ['_DORA_CLEAN_GIT'] = '1'
-    run_cmd(["run", '--clean_git'])
+    try:
+        with pytest.raises(sp.SubprocessError):
+            # this one will fail because of the internal check in test_main.py
+            run_cmd(["run"])
+        run_cmd(["run", '--clean_git'])
+        # Testing a second time, to make sure updating an existing repo works fine.
+        run_cmd(["run", '--clean_git'])
+    finally:
+        os.environ['_DORA_CLEAN_GIT'] = '0'
 
 
 def test_pickle(tmpdir):

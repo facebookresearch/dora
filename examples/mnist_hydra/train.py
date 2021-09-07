@@ -84,7 +84,7 @@ def test(model, device, test_loader):
 def main(args):
     logger.info(repr(args))
     import os
-    logger.info(os.getcwd())
+    logger.info("%s %s", os.getcwd(), __file__)
     xp = get_xp()
     logger.info(xp.sig)
     # Training settings

@@ -55,7 +55,7 @@ def do_clean_git(args, main: DecoratedMain):
     clean_git.shallow_clone(xp.code_folder)
 
     # Let's move to the right folder
-    clean_git.move_to_clone()
+    clean_git.move_to_clone(xp)
 
 
 def run_action(args, main: DecoratedMain):

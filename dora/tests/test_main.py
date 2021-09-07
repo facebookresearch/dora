@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 from pathlib import Path
+import os
 import sys
 
 import pytest
@@ -21,12 +22,19 @@ EXCLUDE = ["num_workers", "cat_*"]
 
 def get_main(tmpdir):
     tmpdir = Path(str(tmpdir))
+    current_dir = Path('.').resolve()
 
     @argparse_main(parser=parser, exclude=EXCLUDE, dir=tmpdir, use_underscore=True)
     def main():
         xp = get_xp()
+        if xp.dora.clean_git:
+            assert Path('.').resolve() != current_dir, Path('.').resolve()
+
         xp.link.push_metrics({"loss": 0.1})
         return xp
+
+    if os.environ.get('_DORA_CLEAN_GIT') == '1':
+        main.dora.clean_git = True
     return main
 
 
