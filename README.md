@@ -35,6 +35,9 @@ pip install -U git+ssh://git@github.com/fairinternal/dora#egg=dora
 
 ## What's up?
 
+- 7 of September 2021: added support for a `clean_git` option. This will ensure that the project git is clean
+    and make a clone from which the experiment will run. This does not apply to `dora run` for easier
+    debugging (but you can force it with `--clean_git`).
 - 21 of June 2021: added support for Hydra 1.1. Be very careful if you update to Hydra 1.1, there are some non backward compatible changes in the way group config are parsed, see [the Hydra release notes](https://hydra.cc/docs/upgrades/1.0_to_1.1/default_composition_order) for more information.
 - 18 of June 2021: please upgrade Dora, there was a bug with the wrong number of gpus being scheduled 😇. 
 
@@ -113,6 +116,7 @@ parser = argparse.ArgumentParser("mycode.train")
     exclude=["list_of_args_to_ignore_in_signature, e.g.", "num_workers",
              "can_be_pattern_*", "log_*"],
     use_underscore=True,  # flags are --batch_size vs. --batch-size
+    clean_git=False,  # if True, scheduled experiments will run from a separate clone of the repo.
 )
 def main():
     # No need to reparse args, you can directly access them from the current XP
@@ -173,6 +177,7 @@ logs:
 dora:
     exclude: ["num_workers", "logs.*"]
     dir: "./outputs"
+    clean_git: true  # set clean_git option for the project.
 ```
 
 ### PyTorch Lightning support
@@ -253,6 +258,8 @@ dora run -- [TRAINING_ARGS ...]
 `dora run` supports two flags:
 - `-d`: distributed training using all available gpus. The master worker output will be to the shell, and other workers will be redirected to a log file in the XP folder.
 - `-f sig`: this will inject the hyper-parameters from the XP with the given sig on top of the one provided on the command line. Useful to resume locally a remote job that failed.
+- `--clean_git`: clone the repo inside the XP folder and execute from there. This is mostly for debugging,
+    and in general is not needed.
 
 ## `dora launch`: Launching XP remotely
 
@@ -283,6 +290,13 @@ Other flags:
 - `-p, --partition PARTITION`: partition to use.
 - `-c, --comment COMMENT`: comment for the job (e.g. if priority is used).
 - `--clear`: cancel any previous job, clear the XP folder (i.e. delete checkpoints) and reschedule.
+
+
+### Clean git and `dora launch`
+
+If `clean_git` is set for this project (see [the examples above](#making-your-code-compatible-with-dora)
+for how to do this), Dora will clone the repository (and fail if it is not in clean state), and run
+the remote job from this clone. The clone will be in the XP folder, in the `code` subfolder.
 
 ## `dora info`: Inspecting an XP
 
@@ -354,6 +368,12 @@ This will do 3 thing:
     **If you just comment one line in the grid file, the corresponding job will automatically be killed.**
 - A table containing job status and metadata as well as the latest metrics will
     be printed every 5 minutes.
+
+### Clean git and `dora grid`
+
+If `clean_git` is set for this project (see [the examples above](#making-your-code-compatible-with-dora)
+for how to do this), Dora will clone the repository once for each XP (and fail if it is not in clean state), and run
+the remote jobs from their respective clone. The clone will be in the XP folder, in the `code` subfolder.
 
 ### Flags
 
