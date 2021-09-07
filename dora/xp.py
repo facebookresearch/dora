@@ -52,6 +52,13 @@ class XP:
         return self.dora.dir / self.dora.xps / self.sig
 
     @property
+    def code_folder(self) -> Path:
+        if self.dora.clean_git:
+            return self.folder / 'code'
+        else:
+            return Path('.')
+
+    @property
     def submitit(self) -> Path:
         return self.folder / self.dora.shep.submitit_folder
 

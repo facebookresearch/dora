@@ -10,6 +10,7 @@ import typing as tp
 from submitit import SlurmJob
 import submitit
 
+from . import clean_git
 from .conf import SlurmConfig, SubmitRules
 from .distrib import get_distrib_spec
 from .main import DecoratedMain
@@ -23,6 +24,11 @@ logger = logging.getLogger(__name__)
 class _SubmitItTarget:
     def __call__(self, main: DecoratedMain, argv: tp.Sequence[str]):
         self.xp = main.get_xp(argv)
+
+        if main.dora.clean_git:
+            # Let's move to the right folder
+            clean_git.move_to_clone(self.xp)
+
         sys.argv[1:] = argv
         main()
 
@@ -182,6 +188,9 @@ class Shepherd:
             self._cancel(self._to_cancel)
             self._to_cancel = []
 
+        if self.main.dora.clean_git:
+            clean_git.check_repo_clean()
+
         while self._to_submit:
             sheep, slurm_config = self._to_submit.pop(0)
             self._submit(sheep, slurm_config)
@@ -202,6 +211,10 @@ class Shepherd:
         self.main.init_xp(xp)
         folder = xp.folder / xp.dora.shep.submitit_folder
         folder.mkdir(exist_ok=True)
+
+        if self.main.dora.clean_git:
+            clean_git.shallow_clone(xp.code_folder)
+
         dirty = folder / "dirty"  # Dirty flag, will be cleaned at the end.
         name = self.main.name + "_" + sheep.xp.sig
         if dirty.exists():
@@ -221,8 +234,7 @@ class Shepherd:
         if xp.rendezvous_file.exists():
             xp.rendezvous_file.unlink()
 
-        # Kill the job if any of the task fails
-        os.environ['SLURM_KILL_BAD_EXIT'] = '1'
+        os.environ['SLURM_KILL_BAD_EXIT'] = '1'  # Kill the job if any of the task fails
         kwargs = dict(slurm_config.__dict__)
         executor = submitit.SlurmExecutor(
             folder=folder, max_num_timeout=kwargs.pop('max_num_timeout'))

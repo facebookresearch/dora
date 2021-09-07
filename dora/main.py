@@ -198,7 +198,7 @@ class ArgparseMain(DecoratedMain):
 def argparse_main(parser: argparse.ArgumentParser, *, use_underscore: bool = True,
                   exclude: tp.Sequence[str] = None,
                   slurm: tp.Optional[SlurmConfig] = None,
-                  dir: tp.Union[str, Path] = "./outputs"):
+                  dir: tp.Union[str, Path] = "./outputs", **kwargs):
     """Nicer version of `ArgparseMain` that acts like a decorator, and directly
     exposes the most useful configs to override.
 
@@ -211,10 +211,12 @@ def argparse_main(parser: argparse.ArgumentParser, *, use_underscore: bool = Tru
         use_underscore : if False, scheduling a job as `launcher(batch_size=32)`
             will translate to the command-line `--batch-size=32`,
             otherwise, it will stay as `--batch_size=32`.
+        **kwargs: extra args are passed to `DoraConfig`.
     """
     def _decorator(main: MainFun):
         dora = DoraConfig(
             dir=Path(dir),
-            exclude=list(exclude) if exclude is not None else [])
+            exclude=list(exclude) if exclude is not None else [],
+            **kwargs)
         return ArgparseMain(main, dora, parser, use_underscore=use_underscore, slurm=slurm)
     return _decorator

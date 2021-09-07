@@ -5,9 +5,10 @@ import sys
 import typing as tp
 import time
 
+from . import clean_git
 from .executor import start_ddp_workers
 from .main import DecoratedMain
-from .log import simple_log, red
+from .log import simple_log, red, fatal
 from .shep import Shepherd
 
 log = partial(simple_log, "Launch:")
@@ -39,13 +40,33 @@ def check_job_and_clear(argv: tp.List[str], main: DecoratedMain, clear: bool = F
             log("Failed to properly remove folder, but things should be okay...")
 
 
+def do_clean_git(args, main: DecoratedMain):
+    if not main.dora.clean_git:
+        if args.clean_git:
+            fatal("--clean_git can only be used if dora.clean_git is True.")
+        return
+    if not args.clean_git:
+        return
+
+    xp = main.get_xp(args.argv)
+    main.init_xp(xp)
+
+    clean_git.check_repo_clean()
+    clean_git.shallow_clone(xp.code_folder)
+
+    # Let's move to the right folder
+    clean_git.move_to_clone()
+
+
 def run_action(args, main: DecoratedMain):
     if args.ddp and not os.environ.get('RANK'):
         check_job_and_clear(args.argv, main, args.clear)
+        do_clean_git(args, main)
         start_ddp_workers(args.package, main, args.argv)
     else:
         if 'WORLD_SIZE' not in os.environ:
             check_job_and_clear(args.argv, main, args.clear)
+            do_clean_git(args, main)
             os.environ['RANK'] = '0'
             os.environ['WORLD_SIZE'] = '1'
         sys.argv[1:] = args.argv

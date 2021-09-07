@@ -60,3 +60,10 @@ def test_shep(tmpdir):
         shepherd.maybe_submit_lazy(sheep, slurm, rules)
         shepherd.commit()
         assert sheep.job.job_id == "3"
+
+        main.dora.clean_git = True
+        sheep = shepherd.get_sheep_from_argv(["a=56"])
+        shepherd.maybe_submit_lazy(sheep, slurm, rules)
+        shepherd.commit()
+        assert sheep.xp.code_folder.name == 'code'
+        assert sheep.xp.code_folder.exists()

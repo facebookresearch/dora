@@ -119,6 +119,8 @@ def get_parser():
     run = subparsers.add_parser("run", help="Run locally the given command.")
     run.add_argument("-f", "--from_sig", help="Signature of job to use as baseline.")
     run.add_argument("-d", "--ddp", action="store_true", help="Distributed training.")
+    run.add_argument("--clean_git", action="store_true",
+                     help="Run from a clean git clone, only if activated in the main dora config!")
     run.add_argument("--clear", action='store_true',
                      help="Remove XP folder, reschedule job, starting from scratch.")
     run.add_argument("argv", nargs='*')

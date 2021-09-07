@@ -11,6 +11,7 @@ def run_cmd(argv):
 
 def test_integration(tmpdir):
     os.environ['_DORA_TEST_TMPDIR'] = str(tmpdir)
+    os.environ['_DORA_CLEAN_GIT'] = '0'
     with pytest.raises(sp.SubprocessError):
         run_cmd(["info", "--", "a=32"])
     run_cmd(["info"])
@@ -18,6 +19,12 @@ def test_integration(tmpdir):
     run_cmd(["grid", "test", "--dry_run", "--no_monitor"])
     run_cmd(["info", "--", "--a=32"])
     run_cmd(["--main_module", "other_train", "run"])
+
+    with pytest.raises(sp.SubprocessError):
+        run_cmd(["run", "--clean_git"])
+
+    os.environ['_DORA_CLEAN_GIT'] = '1'
+    run_cmd(["run", '--clean_git'])
 
 
 def test_pickle(tmpdir):
