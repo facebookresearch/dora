@@ -98,6 +98,28 @@ dora.distrib.init()
 
 **Note:** This is not required for Pytorch Lightning users, see the PL section hereafter, everything will be setup automatically for you :)
 
+
+### Clean git
+
+You can set the `clean_git` option on your project, see hereafter on how to do it for either argparse or Hydra
+based projects.
+When this option is set, Dora will make individual clone of your project repository for each experiment that is scheduled.
+The job will then run from that clean clone. This allows both to keep track of the exact
+code that was used for an experiment, as well as preventing code changes to impact pending, or rescheduled
+jobs.
+If you reschedule a failed or cancelled job, the clone will be updated with the current code.
+
+In order to use this option, your code must not rely on any file that are specified relatively
+to the project folder, and should be able to run from a fresh clone of the repository in an arbitrary location.
+**The repository must be completely clean** before scheduling remote jobs, and all files should be either
+tracked or git ignored. Only the `dora run` command can be used on a dirty repository, to allow
+for easy debugging.
+
+The clone for each experiments is located inside the `code/` subfolder inside the XP folder (which you can get with the `dora info` command for instance).
+
+
+
+
 ### Argparse support
 
 Here is a template for the `train.py` file:
@@ -292,12 +314,6 @@ Other flags:
 - `--clear`: cancel any previous job, clear the XP folder (i.e. delete checkpoints) and reschedule.
 
 
-### Clean git and `dora launch`
-
-If `clean_git` is set for this project (see [the examples above](#making-your-code-compatible-with-dora)
-for how to do this), Dora will clone the repository (and fail if it is not in clean state), and run
-the remote job from this clone. The clone will be in the XP folder, in the `code` subfolder.
-
 ## `dora info`: Inspecting an XP
 
 You can get information on an XP with the `dora info` command:
@@ -368,12 +384,6 @@ This will do 3 thing:
     **If you just comment one line in the grid file, the corresponding job will automatically be killed.**
 - A table containing job status and metadata as well as the latest metrics will
     be printed every 5 minutes.
-
-### Clean git and `dora grid`
-
-If `clean_git` is set for this project (see [the examples above](#making-your-code-compatible-with-dora)
-for how to do this), Dora will clone the repository once for each XP (and fail if it is not in clean state), and run
-the remote jobs from their respective clone. The clone will be in the XP folder, in the `code` subfolder.
 
 ### Flags
 
