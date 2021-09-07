@@ -108,7 +108,7 @@ def main(args):
         transforms.Normalize((0.1307,), (0.3081,))
         ])
 
-    data = hydra.utils.to_absolute_path("../data")
+    data = "/tmp/dora_test_mnist"
     dataset1 = datasets.MNIST(data, train=True, download=True,
                               transform=transform)
     dataset2 = datasets.MNIST(data, train=False,

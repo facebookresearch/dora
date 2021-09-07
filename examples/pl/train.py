@@ -48,7 +48,7 @@ class MainModule(pl.LightningModule):
 
 def get_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data', default='./data')
+    parser.add_argument('--data', default='/tmp/dora_test_mnist')
     parser.add_argument('--restart', action='store_true')
     parser.add_argument('-b', '--batch_size', type=int, default=32)
     parser.add_argument('--dummy')  # used to create multiple XP with same args.

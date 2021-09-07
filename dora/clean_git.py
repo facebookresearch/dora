@@ -41,7 +41,8 @@ def shallow_clone(target: Path):
         run_command(['git', 'clone', '--depth=1', source, target])
 
 
-def move_to_clone(xp: XP):
+def get_clone_exec_dir(xp: XP):
+    assert xp.dora.clean_git
     root = get_git_root()
     relative_path = Path('.').resolve().relative_to(root)
-    os.chdir(xp.code_folder / relative_path)
+    return xp.code_folder / relative_path

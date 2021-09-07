@@ -14,7 +14,7 @@ from . import clean_git
 from .conf import SlurmConfig, SubmitRules
 from .distrib import get_distrib_spec
 from .main import DecoratedMain
-from .utils import try_load
+from .utils import tmp_chdir, try_load
 from .xp import XP
 
 
@@ -24,11 +24,6 @@ logger = logging.getLogger(__name__)
 class _SubmitItTarget:
     def __call__(self, main: DecoratedMain, argv: tp.Sequence[str]):
         self.xp = main.get_xp(argv)
-
-        if main.dora.clean_git:
-            # Let's move to the right folder
-            clean_git.move_to_clone(self.xp)
-
         sys.argv[1:] = argv
         main()
 
@@ -269,8 +264,15 @@ class Shepherd:
             job_name=name,
             stderr_to_stdout=True,
             **kwargs)
-        job = executor.submit(
-            _SubmitItTarget(), self.main, sheep.xp.argv)
+
+        exec_dir = Path('.')
+        if xp.dora.clean_git:
+            # Let's move to the right folder
+            exec_dir = clean_git.get_clone_exec_dir(self.xp)
+
+        with tmp_chdir(exec_dir):
+            job = executor.submit(
+                _SubmitItTarget(), self.main, sheep.xp.argv)
         pickle.dump(job, open(sheep._job_file, "wb"))
         logger.debug("Created job with id %s", job.job_id)
         sheep.job = job

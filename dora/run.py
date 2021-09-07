@@ -41,6 +41,8 @@ def check_job_and_clear(argv: tp.List[str], main: DecoratedMain, clear: bool = F
 
 
 def do_clean_git(args, main: DecoratedMain):
+    if '_DORA_CLEAN_GIT_DONE' in os.environ:
+        return
     if not main.dora.clean_git:
         if args.clean_git:
             fatal("--clean_git can only be used if dora.clean_git is True.")
@@ -55,7 +57,10 @@ def do_clean_git(args, main: DecoratedMain):
     clean_git.shallow_clone(xp.code_folder)
 
     # Let's move to the right folder
-    clean_git.move_to_clone(xp)
+    exec_dir = clean_git.get_clone_exec_dir(xp)
+    os.chdir(exec_dir)
+    os.environ['_DORA_CLEAN_GIT_DONE'] = '1'
+    os.execv(sys.executable, [sys.executable, "-m", "dora"] + sys.argv[1:])
 
 
 def run_action(args, main: DecoratedMain):
