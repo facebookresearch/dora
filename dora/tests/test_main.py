@@ -32,7 +32,7 @@ def get_main(tmpdir):
 
     if os.environ.get('_DORA_CLEAN_GIT') == '1':
         main.dora.clean_git = True
-        assert '/code/' in Path('.').resolve(), Path('.').resolve()
+        assert '/code/' in str(Path('.').resolve()), Path('.').resolve()
     return main
 
 
