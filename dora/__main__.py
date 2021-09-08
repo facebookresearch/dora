@@ -4,7 +4,6 @@ check grid files, launch XPs, check their logs etc, as well
 as doing local runs for debugging.
 """
 import argparse
-import logging
 from pathlib import Path
 import os
 import sys
@@ -13,7 +12,7 @@ from .main import DecoratedMain
 from .grid import grid_action
 from .info import info_action
 from .launch import launch_action
-from .log import fatal, simple_log
+from .log import fatal, setup_logging, simple_log
 from .run import run_action
 from .utils import import_or_fatal
 
@@ -156,13 +155,8 @@ def get_parser():
 def main():
     parser = get_parser()
     args = parser.parse_args()
-    log_level = logging.DEBUG if args.verbose else logging.INFO
-    logger = logging.getLogger('dora')
-    logger.setLevel(log_level)
-    sh = logging.StreamHandler(sys.stderr)
-    sh.setFormatter(logging.Formatter('%(levelname)s:%(name)s:%(message)s'))
-    sh.setLevel(log_level)
-    logger.addHandler(sh)
+
+    setup_logging(args.verbose)
 
     if args.action is None:
         fatal("You must give an action.")

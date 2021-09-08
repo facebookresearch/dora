@@ -99,3 +99,23 @@ def simple_log(first: str, *args, color=None):
 def fatal(*args) -> tp.NoReturn:
     simple_log("FATAL:", *args)
     sys.exit(1)
+
+
+_dora_handler = None
+
+
+def setup_logging(verbose=False):
+    global _dora_handler  # I know this is dirty
+    log_level = logging.DEBUG if verbose else logging.INFO
+    logger = logging.getLogger('dora')
+    logger.setLevel(log_level)
+    _dora_handler = logging.StreamHandler(sys.stderr)
+    _dora_handler.setFormatter(logging.Formatter('%(levelname)s:%(name)s:%(message)s'))
+    _dora_handler.setLevel(log_level)
+    logger.addHandler(_dora_handler)
+
+
+def disable_logging():
+    assert _dora_handler is not None
+    logger = logging.getLogger('dora')
+    logger.removeHandler(_dora_handler)
