@@ -157,7 +157,12 @@ def main():
     parser = get_parser()
     args = parser.parse_args()
     log_level = logging.DEBUG if args.verbose else logging.INFO
-    logging.basicConfig(stream=sys.stderr, level=log_level)
+    logger = logging.getLogger('dora')
+    logger.setLevel(log_level)
+    sh = logging.StreamHandler(sys.stderr)
+    sh.setFormatter(logging.Formatter('%(levelname)s:%(name)s:%(message)s'))
+    sh.setLevel(log_level)
+    logger.addHandler(sh)
 
     if args.action is None:
         fatal("You must give an action.")
