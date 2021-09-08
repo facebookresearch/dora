@@ -60,6 +60,7 @@ def do_clean_git(args, main: DecoratedMain):
     exec_dir = clean_git.get_clone_exec_dir(xp)
     os.chdir(exec_dir)
     os.environ['_DORA_CLEAN_GIT_DONE'] = '1'
+    os.environ['_DORA_DIR_OVERRIDE'] = main.dora.dir
     os.execv(sys.executable, [sys.executable, "-m", "dora"] + sys.argv[1:])
 
 
