@@ -118,6 +118,7 @@ def main():
     # No need to reparse args, you can directly access them from the current XP
     # object.
     xp = get_xp()
+    xp.cfg # parsed arguments 
     xp.sig  # signature for the current run
     xp.folder  # folder for the current run, please put your checkpoint relative
                # to this folder, so that it is automatically resumed!
@@ -147,6 +148,7 @@ from dora import hydra_main, get_xp
 )
 def main(cfg):
     xp = get_xp()
+    xp.cfg # parsed configuration 
     xp.sig  # signature for the current run
     # Hydra run folder will automatically be set to xp.folder!
 
