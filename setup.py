@@ -18,7 +18,7 @@ URL = 'https://github.com/fairinternal/dora'
 EMAIL = 'defossez@fb.com'
 AUTHOR = 'Alexandre Défossez'
 REQUIRES_PYTHON = '>=3.7.0'
-VERSION = "0.1.3dev1"
+VERSION = "0.1.3dev2"
 
 HERE = Path(__file__).parent
 
@@ -42,7 +42,7 @@ setup(
     url=URL,
     packages=find_packages(),
     package_data={"dora": ["py.typed"]},
-    install_requires=['retrying', 'submitit', 'treetable', 'torch'],
+    install_requires=['omegaconf', 'retrying', 'submitit', 'treetable', 'torch'],
     include_package_data=True,
     entry_points={
         'console_scripts': ['dora=dora.__main__:main'],
