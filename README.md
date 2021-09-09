@@ -99,25 +99,29 @@ dora.distrib.init()
 **Note:** This is not required for Pytorch Lightning users, see the PL section hereafter, everything will be setup automatically for you :)
 
 
-### Clean git
+### Git Save
 
 You can set the `git_save` option on your project, see hereafter on how to do it for either argparse or Hydra
 based projects.
-When this option is set, Dora will make individual clone of your project repository for each experiment that is scheduled.
+When this option is set, Dora makes individual clones of your project repository for each experiment that is scheduled.
 The job will then run from that clean clone. This allows both to keep track of the exact
-code that was used for an experiment, as well as preventing code changes to impact pending, or rescheduled
+code that was used for an experiment, as well as preventing code changes to impact pending, or requeued
 jobs.
-If you reschedule a failed or cancelled job, the clone will be updated with the current code.
+If you reschedule a failed or cancelled job, the clone will however be updated with the current code.
 
-In order to use this option, your code must not rely on any file that are specified relatively
-to the project folder, and should be able to run from a fresh clone of the repository in an arbitrary location.
+In order to use this option, your code should be able to run from a fresh clone of the repository.
+If you need to access to resources that are specified with a path relative to the original
+repo, use `dora.git_save.to_absolute_path()`. Note that this is similar to `hydra.utils.to_absolute_path()`. In fact, you can safely replace the Hydra version with this one,
+as even when `git_save` is not set, the Dora one automatically falls back to the Hydra one (if Hydra is used).
+
 **The repository must be completely clean** before scheduling remote jobs, and all files should be either
-tracked or git ignored. Only the `dora run` command can be used on a dirty repository, to allow
-for easy debugging.
+tracked or git ignored. This is very restricive, but this makes implementing this feature
+much simpler and safe. Also this forces good practice :)
+Only the `dora run` command can be used on a dirty repository, to allow
+for easy debugging. For the `dora launch` and `dora grid` command, you can also use the `--no_git_save`
+option to temporarily deactivate this feature.
 
-The clone for each experiments is located inside the `code/` subfolder inside the XP folder (which you can get with the `dora info` command for instance).
-
-
+The clone for each experiment is located inside the `code/` subfolder inside the XP folder (which you can get with the `dora info` command for instance).
 
 
 ### Argparse support
