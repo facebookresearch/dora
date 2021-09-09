@@ -14,7 +14,7 @@ from .conf import SlurmConfig, SubmitRules
 from .distrib import get_distrib_spec
 from .git_save import git_save
 from .main import DecoratedMain
-from .utils import tmp_chdir, try_load
+from .utils import try_load
 from .xp import XP
 
 
