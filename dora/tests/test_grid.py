@@ -63,5 +63,4 @@ def test_shep(tmpdir):
         assert len(sheeps) == 1
         assert sheeps[0].state() == "UNKNOWN"
         assert sheeps[0].job.job_id == "2"
-        print("SHIT", old_sheep.job.job_id)
         assert old_sheep.state() == "CANCELLED"

@@ -86,7 +86,6 @@ def main(args):
     import os
     logger.info("%s %s", os.getcwd(), __file__)
     xp = get_xp()
-    print("fuck", main.dora.dir, xp.folder)
     logger.info(xp.sig)
     # Training settings
     use_cuda = not args.no_cuda and torch.cuda.is_available()

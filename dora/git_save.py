@@ -51,7 +51,6 @@ def git_save(xp: XP, git_save: bool = True):
 
     If `git_save` is false, this does nothing.
     """
-    print("FUCK YOU CALLED", git_save)
     if not git_save or '_DORA_ORIGINAL_DIR' in os.environ:
         # if _DORA_ORIGINAL_DIR in env, we already moved to a new folder.
         # if git_save is False, then git saving is disabled.
