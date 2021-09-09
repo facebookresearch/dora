@@ -42,9 +42,13 @@ def test_hydra_git_save(tmpdir):
     argv = ['optim.loss=git_save']
     xp = main.get_xp(argv)
 
+    print(main.main.__module__)
     with git_save(xp, True):
         call(main, argv)
-
+    import os
+    print(os.getcwd())
+    main = get_main(tmpdir)
+    assert False
 
 def test_hydra(tmpdir):
     main = get_main(tmpdir)

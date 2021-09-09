@@ -75,6 +75,7 @@ class HydraMain(DecoratedMain):
         self.config_path = config_path
 
         module = main.__module__
+        print('fuck youuuu', sys.executable, sys.argv, main, module)
         if module == "__main__":
             spec = sys.modules[module].__spec__
             if spec is None:
