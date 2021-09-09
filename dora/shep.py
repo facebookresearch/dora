@@ -203,15 +203,14 @@ class Shepherd:
         self.main.init_xp(xp)
         folder = xp.folder / xp.dora.shep.submitit_folder
         folder.mkdir(exist_ok=True)
-
-        if self.main.dora.git_save:
-            git_save.shallow_clone(xp.code_folder)
-
-        dirty = folder / "dirty"  # Dirty flag, will be cleaned at the end.
         name = self.main.name + "_" + sheep.xp.sig
+
+        # Dirty flag is used to detect if a job was submitted, but Dora was
+        # killed before saving its job id.
+        dirty = folder / "dirty"
         if dirty.exists():
-            # Previous tentative for submission might have failed
-            # with an orphan job.
+            # Previous tentative for submission might have failed with an orphan job.
+            # We manually scan for a job with the right name.
             long_name = self.main.get_name(sheep.xp)
             logger.warning("Dirty tag is still here, we might have an orphan job "
                            f"for sheep {sheep.xp.sig}/{long_name}.")
@@ -222,7 +221,6 @@ class Shepherd:
                 logger.warning(f"Found orphan job ids {ids}, will cancel")
                 sp.run(["scancel"] + ids, check=True)
 
-        dirty.touch()
         if xp.rendezvous_file.exists():
             xp.rendezvous_file.unlink()
 
@@ -263,8 +261,10 @@ class Shepherd:
             **kwargs)
 
         with git_save(xp, xp.dora.git_save):
+            dirty.touch()
             job = executor.submit(
                 _SubmitItTarget(), self.main, sheep.xp.argv)
+
         pickle.dump(job, open(sheep._job_file, "wb"))
         logger.debug("Created job with id %s", job.job_id)
         sheep.job = job
@@ -272,4 +272,5 @@ class Shepherd:
         link = link
         link.symlink_to(sheep.xp.folder.resolve())
 
+        # Now we safely stored the job id, we can remove the dirty tag.
         dirty.unlink()

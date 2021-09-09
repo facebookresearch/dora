@@ -32,7 +32,7 @@ def get_main(tmpdir):
         xp.link.push_metrics({"loss": 0.1})
         return xp
 
-    if os.environ.get('_DORA_CLEAN_GIT') == '1':
+    if os.environ.get('_DORA_GIT_SAVE') == '1':
         main.dora.git_save = True
     return main
 
