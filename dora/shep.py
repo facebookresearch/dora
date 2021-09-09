@@ -10,9 +10,9 @@ import typing as tp
 from submitit import SlurmJob
 import submitit
 
-from . import clean_git
 from .conf import SlurmConfig, SubmitRules
 from .distrib import get_distrib_spec
+from .git_save import git_save
 from .main import DecoratedMain
 from .utils import tmp_chdir, try_load
 from .xp import XP
@@ -183,9 +183,6 @@ class Shepherd:
             self._cancel(self._to_cancel)
             self._to_cancel = []
 
-        if self.main.dora.clean_git:
-            clean_git.check_repo_clean()
-
         while self._to_submit:
             sheep, slurm_config = self._to_submit.pop(0)
             self._submit(sheep, slurm_config)
@@ -207,8 +204,8 @@ class Shepherd:
         folder = xp.folder / xp.dora.shep.submitit_folder
         folder.mkdir(exist_ok=True)
 
-        if self.main.dora.clean_git:
-            clean_git.shallow_clone(xp.code_folder)
+        if self.main.dora.git_save:
+            git_save.shallow_clone(xp.code_folder)
 
         dirty = folder / "dirty"  # Dirty flag, will be cleaned at the end.
         name = self.main.name + "_" + sheep.xp.sig
@@ -265,12 +262,7 @@ class Shepherd:
             stderr_to_stdout=True,
             **kwargs)
 
-        exec_dir = Path('.')
-        if xp.dora.clean_git:
-            # Let's move to the right folder
-            exec_dir = clean_git.get_clone_exec_dir(xp)
-
-        with tmp_chdir(exec_dir):
+        with git_save(xp, xp.dora.git_save):
             job = executor.submit(
                 _SubmitItTarget(), self.main, sheep.xp.argv)
         pickle.dump(job, open(sheep._job_file, "wb"))

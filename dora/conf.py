@@ -123,13 +123,13 @@ class DoraConfig:
         exclude (List[str]): list of patterns of argument names to ignore
             when computing the XP signature and doing deduplication.
             For instance 'num_workers', etc.
-        clean_git (bool): when True, experiments can only be scheduled from a clean repo.
+        git_save (bool): when True, experiments can only be scheduled from a clean repo.
             A shallow clone of the repo will be made and execution will happen from there.
-            This does not impact `dora run` unless you pass the `--clean_git` flag.
+            This does not impact `dora run` unless you pass the `--git_save` flag.
     """
     dir: Path = Path("./outputs")  # where everything will be stored
     exclude: tp.List[str] = field(default_factory=list)
-    clean_git: bool = False
+    git_save: bool = False
 
     # Those are internal config values and are unlikely to be changed
     history: str = "history.json"  # where metrics will be stored
@@ -146,3 +146,8 @@ class DoraConfig:
             if fnmatch(arg_name, pattern):
                 return True
         return False
+
+    def __post_init__(self):
+        from .git_save import to_absolute_path
+        self.dir = to_absolute_path(self.dir)
+        print("called")

@@ -44,7 +44,6 @@ class DecoratedMain(NamesMixin):
     def __init__(self, main: MainFun, dora: DoraConfig):
         self.main = main
         self.dora = dora
-        self.dora.dir = self.dora.dir.resolve()
         self.name = main.__module__.rsplit(".", 1)[0]
         self._full_name = main.__module__ + "." + main.__name__
 

@@ -55,16 +55,6 @@ def write_and_rename(path: Path, mode: str = "wb", suffix: str = ".tmp"):
     os.rename(tmp_path, path)
 
 
-@contextmanager
-def tmp_chdir(path: Path):
-    current = Path('.').resolve()
-    os.chdir(path)
-    try:
-        yield
-    finally:
-        os.chdir(current)
-
-
 def try_load(path: Path, load=pickle.load, mode: str = "rb"):
     """
     Try to load from a path using torch.load, and handles various failure cases.

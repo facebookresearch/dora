@@ -61,7 +61,7 @@ def test_shep(tmpdir):
         shepherd.commit()
         assert sheep.job.job_id == "3"
 
-        main.dora.clean_git = True
+        main.dora.git_save = True
         sheep = shepherd.get_sheep_from_argv(["--a=56"])
         shepherd.maybe_submit_lazy(sheep, slurm, rules)
         shepherd.commit()

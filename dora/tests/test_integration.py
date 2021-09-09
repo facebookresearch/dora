@@ -20,16 +20,16 @@ def test_integration(tmpdir):
     run_cmd(["--main_module", "other_train", "run"])
 
     with pytest.raises(sp.SubprocessError):
-        run_cmd(["run", "--clean_git"])
+        run_cmd(["run", "--git_save"])
 
     os.environ['_DORA_CLEAN_GIT'] = '1'
     try:
         with pytest.raises(sp.SubprocessError):
             # this one will fail because of the internal check in test_main.py
             run_cmd(["run"])
-        run_cmd(["run", '--clean_git'])
+        run_cmd(["run", '--git_save'])
         # Testing a second time, to make sure updating an existing repo works fine.
-        run_cmd(["run", '--clean_git'])
+        run_cmd(["run", '--git_save'])
     finally:
         os.environ['_DORA_CLEAN_GIT'] = '0'
 

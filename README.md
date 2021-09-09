@@ -35,9 +35,9 @@ pip install -U git+ssh://git@github.com/fairinternal/dora#egg=dora
 
 ## What's up?
 
-- 7 of September 2021: added support for a `clean_git` option. This will ensure that the project git is clean
+- 7 of September 2021: added support for a `git_save` option. This will ensure that the project git is clean
     and make a clone from which the experiment will run. This does not apply to `dora run` for easier
-    debugging (but you can force it with `--clean_git`).
+    debugging (but you can force it with `--git_save`).
 - 21 of June 2021: added support for Hydra 1.1. Be very careful if you update to Hydra 1.1, there are some non backward compatible changes in the way group config are parsed, see [the Hydra release notes](https://hydra.cc/docs/upgrades/1.0_to_1.1/default_composition_order) for more information.
 - 18 of June 2021: please upgrade Dora, there was a bug with the wrong number of gpus being scheduled 😇. 
 
@@ -101,7 +101,7 @@ dora.distrib.init()
 
 ### Clean git
 
-You can set the `clean_git` option on your project, see hereafter on how to do it for either argparse or Hydra
+You can set the `git_save` option on your project, see hereafter on how to do it for either argparse or Hydra
 based projects.
 When this option is set, Dora will make individual clone of your project repository for each experiment that is scheduled.
 The job will then run from that clean clone. This allows both to keep track of the exact
@@ -138,7 +138,7 @@ parser = argparse.ArgumentParser("mycode.train")
     exclude=["list_of_args_to_ignore_in_signature, e.g.", "num_workers",
              "can_be_pattern_*", "log_*"],
     use_underscore=True,  # flags are --batch_size vs. --batch-size
-    clean_git=False,  # if True, scheduled experiments will run from a separate clone of the repo.
+    git_save=False,  # if True, scheduled experiments will run from a separate clone of the repo.
 )
 def main():
     # No need to reparse args, you can directly access them from the current XP
@@ -199,7 +199,7 @@ logs:
 dora:
     exclude: ["num_workers", "logs.*"]
     dir: "./outputs"
-    clean_git: true  # set clean_git option for the project.
+    git_save: true  # set git_save option for the project.
 ```
 
 ### PyTorch Lightning support
@@ -280,7 +280,7 @@ dora run -- [TRAINING_ARGS ...]
 `dora run` supports two flags:
 - `-d`: distributed training using all available gpus. The master worker output will be to the shell, and other workers will be redirected to a log file in the XP folder.
 - `-f sig`: this will inject the hyper-parameters from the XP with the given sig on top of the one provided on the command line. Useful to resume locally a remote job that failed.
-- `--clean_git`: clone the repo inside the XP folder and execute from there. This is mostly for debugging,
+- `--git_save`: clone the repo inside the XP folder and execute from there. This is mostly for debugging,
     and in general is not needed.
 
 ## `dora launch`: Launching XP remotely

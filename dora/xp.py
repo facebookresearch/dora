@@ -53,7 +53,7 @@ class XP:
 
     @property
     def code_folder(self) -> Path:
-        if self.dora.clean_git:
+        if self.dora.git_save:
             return self.folder / 'code'
         else:
             return Path('.')

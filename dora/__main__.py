@@ -45,6 +45,8 @@ def add_submit_rules(parser):
                         help="Replace any running job.")
     parser.add_argument("-D", "--replace_done", action="store_true",
                         help="Also resubmit done jobs.")
+    parser.add_argument("--no_git_save", action='store_false', dest='git_save', default=None,
+                        help="Temporarily deactivate git_save for any scheduled job.")
 
 
 def add_slurm_config(parser):
@@ -119,8 +121,8 @@ def get_parser():
     run = subparsers.add_parser("run", help="Run locally the given command.")
     run.add_argument("-f", "--from_sig", help="Signature of job to use as baseline.")
     run.add_argument("-d", "--ddp", action="store_true", help="Distributed training.")
-    run.add_argument("--clean_git", action="store_true",
-                     help="Run from a clean git clone, only if activated in the main dora config!")
+    run.add_argument("--git_save", action="store_true", default=False,
+                     help="Run from a clean git clone.")
     run.add_argument("--clear", action='store_true',
                      help="Remove XP folder, reschedule job, starting from scratch.")
     run.add_argument("argv", nargs='*')
@@ -185,6 +187,8 @@ def main():
         simple_log("Parser", "Injecting argv", argv, "from sig", args.from_sig)
         args.argv = argv + args.argv
 
+    if args.git_save is not None:
+        main.dora.git_save = args.git_save
     args.action(args, main)
 
 
