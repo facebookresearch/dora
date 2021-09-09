@@ -8,7 +8,7 @@ import time
 from .git_save import git_save
 from .executor import start_ddp_workers
 from .main import DecoratedMain
-from .log import simple_log, red
+from .log import disable_logging, simple_log, red
 from .shep import Shepherd
 
 log = partial(simple_log, "Launch:")
@@ -55,4 +55,5 @@ def run_action(args, main: DecoratedMain):
                 os.environ['RANK'] = '0'
                 os.environ['WORLD_SIZE'] = '1'
             sys.argv[1:] = args.argv
+            disable_logging()  # disable logging to avoid messing up with the wrapped project.
             main()
