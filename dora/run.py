@@ -43,6 +43,9 @@ def check_job_and_clear(argv: tp.List[str], main: DecoratedMain, clear: bool = F
 def run_action(args, main: DecoratedMain):
     xp = main.get_xp(args.argv)
     with git_save(xp, args.git_save):
+        if args.git_save and '_DORA_GIT_SAVE_DONE' not in os.environ:
+            os.environ['_DORA_GIT_SAVE_DONE'] = '1'
+            os.execv(sys.executable, [sys.executable, "-m", "dora"] + sys.argv[1:])
         if args.ddp and not os.environ.get('RANK'):
             check_job_and_clear(args.argv, main, args.clear)
             start_ddp_workers(args.package, main, args.argv)
