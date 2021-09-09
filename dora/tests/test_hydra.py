@@ -4,6 +4,7 @@ import sys
 import pytest
 
 from ..hydra import hydra_main
+from ..git_save import git_save, to_absolute_path
 from ..xp import get_xp, XP
 
 _ret = None
