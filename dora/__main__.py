@@ -187,7 +187,7 @@ def main():
         simple_log("Parser", "Injecting argv", argv, "from sig", args.from_sig)
         args.argv = argv + args.argv
 
-    if args.git_save is not None:
+    if getattr(args, 'git_save', None) is not None:
         main.dora.git_save = args.git_save
     args.action(args, main)
 

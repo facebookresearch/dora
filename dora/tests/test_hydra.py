@@ -9,12 +9,15 @@ from ..xp import get_xp, XP
 
 _ret = None
 
+current_path = Path('.').resolve()
+
 
 def main(cfg):
     global _ret
     xp = get_xp()
     xp.link.push_metrics({"loss": 0.1})
     _ret = xp  # hydra does not support return values
+    assert to_absolute_path('.') == str(current_path), (to_absolute_path('.'), current_path)
 
 
 def get_main(tmpdir):
@@ -32,6 +35,15 @@ def call(main, argv):
     finally:
         sys.argv = old_argv
     return _ret
+
+
+def test_hydra_git_save(tmpdir):
+    main = get_main(tmpdir)
+    argv = ['optim.loss=git_save']
+    xp = main.get_xp(argv)
+
+    with git_save(xp, True):
+        call(main, argv)
 
 
 def test_hydra(tmpdir):

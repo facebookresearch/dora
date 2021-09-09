@@ -22,20 +22,18 @@ def test_integration(tmpdir):
     run_cmd(["info", "--", "--a=32"])
     run_cmd(["--main_module", "other_train", "run"])
 
-    with pytest.raises(sp.SubprocessError):
-        run_cmd(["run", "--git_save"])
 
+def test_git_save(tmpdir):
+    os.environ['_DORA_TEST_TMPDIR'] = str(tmpdir)
     os.environ['_DORA_GIT_SAVE'] = '1'
-    main = get_main(tmpdir)
-    xp = main.get_xp([])
-    code = xp.code_folder
-
-    assert not code.exists()
-
     try:
-        with pytest.raises(sp.SubprocessError):
-            # this one will fail because of the internal check in test_main.py
-            run_cmd(["run"])
+        main = get_main(tmpdir)
+        xp = main.get_xp([])
+        code = xp.code_folder
+
+        run_cmd(["run"])
+        assert not code.exists()
+
         run_cmd(["run", '--git_save'])
         assert code.exists()
         # Testing a second time, to make sure updating an existing repo works fine.

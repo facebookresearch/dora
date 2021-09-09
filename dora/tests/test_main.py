@@ -26,9 +26,14 @@ def get_main(tmpdir):
     @argparse_main(parser=parser, exclude=EXCLUDE, dir=tmpdir, use_underscore=True)
     def main():
         xp = get_xp()
+        cwd = str(Path('.').resolve())
+        code = str(xp.folder / 'code')
         if xp.dora.git_save:
-            assert '/code' in str(Path('.').resolve()), Path('.').resolve()
-            assert '/code/' in __file__, __file__
+            assert cwd.startswith(code), cwd
+            assert __file__.startswith(code), __file__
+        else:
+            assert not cwd.startswith(code), cwd
+            assert not __file__.startswith(code), __file__
         xp.link.push_metrics({"loss": 0.1})
         return xp
 

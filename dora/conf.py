@@ -150,4 +150,3 @@ class DoraConfig:
     def __post_init__(self):
         from .git_save import to_absolute_path
         self.dir = to_absolute_path(self.dir)
-        print("called")
