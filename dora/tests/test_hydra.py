@@ -12,7 +12,7 @@ _ret = None
 current_path = Path('.').resolve()
 
 
-def main(cfg):
+def _main(cfg):
     global _ret
     xp = get_xp()
     xp.link.push_metrics({"loss": 0.1})
@@ -22,7 +22,7 @@ def main(cfg):
 
 def get_main(tmpdir):
     tmpdir = Path(str(tmpdir))
-    dora_main = hydra_main(config_path="./test_conf", config_name="test_conf")(main)
+    dora_main = hydra_main(config_path="./test_conf", config_name="test_conf")(_main)
     dora_main.dora.dir = tmpdir
     return dora_main
 
@@ -38,19 +38,17 @@ def call(main, argv):
 
 
 def test_hydra_git_save(tmpdir):
+    _main.__module__ = __name__
     main = get_main(tmpdir)
     argv = ['optim.loss=git_save']
     xp = main.get_xp(argv)
 
-    print(main.main.__module__)
     with git_save(xp, True):
         call(main, argv)
-    import os
-    print(os.getcwd())
-    main = get_main(tmpdir)
-    assert False
+
 
 def test_hydra(tmpdir):
+    _main.__module__ = __name__
     main = get_main(tmpdir)
     xp = call(main, [])
     assert isinstance(xp, XP)

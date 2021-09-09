@@ -75,12 +75,10 @@ class HydraMain(DecoratedMain):
         self.config_path = config_path
 
         module = main.__module__
-        print('fuck youuuu', sys.executable, sys.argv, main, module)
         if module == "__main__":
             spec = sys.modules[module].__spec__
             if spec is None:
                 module_path = sys.argv[0]
-                print('youpi youpi', module_path)
                 self._job_name = module_path.rsplit(".", 2)[1]
             else:
                 assert spec.origin is not None
