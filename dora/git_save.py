@@ -26,8 +26,7 @@ def check_repo_clean():
     out = run_command(['git', 'status', '--porcelain'])
     clean = out == ""
     if not clean:
-        fatal("Repository is not clean! Please commit all changes. All files should be added to "
-              "the repository, or git ignored. The following files should be commited "
+        fatal("Repository is not clean! The following files should be commited "
               f"or git ignored: \n {out}")
 
 
