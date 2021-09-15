@@ -1,0 +1,6 @@
+hydra-core
+pytorch_lightning
+git+https://github.com/facebookincubator/submitit@main#egg=submitit
+torch
+retrying
+treetable

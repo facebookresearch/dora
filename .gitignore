@@ -1,0 +1,14 @@
+.mypy_cache
+.pytest_cache
+__pycache__
+/docs
+*.tar.gz
+*.egg-info
+/build
+/dist
+.coverage
+/htmlcov
+/examples/data
+/examples/outputs
+/examples/outputs_complex
+/examples/outputs_pl

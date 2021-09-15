@@ -1,0 +1,27 @@
+defaults:
+  - override hydra/job_logging: colorlog
+
+batch_size: 64
+test_batch_size: 1000
+epochs: 14
+lr: 1.0
+gamma: 0.7
+no_cuda: false
+dry_run: false
+seed: 1234
+log_interval: 100
+save_model: false
+
+dora:
+  exclude: ["save_model", "no_cuda", "dry_run", "log_interval", "data_root"]
+  dir: "outputs_complex"
+  git_save: true
+
+slurm:
+  cpus_per_gpu: 10
+
+hydra:
+  job_logging:
+    handlers:
+      file:
+        formatter: colorlog

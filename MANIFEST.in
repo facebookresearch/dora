@@ -1,0 +1,6 @@
+recursive-include examples *.py
+recursive-include examples *.yaml
+recursive-include dora *.yaml
+include Makefile
+include LICENSE
+include requirements.txt

@@ -1,0 +1,18 @@
+defaults:
+  - group: plop
+
+epochs: 40
+optim:
+  loss: mse
+num_workers: 10
+
+useless:
+  a: 5
+  b: true
+
+dora:
+  exclude: ["num_workers", "useless.*"]
+  dir: "/test_output_should_fail"
+
+slurm:
+  cpus_per_task: 5
