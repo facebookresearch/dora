@@ -41,7 +41,7 @@ pip install -U git+ssh://git@github.com/facebookresearch/dora#egg=dora-search
 - 21 of June 2021: added support for Hydra 1.1. Be very careful if you update to Hydra 1.1, there are some non backward compatible changes in the way group config are parsed, see [the Hydra release notes](https://hydra.cc/docs/upgrades/1.0_to_1.1/default_composition_order) for more information.
 - 18 of June 2021: please upgrade Dora, there was a bug with the wrong number of gpus being scheduled 😇. 
 
-If you are using Dora and want to receive updates on bug fixes and new versions, ping me (@defossez) on Workchat.
+(FB Only) If you are using Dora and want to receive updates on bug fixes and new versions, ping me (@defossez) on Workchat.
 
 
 ## Introduction
