@@ -29,8 +29,12 @@ width="1000px"></p>
 ## Installation
 
 ```bash
+# For bleeding edge
 pip install -U git+https://github.com/facebookincubator/submitit@main#egg=submitit
 pip install -U git+ssh://git@github.com/facebookresearch/dora#egg=dora-search
+
+# For stable release
+pip install -U dora-search
 ```
 
 ## What's up?
