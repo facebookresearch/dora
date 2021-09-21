@@ -1,7 +1,7 @@
 # Dora The Explorer, a friendly experiment manager
 
-![tests badge](https://github.com/fairinternal/dora/workflows/tests/badge.svg)
-![linter badge](https://github.com/fairinternal/dora/workflows/linter/badge.svg)
+![tests badge](https://github.com/facebookresearch/dora/workflows/tests/badge.svg)
+![linter badge](https://github.com/facebookresearch/dora/workflows/linter/badge.svg)
 
 
 <p align="center">
@@ -30,7 +30,7 @@ width="1000px"></p>
 
 ```bash
 pip install -U git+https://github.com/facebookincubator/submitit@main#egg=submitit
-pip install -U git+ssh://git@github.com/fairinternal/dora#egg=dora-search
+pip install -U git+ssh://git@github.com/facebookresearch/dora#egg=dora-search
 ```
 
 ## What's up?
@@ -446,7 +446,7 @@ For an example with detailed comments, go checkout [the Explorer classes for Bra
 
 Dora provides some API, including the possibility to run grid searches
 directly from an IPython notebook. See the
-[Dora API](https://share.honu.io/dora/docs/dora/).
+[Dora API](https://facebookresearch.github.io/dora/docs/dora).
 
 ### DecoratedMain
 
@@ -523,7 +523,7 @@ short_names, ref_name = main.get_names([sheep.xp for sheep in sheeps])
 
 ### Setting SLURM default parameters
 
-Slurm configuration is detailed in [dora/conf.py](https://github.com/fairinternal/dora/blob/main/dora/conf.py#L37).
+Slurm configuration is detailed in [dora/conf.py](./dora/conf.py#L37).
 It is a bit different from the usual Slurm config, as it tries to make it as easy as possible to change the number of GPUs without requiring to manually compute the number of nodes, tasks per nodes etc.
 
 
