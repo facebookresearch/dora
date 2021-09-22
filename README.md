@@ -640,6 +640,10 @@ class MyExplorer(Explorer):
         return {"train": train, "valid": valid, "test": test}
 ```
 
+## License
+
+Dora is released under the MIT license as found in the [LICENSE](LICENSE) file.
+
 ## Contributing
 
 Before submitting any change, please run `make` to run unit tests and code linting.
