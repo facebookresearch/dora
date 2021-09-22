@@ -488,6 +488,7 @@ Submission rules (e.g. cancel, retry etc.) are passed as a [dora.conf.SubmitRule
 
 ```python
 import dora
+import dora.grid
 
 from myproj.train import main
 
