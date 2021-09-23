@@ -21,7 +21,7 @@ class LogProgress:
         - iterable: iterable object to wrap
         - updates (int): number of lines that will be printed, e.g.
             if `updates=5`, log every 1/5th of the total length.
-        - use_sec_per_it (bool): force speed to display as sec/it
+        - time_per_it (bool): force speed to display as ms/it
         - total (int): length of the iterable, in case it does not support
             `len`.
         - name (str): prefix to use in the log.
@@ -32,7 +32,7 @@ class LogProgress:
                  iterable: Iterable,
                  updates: int = 5,
                  min_interval: int = 1,
-                 use_sec_per_it: bool = False,
+                 time_per_it: bool = False,
                  total: tp.Optional[int] = None,
                  name: str = "LogProgress",
                  level: int = logging.INFO):
@@ -43,7 +43,7 @@ class LogProgress:
         self.total = total
         self.updates = updates
         self.min_interval = min_interval
-        self.use_sec_per_it = use_sec_per_it
+        self.time_per_it = time_per_it
         self.name = name
         self.logger = logger
         self.level = level
@@ -78,10 +78,12 @@ class LogProgress:
         infos = " | ".join(f"{k.capitalize()} {v}" for k, v in self._infos.items())
         if self._speed < 1e-4:
             speed = "oo sec/it"
+        elif self.time_per_it and self._speed < 1:
+            speed = f"{1 / self._speed:.2f} sec/it"
+        elif self.time_per_it:
+            speed = f"{1000 / self._speed:.1f} ms/it"
         elif self._speed < 0.1:
-            speed = f"{1/self._speed:.1f} sec/it"
-        elif self.use_sec_per_it:
-            speed = f"{1/self._speed:.3f} sec/it"
+            speed = f"{1/self._speed:1.f} sec/it"
         else:
             speed = f"{self._speed:.2f} it/sec"
         out = f"{self.name} | {self._index}/{self.total} | {speed}"
