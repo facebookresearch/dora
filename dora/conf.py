@@ -8,7 +8,7 @@
 Basic configuration for Dora is here.
 """
 from argparse import Namespace
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, InitVar
 from fnmatch import fnmatch
 from pathlib import Path
 import typing as tp
@@ -124,7 +124,7 @@ class DoraConfig:
     Main Dora configuration. The main parameters to change are the following.
 
     Args:
-        dir (Path): path where Dora will save all useful informations, logs.
+        dir (Path or str): path where Dora will save all useful informations, logs.
             This is also where you should store your checkpoints (see `dora.xp.XP`).
         exclude (List[str]): list of patterns of argument names to ignore
             when computing the XP signature and doing deduplication.
@@ -133,7 +133,7 @@ class DoraConfig:
             A shallow clone of the repo will be made and execution will happen from there.
             This does not impact `dora run` unless you pass the `--git_save` flag.
     """
-    dir: Path = Path("./outputs")  # where everything will be stored
+    dir: tp.Union[str, Path] = Path("./outputs")  # where everything will be stored
     exclude: tp.List[str] = field(default_factory=list)
     git_save: bool = False
 
@@ -153,6 +153,8 @@ class DoraConfig:
                 return True
         return False
 
-    def __post_init__(self):
-        from .git_save import to_absolute_path
-        self.dir = to_absolute_path(self.dir)
+    def __setattr__(self, name, value):
+        if name == 'dir':
+            from .git_save import to_absolute_path
+            value = Path(to_absolute_path(value))
+        super().__setattr__(name, value)

@@ -6,6 +6,7 @@
 # author: adefossez
 # Inspired from https://github.com/kennethreitz/setup.py
 
+from importlib.machinery import SourceFileLoader
 from pathlib import Path
 
 from setuptools import setup, find_packages
@@ -17,7 +18,11 @@ URL = 'https://github.com/facebookresearch/dora'
 EMAIL = 'defossez@fb.com'
 AUTHOR = 'Alexandre Défossez'
 REQUIRES_PYTHON = '>=3.7.0'
-VERSION = "0.1.4"
+
+# Trick taken from https://github.com/sigsep/sigsep-mus-db/blob/master/setup.py
+VERSION = SourceFileLoader(
+    'dora', 'dora/__init__.py'
+).load_module().__version__
 
 HERE = Path(__file__).parent
 
