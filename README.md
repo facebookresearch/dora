@@ -39,11 +39,13 @@ pip install -U dora-search
 
 ## What's up?
 
-- 7 of September 2021: added support for a `git_save` option. This will ensure that the project git is clean
+See [the changelog](CHANGELOG.md) for details on releases.
+
+- 2021-09-29: version 0.1.5 released.
+- 2021-09-07: added support for a `git_save` option. This will ensure that the project git is clean
     and make a clone from which the experiment will run. This does not apply to `dora run` for easier
     debugging (but you can force it with `--git_save`).
-- 21 of June 2021: added support for Hydra 1.1. Be very careful if you update to Hydra 1.1, there are some non backward compatible changes in the way group config are parsed, see [the Hydra release notes](https://hydra.cc/docs/upgrades/1.0_to_1.1/default_composition_order) for more information.
-- 18 of June 2021: please upgrade Dora, there was a bug with the wrong number of gpus being scheduled 😇. 
+- 2021-06-21: added support for Hydra 1.1. Be very careful if you update to Hydra 1.1, there are some non backward compatible changes in the way group config are parsed, see [the Hydra release notes](https://hydra.cc/docs/upgrades/1.0_to_1.1/default_composition_order) for more information.
 
 (FB Only) If you are using Dora and want to receive updates on bug fixes and new versions, ping me (@defossez) on Workchat.
 

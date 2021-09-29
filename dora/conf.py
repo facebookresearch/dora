@@ -8,7 +8,7 @@
 Basic configuration for Dora is here.
 """
 from argparse import Namespace
-from dataclasses import dataclass, field, InitVar
+from dataclasses import dataclass, field
 from fnmatch import fnmatch
 from pathlib import Path
 import typing as tp
