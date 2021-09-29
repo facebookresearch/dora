@@ -19,10 +19,12 @@ EMAIL = 'defossez@fb.com'
 AUTHOR = 'Alexandre Défossez'
 REQUIRES_PYTHON = '>=3.7.0'
 
-# Trick taken from https://github.com/sigsep/sigsep-mus-db/blob/master/setup.py
-VERSION = SourceFileLoader(
-    'dora', 'dora/__init__.py'
-).load_module().__version__
+for line in open('dora/__init__.py'):
+    line = line.strip()
+    if '__version__' in line:
+        context = {}
+        exec(line, context)
+        VERSION = context['__version__']
 
 HERE = Path(__file__).parent
 
