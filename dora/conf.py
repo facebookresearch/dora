@@ -124,7 +124,7 @@ class DoraConfig:
     Main Dora configuration. The main parameters to change are the following.
 
     Args:
-        dir (Path): path where Dora will save all useful informations, logs.
+        dir (Path or str): path where Dora will save all useful informations, logs.
             This is also where you should store your checkpoints (see `dora.xp.XP`).
         exclude (List[str]): list of patterns of argument names to ignore
             when computing the XP signature and doing deduplication.
@@ -153,6 +153,8 @@ class DoraConfig:
                 return True
         return False
 
-    def __post_init__(self):
-        from .git_save import to_absolute_path
-        self.dir = to_absolute_path(self.dir)
+    def __setattr__(self, name, value):
+        if name == 'dir':
+            from .git_save import to_absolute_path
+            value = Path(to_absolute_path(value))
+        super().__setattr__(name, value)

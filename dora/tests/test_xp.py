@@ -21,6 +21,13 @@ def get_dora(tmpdir: Path):
     return DoraConfig(dir=Path(tmpdir), exclude=["a"])
 
 
+def test_dora_dir_abs():
+    dora = get_dora('outputs')
+    assert dora.dir.is_absolute()
+    dora.dir = 'plop'
+    assert dora.dir.is_absolute()
+
+
 def test_sig(tmpdir):
     tmpdir = Path(str(tmpdir))
     dora = get_dora(tmpdir)
