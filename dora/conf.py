@@ -133,7 +133,7 @@ class DoraConfig:
             A shallow clone of the repo will be made and execution will happen from there.
             This does not impact `dora run` unless you pass the `--git_save` flag.
     """
-    dir: tp.Union[str, Path] = Path("./outputs")  # where everything will be stored
+    dir: Path = Path("./outputs")  # where everything will be stored
     exclude: tp.List[str] = field(default_factory=list)
     git_save: bool = False
 
