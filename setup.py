@@ -6,7 +6,6 @@
 # author: adefossez
 # Inspired from https://github.com/kennethreitz/setup.py
 
-from importlib.machinery import SourceFileLoader
 from pathlib import Path
 
 from setuptools import setup, find_packages
