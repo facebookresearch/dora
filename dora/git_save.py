@@ -46,7 +46,7 @@ def shallow_clone(target: Path):
         run_command(['git', 'fetch', '--depth=1', 'origin', 'HEAD'], cwd=target)
         run_command(['git', 'checkout', 'FETCH_HEAD'], cwd=target)
     else:
-        run_command(['git', 'clone', '--depth=1', source, target])
+        run_command(['git', 'clone', '--depth=1', 'file://' + str(source), target])
 
 
 @contextmanager
