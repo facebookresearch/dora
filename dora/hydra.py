@@ -20,7 +20,7 @@ from unittest import mock
 import hydra
 from hydra.core.global_hydra import GlobalHydra
 try:
-    from hydra import compose, initialize_config_dir
+    from hydra import compose, initialize_config_dir  # type: ignore
 except ImportError:
     from hydra.experimental import compose, initialize_config_dir  # type: ignore
     old_hydra = True
