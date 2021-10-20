@@ -83,7 +83,7 @@ class LogProgress:
         elif self.time_per_it:
             speed = f"{1000 / self._speed:.1f} ms/it"
         elif self._speed < 0.1:
-            speed = f"{1/self._speed:1.f} sec/it"
+            speed = f"{1/self._speed:.1f} sec/it"
         else:
             speed = f"{self._speed:.2f} it/sec"
         out = f"{self.name} | {self._index}/{self.total} | {speed}"
