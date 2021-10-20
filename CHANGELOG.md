@@ -6,11 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.1.6] - 2021-10-20
+
 Add py.typed file to source distribution.
 Fixed bug in LogProgress for very slow speed.
 
 
-## [0.1.5] - 2021-06-29
+## [0.1.5] - 2021-09-29
 
 Added possiblity to log always the time per iteration rathen than iterations per seconds.
 [PR](https://github.com/facebookresearch/dora/pull/10).
