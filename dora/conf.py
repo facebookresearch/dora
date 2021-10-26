@@ -120,6 +120,7 @@ class ShepConfig:
     by_id: str = "by_id"
     orphans: str = "orphans"
     submitit_folder: str = "submitit"
+    arrays: str = "arrays"
 
 
 @dataclass

@@ -40,17 +40,54 @@ def get_git_root():
     return Path(run_command(['git', 'rev-parse', '--show-toplevel'])).resolve()
 
 
-def shallow_clone(target: Path):
+def get_git_commit():
+    return run_command(['git', 'log', '-1', '--format="%H"'])
+
+
+def shallow_clone(source: Path, target: Path, commit: str):
+    run_command(['git', 'clone', '-b',  commit, '--depth=1', 'file://' + str(source), target])
+
+
+def get_new_clone(codes: Path) -> Path:
+    """Return a fresh clone in side the given path."""
     source = get_git_root()
-    if target.exists():
-        run_command(['git', 'fetch', '--depth=1', 'origin', 'HEAD'], cwd=target)
-        run_command(['git', 'checkout', 'FETCH_HEAD'], cwd=target)
-    else:
-        run_command(['git', 'clone', '--depth=1', 'file://' + str(source), target])
+    commit = get_git_commit()
+    check_repo_clean()
+    target = codes / commit
+    if not target.exists():
+        shallow_clone(source, target, commit)
+    assert target.exists()
+    return target
 
 
 @contextmanager
-def git_save(xp: XP, git_save: bool = True):
+def enter_clone(clone: Path):
+    """Context manager that temporarily relocates to a clean clone of the
+    current git repository.
+    """
+    cwd = Path('.').resolve()
+    root = get_git_root()
+    relative_path = cwd.relative_to(root)
+
+    os.environ['_DORA_ORIGINAL_DIR'] = str(cwd)
+    os.chdir(clone / relative_path)
+    try:
+        yield
+    finally:
+        os.chdir(cwd)
+        del os.environ['_DORA_ORIGINAL_DIR']
+
+
+def assign_clone(xp: XP, clone: Path):
+    assert xp.dora.git_save
+    code = xp.code_folder
+    if code.exists():
+        code.unlink()
+    code.symlink_to(clone)
+
+
+@contextmanager
+def git_save_old(xp: XP, git_save: bool = True, existing_clone: tp.Optional[Path] = None):
     """Context manager that temporarily relocates to a clean clone of the
     current git repository.
 
@@ -61,7 +98,8 @@ def git_save(xp: XP, git_save: bool = True):
         # if git_save is False, then git saving is disabled.
         yield
     else:
-        check_repo_clean()
+        if existing_clone is None:
+            existing_clone = get_new_clone()
         target = xp.folder / 'code'
         target.parent.mkdir(exist_ok=True, parents=True)
         shallow_clone(target)
@@ -79,7 +117,10 @@ def git_save(xp: XP, git_save: bool = True):
             del os.environ['_DORA_ORIGINAL_DIR']
 
 
-def to_absolute_path(path: tp.Union[str, Path]) -> tp.Union[str, Path]:
+AnyPath = tp.TypeVar("AnyPath", str, Path)
+
+
+def to_absolute_path(path: AnyPath) -> AnyPath:
     """When using `git_save`, this takes a potentially relative path
     with respect to the original execution folder and return an absolute path.
     This is required if you use relative path with respect to this original folder.

@@ -6,7 +6,7 @@
 
 """Scheduling and job monitoring utilities.
 """
-from contextlib import contextmanager
+from contextlib import contextmanager, ExitStack
 from dataclasses import dataclass, field
 import logging
 from pathlib import Path
@@ -120,9 +120,11 @@ class Shepherd:
         self.main = main
         self._by_id.mkdir(exist_ok=True, parents=True)
         self._orphans.mkdir(exist_ok=True, parents=True)
+        self._arrays.mkdir(exist_ok=True, parents=True)
         self.log = log
 
         self._in_job_array: bool = False
+        self._existing_git_clone: tp.Optional[Path] = None
         self._to_cancel: tp.List[submitit.SlurmJob] = []
         self._to_submit: tp.List[_JobArray] = []
 
@@ -219,6 +221,7 @@ class Shepherd:
             self._cancel(self._to_cancel)
             self._to_cancel = []
 
+        self._existing_git_clone = None
         while self._to_submit:
             job_array = self._to_submit.pop(0)
             self._submit(job_array)
@@ -230,6 +233,10 @@ class Shepherd:
     @property
     def _orphans(self) -> Path:
         return self.main.dora.dir / self.main.dora.shep.orphans
+
+    @property
+    def _arrays(self) -> Path:
+        return self.main.dora.dir / self.main.dora.shep.arrays
 
     def _cancel(self, jobs: tp.List[SlurmJob]):
         cancel_cmd = ["scancel"] + [job.job_id for job in jobs]
@@ -300,30 +307,51 @@ class Shepherd:
             token.unlink()
 
     def _submit(self, job_array: _JobArray):
-        if not job_array.sheeps:
+        sheeps = job_array.sheeps
+        name = job_array.name
+        slurm_config = job_array.slurm_config
+        if sheeps:
             return
 
-        xp = sheep.xp
-        self.main.init_xp(xp)
-        folder = xp.folder / xp.dora.shep.submitit_folder
+        is_array = len(sheeps) > 1
+        first = sheeps[0]
+        use_git_save = first.xp.dora.git_save
+        assert all(other.xp.dora.git_save == use_git_save for other in sheeps), \
+            "All jobs inside an array must have the same value for git_save."""
+
+        if is_array:
+            folder = self._arrays / name
+        else:
+            folder = first.xp.submitit
         folder.mkdir(exist_ok=True)
 
-        if xp.rendezvous_file.exists():
-            xp.rendezvous_file.unlink()
+        executor = self._get_submitit_executor(name, folder, slurm_config)
+        for sheep in sheeps:
+            xp = sheep.xp
+            self.main.init_xp(xp)
+            if xp.rendezvous_file.exists():
+                xp.rendezvous_file.unlink()
 
-
-        with git_save(xp, xp.dora.git_save):
-            dirty.touch()
-            job = executor.submit(
-                _SubmitItTarget(), self.main, sheep.xp.argv)
-
-        pickle.dump(job, open(sheep._job_file, "wb"))
-        logger.debug("Created job with id %s", job.job_id)
-        sheep.job = job
-        link = self._by_id / job.job_id
-        link = link
-        link.symlink_to(sheep.xp.folder.resolve())
-
-        # Now we safely stored the job id, we can remove the dirty tag.
-            name = self.main.get_name(sheep.xp)
-            self.log(f"Scheduled job {sheep.job.job_id} for sheep {sheep.xp.sig}/{name}")
+        jobs = []
+        if git_save and self._existing_git_clone is None:
+            self._existing_git_clone = git_save.get_new_clone()
+        with self._enter_orphan(name):
+            with ExitStack() as stack:
+                if use_git_save:
+                    stack.enter(git_save.enter_clone(self._existing_git_clone))
+                if is_array:
+                    stack.enter(executor.batch())
+                for sheep in job_array.sheeps:
+                    if use_git_save:
+                        git_save.assign_clone(sheep.xp, self._existing_git_clone)
+                    jobs.append(executor.submit(_SubmitItTarget(), self.main, sheep.xp.argv))
+            # Now we can access jobs
+            for sheep, job in zip(sheeps, jobs):
+                pickle.dump(job, open(sheep._job_file, "wb"))
+                logger.debug("Created job with id %s", job.job_id)
+                sheep.job = job
+                link = self._by_id / job.job_id
+                link = link
+                link.symlink_to(sheep.xp.folder.resolve())
+                name = self.main.get_name(sheep.xp)
+                self.log(f"Scheduled job {sheep.job.job_id} for sheep {sheep.xp.sig}/{name}")
