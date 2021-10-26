@@ -13,6 +13,7 @@ and can be called repeatidly to schedule XPs.
 `Explorer`: defines some metadata, in particular the metrics to display
 with the `dora grid` command.
 """
+from collections import OrderedDict
 from copy import deepcopy
 from concurrent.futures import ProcessPoolExecutor, Future
 from contextlib import contextmanager
@@ -42,7 +43,7 @@ def _process(shepherd: Shepherd, argv: tp.List[str], slurm: SlurmConfig,
 class Herd:
     """Represents a herd of sheeps ready to be scheduled.
     """
-    sheeps: tp.List[Sheep] = field(default_factory=list)
+    sheeps: tp.Dict[str, Sheep] = field(default_factory=OrderedDict)
     slurm_configs: tp.Dict[str, SlurmConfig] = field(default_factory=dict)
     job_arrays: tp.List[tp.List[str]] = field(default_factory=list)
 
@@ -70,7 +71,9 @@ class Herd:
 
     def _add_sheep(self, sheep: Sheep, slurm: SlurmConfig,
                    job_array_index: tp.Optional[int] = None):
-        self.sheeps.append(sheep)
+        if sheep.xp.sig in self.sheeps:
+            return
+        self.sheeps[sheep.xp.sig] = sheep
         self.slurm_configs[sheep.xp.sig] = slurm
         if job_array_index is not None:
             self.job_arrays[job_array_index].append(sheep.xp.sig)
@@ -177,8 +180,8 @@ class Launcher:
         XPs using a single job array with the current Slurm parameters.
         """
         assert self._herd._job_array_launcher is None, "Cannot stack job arrays"
-        self._herd._job_array_launcher = self
-        self._herd._job_arrays.append([])
+        self._herd._job_array_launcher = self._copy()
+        self._herd.job_arrays.append([])
         try:
             yield
         finally:

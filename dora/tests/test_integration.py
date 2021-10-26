@@ -6,7 +6,6 @@
 
 import os
 import pickle
-import shutil
 import subprocess as sp
 
 import pytest
@@ -47,7 +46,7 @@ def test_git_save(tmpdir):
     finally:
         os.environ['_DORA_GIT_SAVE'] = '0'
 
-    shutil.rmtree(code)
+    code.unlink()
     run_cmd(["run", '--git_save'])
     assert code.exists()
 

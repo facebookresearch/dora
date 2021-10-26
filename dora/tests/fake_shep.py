@@ -50,6 +50,10 @@ class FakeExecutor:
     def submit(self, *args, **kwargs) -> FakeJob:
         return FakeJob()
 
+    @contextmanager
+    def batch(self):
+        yield
+
 
 def _fake_cancel(self, jobs: tp.List[FakeJob]):
     for job in jobs:

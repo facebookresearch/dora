@@ -174,7 +174,7 @@ class Shepherd:
         try:
             yield
         finally:
-            self._in_job_array
+            self._in_job_array = False
 
     def maybe_submit_lazy(self, sheep: Sheep, slurm_config: SlurmConfig, rules: SubmitRules):
         """

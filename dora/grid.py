@@ -74,7 +74,6 @@ class RunGridArgs:
     init: tp.Optional[bool] = False
 
     jupyter: bool = False  # Are we in a jupyter notebook (will erase cell output content first.)
-    silent: bool = False  # Should we print anything at all ?
 
     # Other flags, supported only from the command line.
     folder: tp.Optional[int] = None
@@ -84,7 +83,7 @@ class RunGridArgs:
     _from_commandline: bool = False
 
 
-def _get_explore(args, main):
+def _get_explore(args):
     # Finds the explorer.
     package = args.package
     root_name = package + ".grids"
@@ -111,7 +110,7 @@ def _get_explore(args, main):
 
 
 def grid_action(args: tp.Any, main: DecoratedMain):
-    explorer = _get_explore(args, main)
+    explorer = _get_explore(args)
     slurm = main.get_slurm_config()
     update_from_args(slurm, args)
     rules = SubmitRules()
@@ -162,8 +161,7 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
         explorer(launcher)
 
     shepherd.update()
-    sheeps = herd.sheeps
-    all_sigs = set(sheep.xp.sig for sheep in sheeps)
+    sheeps = list(herd.sheeps.values())
     sheeps = _filter_grid_sheeps(args.patterns, main, sheeps)
 
     if args.clear:
@@ -189,7 +187,7 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
     to_unlink = []
     old_sheeps = []
     for child in grid_folder.iterdir():
-        if child.name not in all_sigs:
+        if child.name not in herd.sheeps:
             to_unlink.append(child)
             try:
                 old_sheep = shepherd.get_sheep_from_sig(child.name)
@@ -216,7 +214,7 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
             first = array_sheeps[0]
             slurm = herd.slurm_configs[first.xp.sig]
             if len(array_sheeps) == 1:
-                shepherd.maybe_submit_lazy(sheep, slurm, rules)
+                shepherd.maybe_submit_lazy(first, slurm, rules)
             else:
                 with shepherd.job_array(slurm):
                     for sheep in sheeps:
