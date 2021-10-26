@@ -120,6 +120,7 @@ class ShepConfig:
     by_id: str = "by_id"
     orphans: str = "orphans"
     submitit_folder: str = "submitit"
+    latest_submitit: str = "latest"
     arrays: str = "arrays"
 
 

@@ -209,7 +209,7 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
 
     if not args.cancel:
         sheep_map = {sheep.xp.sig: sheep for sheep in sheeps}
-        for index, job_array in enumerate(herd.job_arrays):
+        for job_array in herd.job_arrays:
             array_sheeps = [sheep_map[sig] for sig in job_array if sig in sheep_map]
             if not array_sheeps:
                 continue
@@ -218,8 +218,7 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
             if len(array_sheeps) == 1:
                 shepherd.maybe_submit_lazy(sheep, slurm, rules)
             else:
-                name = main.name + "_" + grid_name + f"_array_{index}"
-                with shepherd.job_array(name, slurm):
+                with shepherd.job_array(slurm):
                     for sheep in sheeps:
                         shepherd.maybe_submit_lazy(sheep, slurm, rules)
 

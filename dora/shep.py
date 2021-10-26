@@ -25,7 +25,7 @@ from .conf import SlurmConfig, SubmitRules
 from .distrib import get_distrib_spec
 from .main import DecoratedMain
 from .utils import try_load
-from .xp import XP
+from .xp import XP, _get_sig
 
 
 logger = logging.getLogger(__name__)
@@ -82,7 +82,7 @@ class Sheep:
         """Return the path to the main log.
         """
         if self.job is not None:
-            return self.xp.submitit / f"{self.job.job_id}_0_log.out"
+            return self.xp.latest_submitit / f"{self.job.job_id}_0_log.out"
         return None
 
     def __repr__(self):
@@ -102,7 +102,6 @@ def no_log(x: str):
 
 @dataclass
 class _JobArray:
-    name: str
     slurm_config: SlurmConfig
     sheeps: tp.List[Sheep] = field(default_factory=list)
 
@@ -167,10 +166,10 @@ class Shepherd:
         SlurmJob.watcher.update()
 
     @contextmanager
-    def job_array(self, name: str, slurm_config: SlurmConfig):
+    def job_array(self, slurm_config: SlurmConfig):
         """Context manager to launch XP in job array."""
         assert not self._in_job_array
-        self._to_submit.append(_JobArray(name, slurm_config))
+        self._to_submit.append(_JobArray(slurm_config))
         self._in_job_array = True
         try:
             yield
@@ -201,8 +200,7 @@ class Shepherd:
 
         if sheep.job is None:
             if not self._in_job_array:
-                name = self.main.name + "_" + sheep.xp.sig
-                self._to_submit.append(_JobArray(name, slurm_config))
+                self._to_submit.append(_JobArray(slurm_config))
             assert slurm_config == self._to_submit[-1].slurm_config
             self._to_submit[-1].sheeps.append(sheep)
 
@@ -308,16 +306,22 @@ class Shepherd:
 
     def _submit(self, job_array: _JobArray):
         sheeps = job_array.sheeps
-        name = job_array.name
         slurm_config = job_array.slurm_config
         if not sheeps:
             return
 
         is_array = len(sheeps) > 1
         first = sheeps[0]
+        self.main.init_xp(first.xp)
         use_git_save = first.xp.dora.git_save
         assert all(other.xp.dora.git_save == use_git_save for other in sheeps), \
             "All jobs inside an array must have the same value for git_save."""
+
+        if is_array:
+            name_sig = _get_sig([sheep.xp.sig for sheep in sheeps])
+        else:
+            name_sig = first.xp.sig
+        name = self.main.name + "_" + name_sig
 
         if is_array:
             folder = self._arrays / name
@@ -325,13 +329,13 @@ class Shepherd:
             folder = first.xp.submitit
         folder.mkdir(exist_ok=True)
 
-        executor = self._get_submitit_executor(name, folder, slurm_config)
         for sheep in sheeps:
             xp = sheep.xp
             self.main.init_xp(xp)
             if xp.rendezvous_file.exists():
                 xp.rendezvous_file.unlink()
 
+        executor = self._get_submitit_executor(name, folder, slurm_config)
         jobs: tp.List[submitit.Job] = []
         if git_save and self._existing_git_clone is None:
             self._existing_git_clone = git_save.get_new_clone(self.main.dora)
@@ -349,12 +353,19 @@ class Shepherd:
                     jobs.append(executor.submit(_SubmitItTarget(), self.main, sheep.xp.argv))
             # Now we can access jobs
             for sheep, job in zip(sheeps, jobs):
-                assert isinstance(job, submitit.SlurmJob)
                 pickle.dump(job, open(sheep._job_file, "wb"))
                 logger.debug("Created job with id %s", job.job_id)
-                sheep.job = job
+                sheep.job = job  # type: ignore
                 link = self._by_id / job.job_id
                 link = link
                 link.symlink_to(sheep.xp.folder.resolve())
+                latest = sheep.xp.submitit / sheep.xp.dora.shep.latest_submitit
+                if latest.exists():
+                    latest.unlink()
+                if is_array:
+                    folder.symlink_to(sheep.xp.submitit / folder.name)
+                    if is_array:
+                        latest.symlink_to(folder)
+
                 name = self.main.get_name(sheep.xp)
-                self.log(f"Scheduled job {sheep.job.job_id} for sheep {sheep.xp.sig}/{name}")
+                self.log(f"Scheduled job {job.job_id} for sheep {sheep.xp.sig}/{name}")

@@ -21,7 +21,7 @@ def test_shep(tmpdir):
 
         sheep = shepherd.get_sheep_from_argv([])
         assert sheep.job is None
-        shepherd._submit(_JobArray("test", slurm, [sheep]))
+        shepherd._submit(_JobArray(slurm, [sheep]))
         assert sheep.job is not None
         assert sheep.job.job_id == "0"
 
