@@ -165,18 +165,18 @@ class Launcher:
         and Slurm config. You can also provide extra overrides like in `bind()`.
         """
         launcher = self.bind(*args, **kwargs)
-        array_launcher = self._shepherd._job_array_launcher
+        array_launcher = self._herd._job_array_launcher
         if array_launcher is not None:
             assert array_launcher._slurm == launcher._slurm, \
                 "cannot change slurm config inside job array."
-        self._herd.add_sheep(self.shepherd, launcher._argv, launcher._slurm, self.pool)
+        self._herd.add_sheep(self._shepherd, launcher._argv, launcher._slurm, self._pool)
 
     @contextmanager
     def job_array(self):
         """Context manager to indicate that you wish to launch all the included
         XPs using a single job array with the current Slurm parameters.
         """
-        assert self._shepherd._job_array_launcher is None, "Cannot stack job arrays"
+        assert self._herd._job_array_launcher is None, "Cannot stack job arrays"
         self._herd._job_array_launcher = self
         self._herd._job_arrays.append([])
         try:

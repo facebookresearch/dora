@@ -5,6 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 from contextlib import contextmanager
+import logging
 import os
 import shlex
 import subprocess as sp
@@ -14,6 +15,9 @@ from pathlib import Path
 from .conf import DoraConfig
 from .log import fatal
 from .xp import XP
+
+
+logger = logging.getLogger(__name__)
 
 
 class CommandError(Exception):
@@ -41,12 +45,21 @@ def get_git_root():
     return Path(run_command(['git', 'rev-parse', '--show-toplevel'])).resolve()
 
 
-def get_git_commit():
-    return run_command(['git', 'log', '-1', '--format="%H"'])
+def get_git_commit(repo: Path = Path('.')):
+    return run_command(['git', 'log', '-1', '--format=%H'], cwd=repo)
 
 
-def shallow_clone(source: Path, target: Path, commit: str):
-    run_command(['git', 'clone', '-b',  commit, '--depth=1', 'file://' + str(source), target])
+def shallow_clone(source: Path, target: Path):
+    tmp_target = target.parent / (target.name + ".tmp")
+    run_command(['git', 'clone', '--depth=1', 'file://' + str(source), str(tmp_target)])
+    # We are not sure that there wasn't a new commit in between, so to make
+    # sure the folder name is correct, we clone to a temporary name, then rename to the
+    # actual commit in there. It seems there is no easy way to directly make a shallow
+    # clone to a specific commit (only specific branch or tag).
+    actual_commit = get_git_commit(tmp_target)
+    actual_target = target.parent / actual_commit
+    tmp_target.rename(actual_target)
+    return actual_target
 
 
 def get_new_clone(dora_conf: DoraConfig) -> Path:
@@ -58,7 +71,7 @@ def get_new_clone(dora_conf: DoraConfig) -> Path:
     codes.mkdir(parents=True, exist_ok=True)
     target = codes / commit
     if not target.exists():
-        shallow_clone(source, target, commit)
+        target = shallow_clone(source, target)
     assert target.exists()
     return target
 

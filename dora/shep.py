@@ -310,7 +310,7 @@ class Shepherd:
         sheeps = job_array.sheeps
         name = job_array.name
         slurm_config = job_array.slurm_config
-        if sheeps:
+        if not sheeps:
             return
 
         is_array = len(sheeps) > 1

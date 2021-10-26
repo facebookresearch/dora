@@ -208,7 +208,7 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
     shepherd.update()  # Update all job status
 
     if not args.cancel:
-        sheep_map = {sheep.xp.sig: sheep}
+        sheep_map = {sheep.xp.sig: sheep for sheep in sheeps}
         for index, job_array in enumerate(herd.job_arrays):
             array_sheeps = [sheep_map[sig] for sig in job_array if sig in sheep_map]
             if not array_sheeps:

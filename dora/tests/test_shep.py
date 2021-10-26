@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 from ..conf import SubmitRules
-from ..shep import Shepherd
+from ..shep import Shepherd, _JobArray
 from .fake_shep import mock_shep
 from .test_main import get_main
 
@@ -21,7 +21,7 @@ def test_shep(tmpdir):
 
         sheep = shepherd.get_sheep_from_argv([])
         assert sheep.job is None
-        shepherd._submit(sheep, slurm)
+        shepherd._submit(_JobArray("test", slurm, [sheep]))
         assert sheep.job is not None
         assert sheep.job.job_id == "0"
 
