@@ -49,7 +49,7 @@ class Herd:
     # Sheeps that need to be evaluated in a process pool for faster execution.
     _pendings: tp.List[Future] = field(default_factory=list)
 
-    _job_array_launcher: "Launcher" = None
+    _job_array_launcher: tp.Optional["Launcher"] = None
 
     def complete(self):
         """Complete all pending sheep evaluations and add them to the herd."""

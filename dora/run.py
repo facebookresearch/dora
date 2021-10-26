@@ -52,7 +52,7 @@ def run_action(args, main: DecoratedMain):
     with ExitStack() as stack:
         if args.git_save and '_DORA_GIT_SAVE_DONE' not in os.environ:
             os.environ['_DORA_GIT_SAVE_DONE'] = '1'
-            clone = git_save.get_new_clone()
+            clone = git_save.get_new_clone(main.dora)
             git_save.assign_clone(xp, clone)
             stack.enter_context(git_save.enter_clone(clone))
             os.execv(sys.executable, [sys.executable, "-m", "dora"] + sys.argv[1:])

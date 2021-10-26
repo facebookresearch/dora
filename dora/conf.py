@@ -149,6 +149,7 @@ class DoraConfig:
     shep: ShepConfig = field(default_factory=ShepConfig)
     rendezvous_file: str = "rendezvous.txt"
     grids: str = "grids"
+    codes: str = "codes"
 
     def is_excluded(self, arg_name: str) -> bool:
         """Return True if the given argument name should be excluded from

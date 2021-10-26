@@ -10,7 +10,7 @@ import sys
 import pytest
 
 from ..hydra import hydra_main
-from ..git_save import git_save, to_absolute_path
+from ..git_save import assign_clone, get_new_clone, enter_clone, to_absolute_path
 from ..xp import get_xp, XP
 
 _ret = None
@@ -49,7 +49,9 @@ def test_hydra_git_save(tmpdir):
     argv = ['optim.loss=git_save']
     xp = main.get_xp(argv)
 
-    with git_save(xp, True):
+    clone = get_new_clone(xp.dora)
+    assign_clone(xp)
+    with enter_clone(clone):
         call(main, argv)
 
 

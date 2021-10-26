@@ -20,9 +20,9 @@ import typing as tp
 from submitit import SlurmJob
 import submitit
 
+from . import git_save
 from .conf import SlurmConfig, SubmitRules
 from .distrib import get_distrib_spec
-from .git_save import git_save
 from .main import DecoratedMain
 from .utils import try_load
 from .xp import XP
@@ -104,7 +104,7 @@ def no_log(x: str):
 class _JobArray:
     name: str
     slurm_config: SlurmConfig
-    sheeps: tp.List[sheeps] = field(default_factory=list)
+    sheeps: tp.List[Sheep] = field(default_factory=list)
 
 
 class Shepherd:
@@ -243,7 +243,7 @@ class Shepherd:
         logger.debug("Running %s", " ".join(cancel_cmd))
         sp.run(cancel_cmd, check=True)
 
-    def _get_submitit_executor(name: str, folder: Path,
+    def _get_submitit_executor(self, name: str, folder: Path,
                                slurm_config: SlurmConfig) -> submitit.SlurmExecutor:
         os.environ['SLURM_KILL_BAD_EXIT'] = '1'  # Kill the job if any of the task fails
         kwargs = dict(slurm_config.__dict__)
@@ -332,21 +332,24 @@ class Shepherd:
             if xp.rendezvous_file.exists():
                 xp.rendezvous_file.unlink()
 
-        jobs = []
+        jobs: tp.List[submitit.Job] = []
         if git_save and self._existing_git_clone is None:
-            self._existing_git_clone = git_save.get_new_clone()
+            self._existing_git_clone = git_save.get_new_clone(self.main.dora)
         with self._enter_orphan(name):
             with ExitStack() as stack:
                 if use_git_save:
-                    stack.enter(git_save.enter_clone(self._existing_git_clone))
+                    assert self._existing_git_clone is not None
+                    stack.enter_context(git_save.enter_clone(self._existing_git_clone))
                 if is_array:
-                    stack.enter(executor.batch())
+                    stack.enter_context(executor.batch())
                 for sheep in job_array.sheeps:
                     if use_git_save:
+                        assert self._existing_git_clone is not None
                         git_save.assign_clone(sheep.xp, self._existing_git_clone)
                     jobs.append(executor.submit(_SubmitItTarget(), self.main, sheep.xp.argv))
             # Now we can access jobs
             for sheep, job in zip(sheeps, jobs):
+                assert isinstance(job, submitit.SlurmJob)
                 pickle.dump(job, open(sheep._job_file, "wb"))
                 logger.debug("Created job with id %s", job.job_id)
                 sheep.job = job
