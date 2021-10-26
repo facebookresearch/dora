@@ -6,6 +6,8 @@
 
 """Scheduling and job monitoring utilities.
 """
+from contextlib import contextmanager
+from dataclasses import dataclass, field
 import logging
 from pathlib import Path
 import pickle
@@ -98,6 +100,13 @@ def no_log(x: str):
     pass
 
 
+@dataclass
+class _JobArray:
+    name: str
+    slurm_config: SlurmConfig
+    sheeps: tp.List[sheeps] = field(default_factory=list)
+
+
 class Shepherd:
     """
     Takes care of the little jobs.
@@ -110,10 +119,14 @@ class Shepherd:
     def __init__(self, main: DecoratedMain, log: tp.Callable[[str], None] = no_log):
         self.main = main
         self._by_id.mkdir(exist_ok=True, parents=True)
+        self._orphans.mkdir(exist_ok=True, parents=True)
         self.log = log
 
+        self._in_job_array: bool = False
         self._to_cancel: tp.List[submitit.SlurmJob] = []
-        self._to_submit: tp.List[tp.Tuple[Sheep, SlurmConfig]] = []
+        self._to_submit: tp.List[_JobArray] = []
+
+        self._check_orphans()
 
     def get_sheep_from_argv(self, argv: tp.Sequence[str]) -> Sheep:
         """
@@ -151,6 +164,17 @@ class Shepherd:
         """
         SlurmJob.watcher.update()
 
+    @contextmanager
+    def job_array(self, name: str, slurm_config: SlurmConfig):
+        """Context manager to launch XP in job array."""
+        assert not self._in_job_array
+        self._to_submit.append(_JobArray(name, slurm_config))
+        self._in_job_array = True
+        try:
+            yield
+        finally:
+            self._in_job_array
+
     def maybe_submit_lazy(self, sheep: Sheep, slurm_config: SlurmConfig, rules: SubmitRules):
         """
         Decides whether to schedule a new job for the given sheep, based on the rules
@@ -174,7 +198,11 @@ class Shepherd:
                     sheep.job = None
 
         if sheep.job is None:
-            self._to_submit.append((sheep, slurm_config))
+            if not self._in_job_array:
+                name = self.main.name + "_" + sheep.xp.sig
+                self._to_submit.append(_JobArray(name, slurm_config))
+            assert slurm_config == self._to_submit[-1].slurm_config
+            self._to_submit[-1].sheeps.append(sheep)
 
     def cancel_lazy(self, job: submitit.SlurmJob):
         """
@@ -192,46 +220,24 @@ class Shepherd:
             self._to_cancel = []
 
         while self._to_submit:
-            sheep, slurm_config = self._to_submit.pop(0)
-            self._submit(sheep, slurm_config)
-            name = self.main.get_name(sheep.xp)
-            self.log(f"Scheduled job {sheep.job.job_id} for sheep {sheep.xp.sig}/{name}")
+            job_array = self._to_submit.pop(0)
+            self._submit(job_array)
 
     @property
     def _by_id(self) -> Path:
         return self.main.dora.dir / self.main.dora.shep.by_id
 
+    @property
+    def _orphans(self) -> Path:
+        return self.main.dora.dir / self.main.dora.shep.orphans
+
     def _cancel(self, jobs: tp.List[SlurmJob]):
-        cancel_cmd = ["scancel"] + [job.job_id for job in self._to_cancel]
+        cancel_cmd = ["scancel"] + [job.job_id for job in jobs]
         logger.debug("Running %s", " ".join(cancel_cmd))
         sp.run(cancel_cmd, check=True)
 
-    def _submit(self, sheep, slurm_config: SlurmConfig):
-        xp = sheep.xp
-        self.main.init_xp(xp)
-        folder = xp.folder / xp.dora.shep.submitit_folder
-        folder.mkdir(exist_ok=True)
-        name = self.main.name + "_" + sheep.xp.sig
-
-        # Dirty flag is used to detect if a job was submitted, but Dora was
-        # killed before saving its job id.
-        dirty = folder / "dirty"
-        if dirty.exists():
-            # Previous tentative for submission might have failed with an orphan job.
-            # We manually scan for a job with the right name.
-            long_name = self.main.get_name(sheep.xp)
-            logger.warning("Dirty tag is still here, we might have an orphan job "
-                           f"for sheep {sheep.xp.sig}/{long_name}.")
-            proc = sp.run(["squeue", "-n", name, "-o", "%i", "-h"],
-                          capture_output=True, check=True)
-            ids = [line for line in proc.stdout.decode().strip().split("\n") if line]
-            if ids:
-                logger.warning(f"Found orphan job ids {ids}, will cancel")
-                sp.run(["scancel"] + ids, check=True)
-
-        if xp.rendezvous_file.exists():
-            xp.rendezvous_file.unlink()
-
+    def _get_submitit_executor(name: str, folder: Path,
+                               slurm_config: SlurmConfig) -> submitit.SlurmExecutor:
         os.environ['SLURM_KILL_BAD_EXIT'] = '1'  # Kill the job if any of the task fails
         kwargs = dict(slurm_config.__dict__)
         executor = submitit.SlurmExecutor(
@@ -267,6 +273,44 @@ class Shepherd:
             job_name=name,
             stderr_to_stdout=True,
             **kwargs)
+        return executor
+
+    def _check_orphans(self):
+        """Check for orphaned jobs."""
+        for dirty in self._orphans.iterdir():
+            name = dirty.name
+            logger.warning(f"Found dirty tag {name}, meaning a job might have been scheduled "
+                           "but Dora or Slurm crashed before the job id was saved.")
+            proc = sp.run(["squeue", "-u", os.getlogin(), "-n", name, "-o", "%i", "-h"],
+                          capture_output=True, check=True)
+            ids = [line for line in proc.stdout.decode().strip().split("\n") if line]
+            if ids:
+                logger.warning(f"Found orphan job ids {ids}, will cancel")
+                sp.run(["scancel"] + ids, check=True)
+            dirty.unlink()
+
+    @contextmanager
+    def _enter_orphan(self, name: str):
+        """Context manager to enter a potential orphan."""
+        token = self._orphans / name
+        token.touch()
+        try:
+            yield
+        finally:
+            token.unlink()
+
+    def _submit(self, job_array: _JobArray):
+        if not job_array.sheeps:
+            return
+
+        xp = sheep.xp
+        self.main.init_xp(xp)
+        folder = xp.folder / xp.dora.shep.submitit_folder
+        folder.mkdir(exist_ok=True)
+
+        if xp.rendezvous_file.exists():
+            xp.rendezvous_file.unlink()
+
 
         with git_save(xp, xp.dora.git_save):
             dirty.touch()
@@ -281,4 +325,5 @@ class Shepherd:
         link.symlink_to(sheep.xp.folder.resolve())
 
         # Now we safely stored the job id, we can remove the dirty tag.
-        dirty.unlink()
+            name = self.main.get_name(sheep.xp)
+            self.log(f"Scheduled job {sheep.job.job_id} for sheep {sheep.xp.sig}/{name}")
