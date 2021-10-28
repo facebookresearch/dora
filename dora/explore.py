@@ -55,7 +55,7 @@ class Herd:
     def complete(self):
         """Complete all pending sheep evaluations and add them to the herd."""
         while self._pendings:
-            future = self._pending(0)
+            future = self._pending.pop(0)
             sheep, slurm, job_array_index = future.result()
             self._add_sheep(sheep, slurm, job_array_index)
 
