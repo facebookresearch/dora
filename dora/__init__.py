@@ -60,7 +60,7 @@ width="400px"></p>
 __pdoc__ = {}
 __pdoc__['tests'] = False
 
-__version__ = "0.1.6"
+__version__ = "0.1.7a1"
 
 # flake8: noqa
 from .explore import Explorer, Launcher
@@ -70,12 +70,6 @@ except ImportError:
     pass
 else:
     from .hydra import hydra_main
-try:
-    import pytorch_lightning
-except ImportError:
-    pass
-else:
-    from . import lightning
 from . import conf, grid
 from .link import Link
 from .main import argparse_main

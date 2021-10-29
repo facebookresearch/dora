@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+Disabling automatic loading of PyTorch Lightning if installed, as this trigger
+a warning with distutils/setuptools.
+
 ## [0.1.6] - 2021-10-20
 
 Add py.typed file to source distribution.
