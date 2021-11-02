@@ -74,6 +74,7 @@ class Sheep:
         state = self.job.watcher.get_state(self.job.job_id, mode)
         if state == 'UNKNOWN' and self._other_jobs:
             if any(job.state != 'UNKNOWN' for job in self._other_jobs):
+                print([job.state for job in self._other_jobs])
                 # When cancelling single entries in a job array,
                 # sacct will just completely forget about it insted of marking
                 # it as cancelled. So we use a specific 'MISSING' status to handle that.
@@ -200,7 +201,7 @@ class Shepherd:
                 if rules.replace_done:
                     logger.debug(f"Ignoring previously completed job {sheep.job.job_id}")
                     sheep.job = None
-            elif state in ["FAILED", "CANCELLED", "OUT_OF_MEMORY", "TIMEOUT"]:
+            elif state in ["FAILED", "CANCELLED", "OUT_OF_MEMORY", "TIMEOUT", "MISSING"]:
                 logger.debug(f"Previous job {sheep.job.job_id} failed or was canceled")
                 if rules.retry:
                     sheep.job = None
@@ -372,6 +373,7 @@ class Shepherd:
                 pickle.dump((job, jobs), open(sheep._job_file, "wb"))
                 logger.debug("Created job with id %s", job.job_id)
                 sheep.job = job  # type: ignore
+                sheep._other_jobs = jobs
                 link = self._by_id / job.job_id
                 link = link
                 link.symlink_to(sheep.xp.folder.resolve())
