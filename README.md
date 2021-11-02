@@ -222,7 +222,7 @@ capture logged metrics (make sure to use `per_epoch=True`), and handles distribu
 (you should not pass `gpus=...` or `num_nodes=...` to PL).
 
 ```python
-import dora
+import dora.lightning
 
 
 @dora.argparse_main(...)
