@@ -329,7 +329,7 @@ class Shepherd:
         if is_array:
             submitit_folder = self._arrays / name
         else:
-            submitit_folder = first.xp._submitit
+            submitit_folder = first.xp._xp_submitit
         submitit_folder.mkdir(exist_ok=True)
 
         for sheep in sheeps:
@@ -374,7 +374,7 @@ class Shepherd:
                 else:
                     latest_target = submitit_folder
                 latest = sheep.xp._latest_submitit
-                if latest_target.exists():
+                if latest.exists():
                     latest.unlink()
                 latest.symlink_to(latest_target)
 
