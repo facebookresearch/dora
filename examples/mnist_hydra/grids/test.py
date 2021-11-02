@@ -25,4 +25,7 @@ def explorer(launcher):
     launcher.bind_(gamma=0.6)
     launcher.slurm_(mem_per_gpu=20)
     launcher()
-    launcher(plop=4)
+    launcher(lr=0.01)
+    with launcher.job_array():
+        for seed in range(1234, 1234 + 8):
+            launcher(seed=seed)

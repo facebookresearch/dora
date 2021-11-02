@@ -60,7 +60,7 @@ width="400px"></p>
 __pdoc__ = {}
 __pdoc__['tests'] = False
 
-__version__ = "0.1.7a1"
+__version__ = "0.1.7a4"
 
 # flake8: noqa
 from .explore import Explorer, Launcher
@@ -71,6 +71,7 @@ except ImportError:
 else:
     from .hydra import hydra_main
 from . import conf, grid
+from .git_save import to_absolute_path
 from .link import Link
 from .main import argparse_main
 from .shep import Sheep

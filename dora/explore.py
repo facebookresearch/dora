@@ -13,27 +13,70 @@ and can be called repeatidly to schedule XPs.
 `Explorer`: defines some metadata, in particular the metrics to display
 with the `dora grid` command.
 """
-from copy import deepcopy
 from collections import OrderedDict
-from concurrent.futures import ProcessPoolExecutor
+from copy import deepcopy
+from concurrent.futures import ProcessPoolExecutor, Future
+from contextlib import contextmanager
+from dataclasses import dataclass, field
 import typing as tp
 
 from treetable.table import _Node
 import treetable as tt
 
 from .conf import SlurmConfig
-from .shep import Shepherd
+from .shep import Shepherd, Sheep
 
 
 class ProcessException(RuntimeError):
     pass
 
 
-def _process(shepherd: Shepherd, argv: tp.List[str], slurm: SlurmConfig):
+def _process(shepherd: Shepherd, argv: tp.List[str], slurm: SlurmConfig,
+             job_array_index: tp.Optional[int] = None):
     try:
-        return (shepherd.get_sheep_from_argv(argv), slurm)
+        return (shepherd.get_sheep_from_argv(argv), slurm, job_array_index)
     except Exception as exc:
         raise ProcessException(repr(exc))
+
+
+@dataclass
+class Herd:
+    """Represents a herd of sheeps ready to be scheduled.
+    """
+    sheeps: tp.Dict[str, Sheep] = field(default_factory=OrderedDict)
+    slurm_configs: tp.Dict[str, SlurmConfig] = field(default_factory=dict)
+    job_arrays: tp.List[tp.List[str]] = field(default_factory=list)
+
+    # Sheeps that need to be evaluated in a process pool for faster execution.
+    _pendings: tp.List[Future] = field(default_factory=list)
+
+    _job_array_launcher: tp.Optional["Launcher"] = None
+
+    def complete(self):
+        """Complete all pending sheep evaluations and add them to the herd."""
+        while self._pendings:
+            future = self._pendings.pop(0)
+            sheep, slurm, job_array_index = future.result()
+            self._add_sheep(sheep, slurm, job_array_index)
+
+    def add_sheep(self, shepherd: Shepherd, argv: tp.List[str], slurm: SlurmConfig,
+                  pool: tp.Optional[ProcessPoolExecutor] = None):
+        if self._job_array_launcher is None:
+            self.job_arrays.append([])
+        job_array_index = len(self.job_arrays) - 1
+        if pool is None:
+            self._add_sheep(shepherd.get_sheep_from_argv(argv), slurm, job_array_index)
+        else:
+            self._pendings.append(pool.submit(_process, shepherd, argv, slurm, job_array_index))
+
+    def _add_sheep(self, sheep: Sheep, slurm: SlurmConfig,
+                   job_array_index: tp.Optional[int] = None):
+        if sheep.xp.sig in self.sheeps:
+            return
+        self.sheeps[sheep.xp.sig] = sheep
+        self.slurm_configs[sheep.xp.sig] = slurm
+        if job_array_index is not None:
+            self.job_arrays[job_array_index].append(sheep.xp.sig)
 
 
 class Launcher:
@@ -50,7 +93,7 @@ class Launcher:
     have the same effect as in `Launcher.bind()`.
     """
 
-    def __init__(self, shepherd: Shepherd, slurm: SlurmConfig, herd: OrderedDict,
+    def __init__(self, shepherd: Shepherd, slurm: SlurmConfig, herd: Herd,
                  argv: tp.List[str] = [], pool: tp.Optional[ProcessPoolExecutor] = None):
         self._shepherd = shepherd
         self._main = self._shepherd.main
@@ -125,13 +168,24 @@ class Launcher:
         and Slurm config. You can also provide extra overrides like in `bind()`.
         """
         launcher = self.bind(*args, **kwargs)
-        if self._pool is None:
-            sheep = self._shepherd.get_sheep_from_argv(launcher._argv)
-            self._herd[sheep.xp.sig] = (sheep, launcher._slurm)
-        else:
-            future = self._pool.submit(_process, launcher._shepherd,
-                                       launcher._argv, launcher._slurm)
-            self._herd[len(self._herd)] = future
+        array_launcher = self._herd._job_array_launcher
+        if array_launcher is not None:
+            assert array_launcher._slurm == launcher._slurm, \
+                "cannot change slurm config inside job array."
+        self._herd.add_sheep(self._shepherd, launcher._argv, launcher._slurm, self._pool)
+
+    @contextmanager
+    def job_array(self):
+        """Context manager to indicate that you wish to launch all the included
+        XPs using a single job array with the current Slurm parameters.
+        """
+        assert self._herd._job_array_launcher is None, "Cannot stack job arrays"
+        self._herd._job_array_launcher = self._copy()
+        self._herd.job_arrays.append([])
+        try:
+            yield
+        finally:
+            self._herd._job_array_launcher = None
 
 
 Explore = tp.Callable[[Launcher], None]

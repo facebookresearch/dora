@@ -39,6 +39,10 @@ class FakeJob:
     def _state(self, state: str):
         self.watcher.jobs[self.job_id] = state
 
+    @property
+    def state(self):
+        return self._state
+
 
 class FakeExecutor:
     def __init__(self, *args, **kwargs):
@@ -49,6 +53,10 @@ class FakeExecutor:
 
     def submit(self, *args, **kwargs) -> FakeJob:
         return FakeJob()
+
+    @contextmanager
+    def batch(self):
+        yield
 
 
 def _fake_cancel(self, jobs: tp.List[FakeJob]):

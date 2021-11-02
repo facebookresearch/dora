@@ -11,8 +11,7 @@ that can be used from a notebook or any other script.
 When using the API, you can provide the equivalent of the command line flags
 with the `RunGridArgs` dataclass.
 """
-from collections import OrderedDict
-from concurrent.futures import ProcessPoolExecutor, Future
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, field
 import fnmatch
 from functools import partial
@@ -25,7 +24,7 @@ import sys
 import time
 
 from .conf import SlurmConfig, SubmitRules, update_from_args
-from .explore import Explorer, Launcher
+from .explore import Explorer, Launcher, Herd
 from .main import DecoratedMain
 from .log import colorize, simple_log, fatal
 from .shep import Sheep, Shepherd
@@ -74,8 +73,7 @@ class RunGridArgs:
     clear: bool = False
     init: tp.Optional[bool] = False
 
-    # jupyter display?
-    jupyter: bool = False
+    jupyter: bool = False  # Are we in a jupyter notebook (will erase cell output content first.)
 
     # Other flags, supported only from the command line.
     folder: tp.Optional[int] = None
@@ -85,7 +83,7 @@ class RunGridArgs:
     _from_commandline: bool = False
 
 
-def _get_explore(args, main):
+def _get_explore(args):
     # Finds the explorer.
     package = args.package
     root_name = package + ".grids"
@@ -112,7 +110,7 @@ def _get_explore(args, main):
 
 
 def grid_action(args: tp.Any, main: DecoratedMain):
-    explorer = _get_explore(args, main)
+    explorer = _get_explore(args)
     slurm = main.get_slurm_config()
     update_from_args(slurm, args)
     rules = SubmitRules()
@@ -151,24 +149,19 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
     grid_folder = main.dora.dir / main.dora.grids / grid_name
     grid_folder.mkdir(exist_ok=True, parents=True)
 
-    herd: OrderedDict[str, tp.Tuple[Sheep, SlurmConfig]] = OrderedDict()
+    herd = Herd()
     shepherd = Shepherd(main, log=log)
     if main._slow:
-        pending: OrderedDict[int, Future] = OrderedDict()
         with ProcessPoolExecutor(4) as pool:
-            launcher = Launcher(shepherd, slurm, pending, pool=pool)
+            launcher = Launcher(shepherd, slurm, herd, pool=pool)
             explorer(launcher)
-            for future in pending.values():
-                sheep, slurm = future.result()
-                assert isinstance(sheep, Sheep) and isinstance(slurm, SlurmConfig)
-                assert sheep.xp.sig is not None
-                herd[sheep.xp.sig] = (sheep, slurm)
+            herd.complete()
     else:
         launcher = Launcher(shepherd, slurm, herd)
         explorer(launcher)
 
     shepherd.update()
-    sheeps = [sheep for sheep, _ in herd.values()]
+    sheeps = list(herd.sheeps.values())
     sheeps = _filter_grid_sheeps(args.patterns, main, sheeps)
 
     if args.clear:
@@ -191,15 +184,10 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
                 shutil.rmtree(sheep.xp.folder)
             sheep.job = None
 
-    if not args.cancel:
-        for sheep in sheeps:
-            _, slurm = herd[sheep.xp.sig]
-            shepherd.maybe_submit_lazy(sheep, slurm, rules)
-
     to_unlink = []
     old_sheeps = []
     for child in grid_folder.iterdir():
-        if child.name not in herd:
+        if child.name not in herd.sheeps:
             to_unlink.append(child)
             try:
                 old_sheep = shepherd.get_sheep_from_sig(child.name)
@@ -215,7 +203,23 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
                 assert old_sheep is not None
                 old_sheeps.append(old_sheep)
 
-    shepherd.update()
+    shepherd.update()  # Update all job status
+
+    if not args.cancel:
+        sheep_map = {sheep.xp.sig: sheep for sheep in sheeps}
+        for job_array in herd.job_arrays:
+            array_sheeps = [sheep_map[sig] for sig in job_array if sig in sheep_map]
+            if not array_sheeps:
+                continue
+            first = array_sheeps[0]
+            slurm = herd.slurm_configs[first.xp.sig]
+            if len(array_sheeps) == 1:
+                shepherd.maybe_submit_lazy(first, slurm, rules)
+            else:
+                with shepherd.job_array(slurm):
+                    for sheep in array_sheeps:
+                        shepherd.maybe_submit_lazy(sheep, slurm, rules)
+
     for old_sheep in old_sheeps:
         if not old_sheep.is_done():
             assert old_sheep.job is not None
@@ -239,6 +243,7 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
                 assert link.is_symlink() and link.resolve() == sheep.xp.folder
             else:
                 link.symlink_to(sheep.xp.folder)
+
         shepherd.commit()
 
         for child in to_unlink:

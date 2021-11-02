@@ -16,7 +16,7 @@ from .link import Link
 from .utils import jsonable
 
 
-def _get_sig(delta: tp.List[tp.Tuple[str, tp.Any]]) -> str:
+def _get_sig(delta: tp.List[tp.Any]) -> str:
     # Return signature from a jsonable content.
     sorted_delta = sorted(delta)
     return sha1(json.dumps(sorted_delta).encode('utf8')).hexdigest()[:8]
@@ -65,8 +65,19 @@ class XP:
             return Path('.')
 
     @property
-    def submitit(self) -> Path:
+    def _xp_submitit(self) -> Path:
         return self.folder / self.dora.shep.submitit_folder
+
+    @property
+    def _latest_submitit(self) -> Path:
+        return self.folder / self.dora.shep.latest_submitit
+
+    @property
+    def submitit(self) -> Path:
+        if self._latest_submitit.exists():
+            return self._latest_submitit
+        else:
+            return self._xp_submitit
 
     @property
     def rendezvous_file(self) -> Path:

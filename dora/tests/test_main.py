@@ -33,7 +33,7 @@ def get_main(tmpdir):
     def main():
         xp = get_xp()
         cwd = str(Path('.').resolve())
-        code = str(xp.folder / 'code')
+        code = str((xp.folder / 'code').resolve())
         if xp.dora.git_save:
             assert cwd.startswith(code), cwd
             assert __file__.startswith(code), __file__

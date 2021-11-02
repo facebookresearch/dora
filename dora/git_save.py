@@ -5,14 +5,19 @@
 # LICENSE file in the root directory of this source tree.
 
 from contextlib import contextmanager
+import logging
 import os
 import shlex
 import subprocess as sp
 import typing as tp
 from pathlib import Path
 
+from .conf import DoraConfig
 from .log import fatal
 from .xp import XP
+
+
+logger = logging.getLogger(__name__)
 
 
 class CommandError(Exception):
@@ -40,46 +45,67 @@ def get_git_root():
     return Path(run_command(['git', 'rev-parse', '--show-toplevel'])).resolve()
 
 
-def shallow_clone(target: Path):
+def get_git_commit(repo: Path = Path('.')):
+    return run_command(['git', 'log', '-1', '--format=%H'], cwd=repo)
+
+
+def shallow_clone(source: Path, target: Path):
+    tmp_target = target.parent / (target.name + ".tmp")
+    run_command(['git', 'clone', '--depth=1', 'file://' + str(source), str(tmp_target)])
+    # We are not sure that there wasn't a new commit in between, so to make
+    # sure the folder name is correct, we clone to a temporary name, then rename to the
+    # actual commit in there. It seems there is no easy way to directly make a shallow
+    # clone to a specific commit (only specific branch or tag).
+    actual_commit = get_git_commit(tmp_target)
+    actual_target = target.parent / actual_commit
+    tmp_target.rename(actual_target)
+    return actual_target
+
+
+def get_new_clone(dora_conf: DoraConfig) -> Path:
+    """Return a fresh clone in side the given path."""
     source = get_git_root()
-    if target.exists():
-        run_command(['git', 'fetch', '--depth=1', 'origin', 'HEAD'], cwd=target)
-        run_command(['git', 'checkout', 'FETCH_HEAD'], cwd=target)
-    else:
-        run_command(['git', 'clone', '--depth=1', 'file://' + str(source), target])
+    commit = get_git_commit()
+    check_repo_clean()
+    codes = dora_conf.dir / dora_conf.codes
+    codes.mkdir(parents=True, exist_ok=True)
+    target = codes / commit
+    if not target.exists():
+        target = shallow_clone(source, target)
+    assert target.exists()
+    return target
 
 
 @contextmanager
-def git_save(xp: XP, git_save: bool = True):
+def enter_clone(clone: Path):
     """Context manager that temporarily relocates to a clean clone of the
     current git repository.
-
-    If `git_save` is false, this does nothing.
     """
-    if not git_save or '_DORA_ORIGINAL_DIR' in os.environ:
-        # if _DORA_ORIGINAL_DIR in env, we already moved to a new folder.
-        # if git_save is False, then git saving is disabled.
+    cwd = Path('.').resolve()
+    root = get_git_root()
+    relative_path = cwd.relative_to(root)
+
+    os.environ['_DORA_ORIGINAL_DIR'] = str(cwd)
+    os.chdir(clone / relative_path)
+    try:
         yield
-    else:
-        check_repo_clean()
-        target = xp.folder / 'code'
-        target.parent.mkdir(exist_ok=True, parents=True)
-        shallow_clone(target)
-
-        cwd = Path('.').resolve()
-        root = get_git_root()
-        relative_path = cwd.relative_to(root)
-
-        os.environ['_DORA_ORIGINAL_DIR'] = str(cwd)
-        os.chdir(target / relative_path)
-        try:
-            yield
-        finally:
-            os.chdir(cwd)
-            del os.environ['_DORA_ORIGINAL_DIR']
+    finally:
+        os.chdir(cwd)
+        del os.environ['_DORA_ORIGINAL_DIR']
 
 
-def to_absolute_path(path: tp.Union[str, Path]) -> tp.Union[str, Path]:
+def assign_clone(xp: XP, clone: Path):
+    assert xp.dora.git_save
+    code = xp.code_folder
+    if code.exists():
+        code.unlink()
+    code.symlink_to(clone)
+
+
+AnyPath = tp.TypeVar("AnyPath", str, Path)
+
+
+def to_absolute_path(path: AnyPath) -> AnyPath:
     """When using `git_save`, this takes a potentially relative path
     with respect to the original execution folder and return an absolute path.
     This is required if you use relative path with respect to this original folder.
@@ -93,21 +119,21 @@ def to_absolute_path(path: tp.Union[str, Path]) -> tp.Union[str, Path]:
     Hydra version, so that you only need to ever call this function to cover all cases.
     """
     klass = type(path)
-    path = Path(path)
+    _path = Path(path)
     if '_DORA_ORIGINAL_DIR' not in os.environ:
         # We did not use git_save, we check first if Hydra is used,
         # in which case we use it to convert to an absolute Path.
         try:
             import hydra.utils
         except ImportError:
-            path = path.resolve()
+            _path = _path.resolve()
         else:
-            path = hydra.utils.to_absolute_path(str(path))
-        return klass(path)
+            _path = Path(hydra.utils.to_absolute_path(str(_path)))
+        return klass(_path)
     else:
         # We used git_save, in which case we used the original dir saved by Dora.
         original_cwd = Path(os.environ['_DORA_ORIGINAL_DIR'])
-        if path.is_absolute():
-            return klass(path)
+        if _path.is_absolute():
+            return klass(_path)
         else:
-            return klass(original_cwd / path)
+            return klass(original_cwd / _path)

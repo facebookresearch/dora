@@ -41,6 +41,7 @@ pip install -U dora-search
 
 See [the changelog](CHANGELOG.md) for details on releases.
 
+- 2021-10-20: version 0.1.6 released, bug fixes.
 - 2021-09-29: version 0.1.5 released.
 - 2021-09-07: added support for a `git_save` option. This will ensure that the project git is clean
     and make a clone from which the experiment will run. This does not apply to `dora run` for easier
@@ -83,7 +84,7 @@ Some Dora concepts:
 
 ## Making your code compatible with Dora
 
-In order to derive the XP signature, Dora must know about the configuration schema your project is following, as well as 
+In order to derive the XP signature, Dora must know about the configuration schema your project is following, as well as
 the parsed arguments for a run.
 Dora supports two backends for that : `argparse`, and `hydra`. On top of that, Dora provides a smooth integration
 with Pytorch Lightning for projects that uses it.
@@ -117,7 +118,7 @@ If you reschedule a failed or cancelled job, the clone will however be updated w
 
 In order to use this option, your code should be able to run from a fresh clone of the repository.
 If you need to access to resources that are specified with a path relative to the original
-repo, use `dora.git_save.to_absolute_path()`. Note that this is similar to `hydra.utils.to_absolute_path()`. In fact, you can safely replace the Hydra version with this one,
+repo, use `dora.to_absolute_path()`. Note that this is similar to `hydra.utils.to_absolute_path()`. In fact, you can safely replace the Hydra version with this one,
 as even when `git_save` is not set, the Dora one automatically falls back to the Hydra one (if Hydra is used).
 
 **The repository must be completely clean** before scheduling remote jobs, and all files should be either
@@ -154,7 +155,7 @@ def main():
     # No need to reparse args, you can directly access them from the current XP
     # object.
     xp = get_xp()
-    xp.cfg # parsed arguments 
+    xp.cfg # parsed arguments
     xp.sig  # signature for the current run
     xp.folder  # folder for the current run, please put your checkpoint relative
                # to this folder, so that it is automatically resumed!
@@ -184,7 +185,7 @@ from dora import hydra_main, get_xp
 )
 def main(cfg):
     xp = get_xp()
-    xp.cfg # parsed configuration 
+    xp.cfg # parsed configuration
     xp.sig  # signature for the current run
     # Hydra run folder will automatically be set to xp.folder!
 
@@ -446,7 +447,7 @@ The `Explorer` class allows to customize which metric to report, and with what p
 See [Customize metrics displayed](#customize-metrics-displayed-in-explorer) hereafter for more explanation.
 
 By convention, files starting with `_` inside the `grids` folder are ignored by Dora, and are a good place to put utility code such as your custom `Explorer` classes.
-For an example with detailed comments, go checkout [the Explorer classes for BrainMagick](https://github.com/fairinternal/brainmagick/blob/main/bm/grids/_explorers.py#L7). 
+For an example with detailed comments, go checkout [the Explorer classes for BrainMagick](https://github.com/fairinternal/brainmagick/blob/main/bm/grids/_explorers.py#L7).
 
 ## The Dora API
 

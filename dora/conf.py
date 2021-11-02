@@ -68,6 +68,8 @@ class SlurmConfig:
         max_num_timeout (int): maximum number of requeue.
         one_task_per_node (bool): if True, schedules a single task
             per node, otherwise, will schedule one task per gpu (default is False).
+        array_parallelism (int): when using job arrays, how many tasks can run
+            in parallel.
 
     ..warning:: this assumes one task per GPU.
         Set `one_task_per_node` if you do not want that.
@@ -84,6 +86,7 @@ class SlurmConfig:
     max_num_timeout: int = 20
     constraint: str = ""
     one_task_per_node: bool = False
+    array_parallelism: int = 256
 
 
 @dataclass
@@ -115,7 +118,10 @@ class ShepConfig:
     """
     job_file: str = "job.pkl"
     by_id: str = "by_id"
+    orphans: str = "orphans"
     submitit_folder: str = "submitit"
+    latest_submitit: str = "latest"
+    arrays: str = "arrays"
 
 
 @dataclass
@@ -144,6 +150,7 @@ class DoraConfig:
     shep: ShepConfig = field(default_factory=ShepConfig)
     rendezvous_file: str = "rendezvous.txt"
     grids: str = "grids"
+    codes: str = "codes"
 
     def is_excluded(self, arg_name: str) -> bool:
         """Return True if the given argument name should be excluded from
