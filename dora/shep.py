@@ -82,7 +82,7 @@ class Sheep:
         """Return the path to the main log.
         """
         if self.job is not None:
-            return self.xp.latest_submitit / f"{self.job.job_id}_0_log.out"
+            return self.xp.submitit / f"{self.job.job_id}_0_log.out"
         return None
 
     def __repr__(self):
@@ -318,16 +318,19 @@ class Shepherd:
             "All jobs inside an array must have the same value for git_save."""
 
         if is_array:
-            name_sig = _get_sig([sheep.xp.sig for sheep in sheeps])
+            name_sig = _get_sig(sorted([sheep.xp.sig for sheep in sheeps]))
         else:
             name_sig = first.xp.sig
-        name = self.main.name + "_" + name_sig
+        if is_array:
+            name = self.main.name + "_array_" + name_sig
+        else:
+            name = self.main.name + "_" + name_sig
 
         if is_array:
-            folder = self._arrays / name
+            submitit_folder = self._arrays / name
         else:
-            folder = first.xp.submitit
-        folder.mkdir(exist_ok=True)
+            submitit_folder = first.xp._submitit
+        submitit_folder.mkdir(exist_ok=True)
 
         for sheep in sheeps:
             xp = sheep.xp
@@ -335,7 +338,7 @@ class Shepherd:
             if xp.rendezvous_file.exists():
                 xp.rendezvous_file.unlink()
 
-        executor = self._get_submitit_executor(name, folder, slurm_config)
+        executor = self._get_submitit_executor(name, submitit_folder, slurm_config)
         jobs: tp.List[submitit.Job] = []
         if use_git_save and self._existing_git_clone is None:
             self._existing_git_clone = git_save.get_new_clone(self.main.dora)
@@ -359,13 +362,21 @@ class Shepherd:
                 link = self._by_id / job.job_id
                 link = link
                 link.symlink_to(sheep.xp.folder.resolve())
-                latest = sheep.xp.submitit / sheep.xp.dora.shep.latest_submitit
-                if latest.exists():
-                    latest.unlink()
                 if is_array:
-                    folder.symlink_to(sheep.xp.submitit / folder.name)
-                    if is_array:
-                        latest.symlink_to(folder)
+                    # We link the array submitit folder to be sure
+                    # we keep an history of all arrays the XP was in.
+                    submitit_link = (sheep.xp.folder / submitit_folder.name)
+                    if submitit_link.exists():
+                        assert submitit_link.resolve() == submitit_folder.resolve()
+                    else:
+                        submitit_link.symlink_to(submitit_link)
+                    latest_target = submitit_link
+                else:
+                    latest_target = submitit_folder
+                latest = sheep.xp._latest_submitit
+                if latest_target.exists():
+                    latest.unlink()
+                latest.symlink_to(latest_target)
 
                 name = self.main.get_name(sheep.xp)
                 self.log(f"Scheduled job {job.job_id} for sheep {sheep.xp.sig}/{name}")

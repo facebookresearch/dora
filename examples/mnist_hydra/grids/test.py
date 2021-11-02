@@ -26,3 +26,6 @@ def explorer(launcher):
     launcher.slurm_(mem_per_gpu=20)
     launcher()
     launcher(plop=4)
+    with launcher.job_array():
+        for k in range(8, 14):
+            launcher(plop=k)

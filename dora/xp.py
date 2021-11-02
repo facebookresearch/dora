@@ -65,18 +65,19 @@ class XP:
             return Path('.')
 
     @property
-    def submitit(self) -> Path:
+    def _xp_submitit(self) -> Path:
         return self.folder / self.dora.shep.submitit_folder
 
     @property
-    def latest_submitit(self) -> Path:
-        submitit = self.submitit
-        if not submitit.exists():
-            return submitit
-        latest = submitit / self.dora.shep.latest_submitit
-        if latest.exists():
-            return latest
-        return submitit
+    def _latest_submitit(self) -> Path:
+        return self.folder / self.dora.shep.latest_submitit
+
+    @property
+    def submitit(self) -> Path:
+        if self._latest_submitit.exists():
+            return self._latest_submitit
+        else:
+            return self._xp_submitit
 
     @property
     def rendezvous_file(self) -> Path:
