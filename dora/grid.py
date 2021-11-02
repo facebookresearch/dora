@@ -217,7 +217,7 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
                 shepherd.maybe_submit_lazy(first, slurm, rules)
             else:
                 with shepherd.job_array(slurm):
-                    for sheep in sheeps:
+                    for sheep in array_sheeps:
                         shepherd.maybe_submit_lazy(sheep, slurm, rules)
 
     for old_sheep in old_sheeps:

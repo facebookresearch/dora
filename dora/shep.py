@@ -237,6 +237,7 @@ class Shepherd:
         return self.main.dora.dir / self.main.dora.shep.arrays
 
     def _cancel(self, jobs: tp.List[SlurmJob]):
+        print('youpi', jobs)
         cancel_cmd = ["scancel"] + [job.job_id for job in jobs]
         logger.debug("Running %s", " ".join(cancel_cmd))
         sp.run(cancel_cmd, check=True)
@@ -337,6 +338,7 @@ class Shepherd:
             self.main.init_xp(xp)
             if xp.rendezvous_file.exists():
                 xp.rendezvous_file.unlink()
+        print('scheduling', use_git_save, is_array, [sheep.xp.sig for sheep in sheeps])
 
         executor = self._get_submitit_executor(name, submitit_folder, slurm_config)
         jobs: tp.List[submitit.Job] = []
@@ -369,14 +371,11 @@ class Shepherd:
                     if submitit_link.exists():
                         assert submitit_link.resolve() == submitit_folder.resolve()
                     else:
-                        submitit_link.symlink_to(submitit_link)
-                    latest_target = submitit_link
-                else:
-                    latest_target = submitit_folder
+                        submitit_link.symlink_to(submitit_folder)
                 latest = sheep.xp._latest_submitit
                 if latest.exists():
                     latest.unlink()
-                latest.symlink_to(latest_target)
+                latest.symlink_to(submitit_folder)
 
                 name = self.main.get_name(sheep.xp)
                 self.log(f"Scheduled job {job.job_id} for sheep {sheep.xp.sig}/{name}")
