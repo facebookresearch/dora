@@ -208,10 +208,10 @@ class HydraMain(DecoratedMain):
     def _get_config_noinit(self, overrides: tp.List[str] = []) -> DictConfig:
         if old_hydra:
             with mock.patch.object(DictConfig, "__deepcopy__", _no_copy):
-                cfg = compose(self.config_name, overrides)
+                cfg = compose(self.config_name, overrides)  # type: ignore
             cfg = copy.deepcopy(cfg)
         else:
-            cfg = compose(self.config_name, overrides)
+            cfg = compose(self.config_name, overrides)  # type: ignore
         return cfg
 
     def _get_delta(self, init: DictConfig, other: DictConfig):

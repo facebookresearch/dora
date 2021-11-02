@@ -35,13 +35,13 @@ class FakeJob:
     def _state(self):
         return self.watcher.get_state(self.job_id)
 
-    @property
-    def state(self):
-        return self.watcher.get_state(self.job_id)
-
     @_state.setter
     def _state(self, state: str):
         self.watcher.jobs[self.job_id] = state
+
+    @property
+    def state(self):
+        return self._state
 
 
 class FakeExecutor:

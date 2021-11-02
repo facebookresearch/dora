@@ -373,7 +373,7 @@ class Shepherd:
                 pickle.dump((job, jobs), open(sheep._job_file, "wb"))
                 logger.debug("Created job with id %s", job.job_id)
                 sheep.job = job  # type: ignore
-                sheep._other_jobs = jobs
+                sheep._other_jobs = jobs  # type: ignore
                 link = self._by_id / job.job_id
                 link = link
                 link.symlink_to(sheep.xp.folder.resolve())
