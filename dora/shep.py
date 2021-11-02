@@ -74,7 +74,6 @@ class Sheep:
         state = self.job.watcher.get_state(self.job.job_id, mode)
         if state == 'UNKNOWN' and self._other_jobs:
             if any(job.state != 'UNKNOWN' for job in self._other_jobs):
-                print([job.state for job in self._other_jobs])
                 # When cancelling single entries in a job array,
                 # sacct will just completely forget about it insted of marking
                 # it as cancelled. So we use a specific 'MISSING' status to handle that.
