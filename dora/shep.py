@@ -53,8 +53,14 @@ class Sheep:
     def __init__(self, xp: XP, job: SlurmJob = None):
         self.xp = xp
         self.job: tp.Optional[submitit.SlurmJob] = None
+        # Other jobs contain the list of other jobs in the array
+        self._other_jobs: tp.Optional[tp.List[submitit.SlurmJob]] = None
         if self._job_file.exists():
-            self.job = try_load(self._job_file)
+            content = try_load(self._job_file)
+            if isinstance(content, tuple):
+                self.job, self._other_jobs = content
+            else:
+                self.job = content
 
     @property
     def _job_file(self) -> Path:
@@ -66,6 +72,12 @@ class Sheep:
         if self.job is None:
             return None
         state = self.job.watcher.get_state(self.job.job_id, mode)
+        if state == 'UNKNOWN' and self._other_jobs:
+            if any(job.state != 'UNKNOWN' for job in self._other_jobs):
+                # When cancelling single entries in a job array,
+                # sacct will just completely forget about it insted of marking
+                # it as cancelled. So we use a specific 'MISSING' status to handle that.
+                state = 'MISSING'
         if state.startswith('CANCELLED'):
             return 'CANCELLED'
         return state
@@ -237,26 +249,9 @@ class Shepherd:
         return self.main.dora.dir / self.main.dora.shep.arrays
 
     def _cancel(self, jobs: tp.List[SlurmJob]):
-        array = []
-        regular = []
-        for job in jobs:
-            assert job.job_id is not None
-            if '_' in  job.job_id:
-                array.append(job.job_id)
-            else:
-                regular.append(job.job_id)
-
-        if regular:
-            cancel_cmd = ["scancel"] + [job.job_id for job in jobs]
-            logger.debug("Running %s", " ".join(cancel_cmd))
-            sp.run(cancel_cmd, check=True)
-        if array:
-            # sacct handles job array cancellation in a weird way.
-            # canceling regularly a job in a job array will make it diseappear
-            # from the DB, so we have to make it fail with SIGINT instead.
-            cancel_cmd = ["scancel", "-s", "SIGINT"] + [job.job_id for job in jobs]
-            logger.debug("Running %s", " ".join(cancel_cmd))
-            sp.run(cancel_cmd, check=True)
+        cancel_cmd = ["scancel"] + [job.job_id for job in jobs]
+        logger.debug("Running %s", " ".join(cancel_cmd))
+        sp.run(cancel_cmd, check=True)
 
     def _get_submitit_executor(self, name: str, folder: Path,
                                slurm_config: SlurmConfig) -> submitit.SlurmExecutor:
@@ -373,7 +368,8 @@ class Shepherd:
                     jobs.append(executor.submit(_SubmitItTarget(), self.main, sheep.xp.argv))
             # Now we can access jobs
             for sheep, job in zip(sheeps, jobs):
-                pickle.dump(job, open(sheep._job_file, "wb"))
+                # See commment in `Sheep.state` function above for storing all jobs in the array.
+                pickle.dump((job, jobs), open(sheep._job_file, "wb"))
                 logger.debug("Created job with id %s", job.job_id)
                 sheep.job = job  # type: ignore
                 link = self._by_id / job.job_id
