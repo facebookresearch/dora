@@ -237,10 +237,26 @@ class Shepherd:
         return self.main.dora.dir / self.main.dora.shep.arrays
 
     def _cancel(self, jobs: tp.List[SlurmJob]):
-        print('youpi', jobs)
-        cancel_cmd = ["scancel"] + [job.job_id for job in jobs]
-        logger.debug("Running %s", " ".join(cancel_cmd))
-        sp.run(cancel_cmd, check=True)
+        array = []
+        regular = []
+        for job in jobs:
+            assert job.job_id is not None
+            if '_' in  job.job_id:
+                array.append(job.job_id)
+            else:
+                regular.append(job.job_id)
+
+        if regular:
+            cancel_cmd = ["scancel"] + [job.job_id for job in jobs]
+            logger.debug("Running %s", " ".join(cancel_cmd))
+            sp.run(cancel_cmd, check=True)
+        if array:
+            # sacct handles job array cancellation in a weird way.
+            # canceling regularly a job in a job array will make it diseappear
+            # from the DB, so we have to make it fail with SIGINT instead.
+            cancel_cmd = ["scancel", "-s", "SIGINT"] + [job.job_id for job in jobs]
+            logger.debug("Running %s", " ".join(cancel_cmd))
+            sp.run(cancel_cmd, check=True)
 
     def _get_submitit_executor(self, name: str, folder: Path,
                                slurm_config: SlurmConfig) -> submitit.SlurmExecutor:
@@ -338,7 +354,6 @@ class Shepherd:
             self.main.init_xp(xp)
             if xp.rendezvous_file.exists():
                 xp.rendezvous_file.unlink()
-        print('scheduling', use_git_save, is_array, [sheep.xp.sig for sheep in sheeps])
 
         executor = self._get_submitit_executor(name, submitit_folder, slurm_config)
         jobs: tp.List[submitit.Job] = []
