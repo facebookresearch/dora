@@ -41,7 +41,7 @@ pip install -U dora-search
 
 See [the changelog](CHANGELOG.md) for details on releases.
 
-- 2021-11-03: support for job arrays added.
+- 2021-11-08: version 0.1.7: support for job arrays added.
 - 2021-10-20: version 0.1.6 released, bug fixes.
 - 2021-09-29: version 0.1.5 released.
 - 2021-09-07: added support for a `git_save` option. This will ensure that the project git is clean
