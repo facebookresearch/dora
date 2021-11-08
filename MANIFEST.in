@@ -1,6 +1,8 @@
 recursive-include examples *.py
 recursive-include examples *.yaml
 recursive-include dora *.yaml
+exclude examples examples/outputs/**
+exclude examples examples/complex_outputs/**
 include Makefile
 include LICENSE
 include requirements.txt
