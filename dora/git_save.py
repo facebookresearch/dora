@@ -98,7 +98,12 @@ def assign_clone(xp: XP, clone: Path):
     assert xp.dora.git_save
     code = xp.code_folder
     if code.exists():
-        code.unlink()
+        if code.is_symlink():
+            code.unlink()
+        elif code.is_dir():
+            code.rename(code.parent / 'old_code')
+        else:
+            assert "code folder should be symlink or folder", code
     code.symlink_to(clone)
 
 
