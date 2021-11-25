@@ -33,6 +33,9 @@ logger = logging.getLogger(__name__)
 
 class _SubmitItTarget:
     def __call__(self, main: DecoratedMain, argv: tp.Sequence[str]):
+        spec = get_distrib_spec()
+        os.environ['RANK'] = spec.rank
+        os.environ['WORLD_SIZE'] = spec.world_size
         self.xp = main.get_xp(argv)
         sys.argv[1:] = argv
         main()

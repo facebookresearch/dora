@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## Unreleased
 
+Always export RANK and WORLD_SIZE as env variable, so that they can be consumed by Hydra config
+resolver.
+
 ## [0.1.7] - 2021-11-08
 
 Adding support for type arrays.
