@@ -35,6 +35,10 @@ import treetable as tt
 log: tp.Callable[[str], None] = partial(simple_log, "Grid:")
 
 
+def no_print(*args, **kwargs):
+    pass
+
+
 @dataclass
 class RunGridArgs:
     """
@@ -51,6 +55,7 @@ class RunGridArgs:
             the XP with the provided index. Useful to compare XP started at different
             times.
         trim_last (bool): if True, will trim all XP to the least advanced XP.
+        silent (bool): if True, do not print anything (e.g. API usage).
         dry_run (bool): if True, Dora will simulate the run of the grid, without scheduling
             or canceling any XP.
         cancel (bool): if True, will cancel all XPs in the grid. If `patterns` is provided,
@@ -66,6 +71,7 @@ class RunGridArgs:
     interval: float = 5
     trim: tp.Optional[int] = None
     trim_last: bool = False
+    silent: bool = False
 
     # Scheduling
     dry_run: bool = False
@@ -287,7 +293,8 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
                 pass
         return sheeps
 
-    print(f"Monitoring Grid {grid_name}")
+    maybe_print = no_print if args.silent else print
+    maybe_print(f"Monitoring Grid {grid_name}")
     while True:
         if args.jupyter:
             from IPython import display
@@ -299,14 +306,14 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
         if not args.monitor:
             break
         sleep = int(args.interval * 60)
-        print()
+        maybe_print()
         for ela in range(sleep):
             out = f'Next update in {sleep - ela:.0f} seconds       '
             if sleep - ela < 10:
                 out = colorize(out, '31')
-            print(out, end='\r')
+            maybe_print(out, end='\r')
             time.sleep(1)
-        print(' ' * 60)
+        maybe_print(' ' * 60)
     return sheeps
 
 
