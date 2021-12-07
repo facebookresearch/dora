@@ -63,7 +63,6 @@ class LogProgress:
         return self
 
     def __next__(self):
-        self._index += 1
         if self._will_log:
             self._log()
             self._will_log = False
@@ -72,6 +71,7 @@ class LogProgress:
         except StopIteration:
             raise
         else:
+            self._index += 1
             if self.updates > 0:
                 log_every = max(self.min_interval, self.total // self.updates)
                 # logging is delayed by 1 it, in order to have the metrics from update
