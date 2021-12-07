@@ -73,6 +73,21 @@ def _compare_config(ref, other, path=[]):
     return delta
 
 
+def _simplify_argv(argv: tp.Sequence[str]) -> tp.List[str]:
+    simplified = []
+    seen = set()
+    for arg in list(argv)[::-1]:
+        assert '=' in arg, f'Argument {arg} does not contain ='
+        key, value = arg.split('=', 1)
+        key = key.strip()
+        if key in seen:
+            continue
+        else:
+            seen.add(key)
+            simplified.append(arg)
+    return simplified[::-1]
+
+
 class HydraMain(DecoratedMain):
     _slow = True
 
@@ -126,7 +141,7 @@ class HydraMain(DecoratedMain):
         return slurm
 
     def get_xp(self, argv: tp.Sequence[str]):
-        argv = list(argv)
+        argv = _simplify_argv(argv)
         cfg = self._get_config(argv)
         base, delta = self._get_base_config(argv)
         delta += self._get_delta(base, cfg)

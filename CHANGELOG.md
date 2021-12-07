@@ -15,6 +15,8 @@ Add silent option for grid API, which suppress all printing.
 
 Adding `process_sheep` method in Explorer, that can replace `process_history`.
 
+Automatically simplfies argv list for Hydra experiments when same parameter is repeated multiple times.
+
 ## [0.1.7] - 2021-11-08
 
 Adding support for type arrays.
