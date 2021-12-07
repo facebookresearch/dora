@@ -48,11 +48,15 @@ class LogProgress:
         self.logger = logger
         self.level = level
 
-    def update(self, **infos):
+    def update(self, **infos) -> bool:
+        """Update the metrics to show when logging. Return True if logging will
+        happen at the end of this iteration."""
         self._infos = infos
+        return self._will_log
 
     def __iter__(self):
         self._iterator = iter(self.iterable)
+        self._will_log = False
         self._index = -1
         self._infos = {}
         self._begin = time.time()
@@ -60,18 +64,20 @@ class LogProgress:
 
     def __next__(self):
         self._index += 1
+        if self._will_log:
+            self._log()
+            self._will_log = False
         try:
             value = next(self._iterator)
         except StopIteration:
             raise
         else:
-            return value
-        finally:
             if self.updates > 0:
                 log_every = max(self.min_interval, self.total // self.updates)
                 # logging is delayed by 1 it, in order to have the metrics from update
                 if self._index >= 1 and self._index % log_every == 0:
-                    self._log()
+                    self._will_log = True
+            return value
 
     def _log(self):
         self._speed = (1 + self._index) / (time.time() - self._begin)

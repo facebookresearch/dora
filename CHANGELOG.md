@@ -9,6 +9,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Always export RANK and WORLD_SIZE as env variable, so that they can be consumed by Hydra config
 resolver.
 
+`dora.log.LogProgress.update` now returns True if logging will happen at the end of the iteration.
+
+Add silent option for grid API, which suppress all printing.
+
+Adding `process_sheep` method in Explorer, that can replace `process_history`.
+
 ## [0.1.7] - 2021-11-08
 
 Adding support for type arrays.

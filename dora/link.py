@@ -9,6 +9,7 @@ import logging
 from pathlib import Path
 import typing as tp
 
+from retrying import retry
 from . import utils
 
 logger = logging.getLogger(__name__)
@@ -29,6 +30,8 @@ class Link:
         self.history: tp.List[dict] = []
         self.history_file = history_file
 
+    # Retry operation as history file might be stale for  update by running XP
+    @retry(stop_max_attempt_number=10)
     def load(self):
         if self.history_file is None:
             return

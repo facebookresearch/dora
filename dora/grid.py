@@ -389,7 +389,11 @@ def monitor(args: tp.Any, main: DecoratedMain, explorer: Explorer, herd: tp.List
         }
         line = {}
         line['Meta'] = meta
-        line.update(explorer.process_history(history))
+        try:
+            other = explorer.process_sheep(sheep, history)
+        except NotImplementedError:
+            other = explorer.process_history(history)
+        line.update(other)
         lines.append(line)
 
     if base_name:

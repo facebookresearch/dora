@@ -20,7 +20,6 @@ import json
 from pathlib import Path
 import typing as tp
 import sys
-from retrying import retry
 
 from .conf import DoraConfig, SlurmConfig
 from .names import NamesMixin
@@ -116,8 +115,6 @@ class DecoratedMain(NamesMixin):
         """
         raise NotImplementedError()
 
-    # Retry operation as history file might be stale for  update by running XP
-    @retry(stop_max_attempt_number=10)
     def get_xp_history(self, xp: XP) -> tp.List[dict]:
         """Return the metrics for a given XP. By default this will look into
         the `history.json` file, that can be populated with the Link class.
@@ -125,11 +122,8 @@ class DecoratedMain(NamesMixin):
         Can be overriden, but metrics should still be returned as a list
         of dicts, possibly with nested dicts.
         """
-        if xp.history.exists():
-            metrics = json.load(open(xp.history))
-            return metrics
-        else:
-            return []
+        xp.link.load()
+        return xp.link.history
 
     def get_slurm_config(self) -> SlurmConfig:
         """Return default Slurm config for the launch and grid actions.

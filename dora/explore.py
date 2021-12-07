@@ -217,6 +217,18 @@ class Explorer:
     def get_colors(self):
         return ["0", "38;5;245"]
 
+    def process_sheep(self, sheep: Sheep, history: tp.List[dict]) -> dict:
+        """Process a sheep to return a dict (with possibly nested dict inside)
+        matching the schema given by `get_grid_metrics`.
+        This gives more possiblities than `process_history`, which is kept for compatibility,
+        as one has access to the XP config here.
+        If this is implemented, it will always be called, otherwise, `process_history` is used.
+
+        One should use the history provided here, rather than the one in `sheep.xp.link.history`,
+        as it has possibly been shortened to align multiple experiments.
+        """
+        raise NotImplementedError()
+
     def process_history(self, history: tp.List[dict]) -> dict:
         """Process history to return a dict (with possibly nested dict inside)
         matching the schema given by `get_grid_metrics`.
