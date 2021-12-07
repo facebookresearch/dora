@@ -293,7 +293,11 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
                 pass
         return sheeps
 
-    maybe_print = no_print if args.silent else print
+    maybe_print: tp.Callable
+    if args.silent:
+        maybe_print = no_print
+    else:
+        maybe_print = print
     maybe_print(f"Monitoring Grid {grid_name}")
     while True:
         if args.jupyter:
