@@ -74,6 +74,5 @@ def import_or_fatal(module_name: str) -> tp.Any:
     try:
         return importlib.import_module(module_name)
     except ImportError:
-        logger.debug("Could not import module %s", module_name, exc_info=True)
-        fatal(f"Failed to import module {module_name}. "
-              "Retry with `dora -v command` to get a traceback.")
+        logger.info("Could not import module %s", module_name, exc_info=True)
+        fatal(f"Failed to import module {module_name}.")

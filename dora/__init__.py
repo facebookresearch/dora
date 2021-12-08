@@ -60,7 +60,7 @@ width="400px"></p>
 __pdoc__ = {}
 __pdoc__['tests'] = False
 
-__version__ = "0.1.8a4"
+__version__ = "0.1.8a5"
 
 # flake8: noqa
 from .explore import Explorer, Launcher

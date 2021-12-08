@@ -17,6 +17,9 @@ Adding `process_sheep` method in Explorer, that can replace `process_history`.
 
 Automatically simplfies argv list for Hydra experiments when same parameter is repeated multiple times.
 
+Better error message when making a typo in the grid name. Always show the traceback when getting an
+import error.
+
 ## [0.1.7] - 2021-11-08
 
 Adding support for type arrays.

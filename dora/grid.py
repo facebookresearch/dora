@@ -95,11 +95,15 @@ def _get_explore(args):
     root_name = package + ".grids"
     grids = import_or_fatal(root_name)
 
-    if args.grid is None:
+    grid_file = Path(grids.__file__).parent / f'{args.grid}.py'
+    if args.grid is None or not grid_file.exists():
         candidates = []
         for info in pkgutil.walk_packages([Path(grids.__file__).parent]):
             if not info.name.startswith('_'):
                 candidates.append(info.name)
+        if not grid_file.exists():
+            log(f'No grid file {grid_file.name} in package {root_name}. '
+                'Maybe you made a typo?')
         log(f"Potential grids are: {', '.join(candidates)}")
         sys.exit(0)
 
