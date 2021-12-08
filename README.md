@@ -95,43 +95,6 @@ with a `train` module in it, (i.e. `myproj.train` module, stored in the `myproj/
 
 The `train.py` file must contain a `main` function that is properly decorated, as explained hereafter.
 
-### Distributed training support (non PyTorch Lightning)
-
-Dora supports distributed training, and makes a few assumptions for you.  You should initialize distributed training through Dora, by calling in your `main` function:
-
-```python
-import dora.distrib
-dora.distrib.init()
-```
-
-**Note:** This is not required for Pytorch Lightning users, see the PL section hereafter, everything will be setup automatically for you :)
-
-
-### Git Save
-
-You can set the `git_save` option on your project, see hereafter on how to do it for either argparse or Hydra
-based projects.
-When this option is set, Dora makes individual clones of your project repository for each experiment that is scheduled.
-The job will then run from that clean clone. This allows both to keep track of the exact
-code that was used for an experiment, as well as preventing code changes to impact pending, or requeued
-jobs.
-If you reschedule a failed or cancelled job, the clone will however be updated with the current code.
-
-In order to use this option, your code should be able to run from a fresh clone of the repository.
-If you need to access to resources that are specified with a path relative to the original
-repo, use `dora.to_absolute_path()`. Note that this is similar to `hydra.utils.to_absolute_path()`. In fact, you can safely replace the Hydra version with this one,
-as even when `git_save` is not set, the Dora one automatically falls back to the Hydra one (if Hydra is used).
-
-**The repository must be completely clean** before scheduling remote jobs, and all files should be either
-tracked or git ignored. This is very restricive, but this makes implementing this feature
-much simpler and safe. Also this forces good practice :)
-Only the `dora run` command can be used on a dirty repository, to allow
-for easy debugging. For the `dora launch` and `dora grid` command, you can also use the `--no_git_save`
-option to temporarily deactivate this feature.
-
-The clone for each experiment is located inside the `code/` subfolder inside the XP folder (which you can get with the `dora info` command for instance).
-
-
 ### Argparse support
 
 Here is a template for the `train.py` file:
@@ -246,6 +209,45 @@ checkpoint upon preemption, as this lead to non deterministic behavior
 from time to time (e.g. every epoch). To get back the old behavior,
 pass `no_unfinished_epochs=False` to `get_trainer`. See [examples/pl/train.py](examples/pl/train.py)
 for an example of how to implement checkpointing in a reliable manner.
+
+
+### Distributed training support (non PyTorch Lightning)
+
+Dora supports distributed training, and makes a few assumptions for you.  You should initialize distributed training through Dora, by calling in your `main` function:
+
+```python
+import dora.distrib
+dora.distrib.init()
+```
+
+**Note:** This is not required for Pytorch Lightning users, see the PL section hereafter, everything will be setup automatically for you :)
+
+
+### Git Save
+
+You can set the `git_save` option on your project, see hereafter on how to do it for either argparse or Hydra
+based projects.
+When this option is set, Dora makes individual clones of your project repository for each experiment that is scheduled.
+The job will then run from that clean clone. This allows both to keep track of the exact
+code that was used for an experiment, as well as preventing code changes to impact pending, or requeued
+jobs.
+If you reschedule a failed or cancelled job, the clone will however be updated with the current code.
+
+In order to use this option, your code should be able to run from a fresh clone of the repository.
+If you need to access to resources that are specified with a path relative to the original
+repo, use `dora.to_absolute_path()`. Note that this is similar to `hydra.utils.to_absolute_path()`. In fact, you can safely replace the Hydra version with this one,
+as even when `git_save` is not set, the Dora one automatically falls back to the Hydra one (if Hydra is used).
+
+**The repository must be completely clean** before scheduling remote jobs, and all files should be either
+tracked or git ignored. This is very restricive, but this makes implementing this feature
+much simpler and safe. Also this forces good practice :)
+Only the `dora run` command can be used on a dirty repository, to allow
+for easy debugging. For the `dora launch` and `dora grid` command, you can also use the `--no_git_save`
+option to temporarily deactivate this feature.
+
+The clone for each experiment is located inside the `code/` subfolder inside the XP folder (which you can get with the `dora info` command for instance).
+
+
 
 ## The `dora` command
 
