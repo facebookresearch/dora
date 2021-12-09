@@ -11,9 +11,10 @@ This allows easy sharing through paste, mails etc.
 import base64
 from functools import partial
 import json
-import textwrap
-import zlib
 import sys
+import textwrap
+import typing as tp
+import zlib
 
 
 from .main import DecoratedMain
@@ -49,8 +50,8 @@ def export_action(args, main: DecoratedMain):
 
 
 def import_action(args, main: DecoratedMain):
-    buffer = []
-    for line in sys.stdin.readline():
+    buffer: tp.List[str] = []
+    for line in sys.stdin:
         line = line.strip()
         if not line and buffer:
             break
