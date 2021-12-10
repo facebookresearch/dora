@@ -138,10 +138,14 @@ class DoraConfig:
         git_save (bool): when True, experiments can only be scheduled from a clean repo.
             A shallow clone of the repo will be made and execution will happen from there.
             This does not impact `dora run` unless you pass the `--git_save` flag.
+        shared (Path or None): if provided, the path to a central repository of XPs.
+            For the moment, this only supports sharing hyper-params, logs etc. will stay
+            in the per user folder.
     """
     dir: Path = Path("./outputs")  # where everything will be stored
     exclude: tp.List[str] = field(default_factory=list)
     git_save: bool = False
+    shared: tp.Optional[Path] = None  # Optional path for shared XPs.
 
     # Those are internal config values and are unlikely to be changed
     history: str = "history.json"  # where metrics will be stored
@@ -161,7 +165,8 @@ class DoraConfig:
         return False
 
     def __setattr__(self, name, value):
-        if name == 'dir':
+        if name in ['dir', 'shared']:
             from .git_save import to_absolute_path
-            value = Path(to_absolute_path(value))
+            if value is not None:
+                value = Path(to_absolute_path(value))
         super().__setattr__(name, value)

@@ -26,10 +26,10 @@ parser.add_argument("--cat_b", type=int)
 EXCLUDE = ["num_workers", "cat_*"]
 
 
-def get_main(tmpdir):
-    tmpdir = Path(str(tmpdir))
-
-    @argparse_main(parser=parser, exclude=EXCLUDE, dir=tmpdir, use_underscore=True)
+def get_main(dora_dir, shared=None):
+    @argparse_main(
+        parser=parser, exclude=EXCLUDE, dir=dora_dir,
+        shared=shared, use_underscore=True)
     def main():
         xp = get_xp()
         cwd = str(Path('.').resolve())
@@ -55,6 +55,22 @@ def call(main, argv):
         return main()
     finally:
         sys.argv = old_argv
+
+
+def test_shared(tmpdir):
+    shared = tmpdir / 'shared'
+    main_a = get_main(tmpdir / 'a', shared)
+    main_b = get_main(tmpdir / 'b')
+    main_c = get_main(tmpdir / 'c', shared)
+
+    xp = main_a.get_xp(['--a=5'])
+    main_a.init_xp(xp)
+
+    with pytest.raises(RuntimeError):
+        main_b.get_xp_from_sig(xp.sig)
+    xp2 = main_c.get_xp_from_sig(xp.sig)
+    assert xp2.sig == xp.sig
+    assert xp2.argv == xp.argv
 
 
 def test_main(tmpdir):
