@@ -21,12 +21,11 @@ Automatically simplifies argv list for Hydra experiments when the same parameter
 Better error message when making a typo in the grid name. Always show the traceback when getting an
 import error.
 
-Added `import`/`export` command to easily share XP hyper-params in text form.
-
+Easier sharing of XP hyper params. Added `import`/`export` command to easily share XP hyper-params in text form.
 Added shared repository option (`shared` option in Dora config). No metrics or
 checkpoints can be shared, this is still a bit dangerous, but this will act as a shared
 database for mappings from SIG -> hyper params, so that you can just pass a SIG
-to your teammate and launch the same XP.
+to your teammate and launch the same XP. See [the README section on sharing](https://github.com/facebookresearch/dora/blob/main/README.md#sharing-xps) for more details.
 
 ## [0.1.7] - 2021-11-08
 
