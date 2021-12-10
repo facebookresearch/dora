@@ -82,10 +82,21 @@ class DecoratedMain(NamesMixin):
         return sys.argv[1:]
 
     def init_xp(self, xp: XP):
-        # Initialize the XP just before the actual execution.
-        # This will create the XP directory and dump the argv used.
+        """
+        Initialize the XP folder. Once this is done, the XP can be retrieved
+        from its signature. This is done automatically before running,
+        or when using the `--init` flag of the `dora grid` command.
+
+        This will also initialize the shared XP folder so that the XP hyper-params
+        can be easily shared using its signature.
+        """
         xp.folder.mkdir(exist_ok=True, parents=True)
         json.dump(xp.argv, open(xp._argv_cache, 'w'))
+        if xp._shared_argv_cache is not None:
+            xp._shared_argv_cache.parent.mkdir(exist_ok=True, parents=True, mode=0o777)
+            xp._shared_argv_cache.parent.chmod(0o777)
+            json.dump(xp.argv, open(xp._shared_argv_cache, 'w'))
+            xp._shared_argv_cache.chmod(0o777)
         return xp
 
     def get_argv_from_sig(self, sig: str) -> tp.Sequence[str]:
@@ -95,6 +106,8 @@ class DecoratedMain(NamesMixin):
         xp = XP(sig=sig, dora=self.dora, cfg=None, argv=[])
         if xp._argv_cache.exists():
             return json.load(open(xp._argv_cache))
+        elif xp._shared_argv_cache is not None and xp._shared_argv_cache.exists():
+            return json.load(open(xp._shared_argv_cache))
         else:
             raise RuntimeError(f"Could not find experiment with signature {sig}")
 
@@ -194,20 +207,24 @@ class ArgparseMain(DecoratedMain):
         return super().get_slurm_config()
 
 
-def argparse_main(parser: argparse.ArgumentParser, *, use_underscore: bool = True,
-                  exclude: tp.Sequence[str] = None,
+def argparse_main(parser: argparse.ArgumentParser, *,
+                  dir: tp.Union[str, Path] = "./outputs",
+                  exclude: tp.Sequence[str] = [],
                   slurm: tp.Optional[SlurmConfig] = None,
-                  dir: tp.Union[str, Path] = "./outputs", **kwargs):
+                  shared: tp.Optional[tp.Union[str, Path]] = None,
+                  use_underscore: bool = True,
+                  **kwargs):
     """Nicer version of `ArgparseMain` that acts like a decorator, and directly
     exposes the most useful configs to override.
 
     Args:
-        parser : parser to use, and to derive default values from.
-        exclude : list of patterns of arguments to exclude from the computation
+        parser: parser to use, and to derive default values from.
+        exclude: list of patterns of arguments to exclude from the computation
             of the XP signature.
-        dir : path to store logs, checkpoints, etc. to.
-        slurm : default slurm config for scheduling jobs.
-        use_underscore : if False, scheduling a job as `launcher(batch_size=32)`
+        dir: path to store logs, checkpoints, etc. to.
+        slurm: default slurm config for scheduling jobs.
+        shared: path to the shared XP repository.
+        use_underscore: if False, scheduling a job as `launcher(batch_size=32)`
             will translate to the command-line `--batch-size=32`,
             otherwise, it will stay as `--batch_size=32`.
         **kwargs: extra args are passed to `DoraConfig`.
@@ -215,7 +232,8 @@ def argparse_main(parser: argparse.ArgumentParser, *, use_underscore: bool = Tru
     def _decorator(main: MainFun):
         dora = DoraConfig(
             dir=Path(dir),
-            exclude=list(exclude) if exclude is not None else [],
+            shared=None if shared is None else Path(shared),
+            exclude=list(exclude),
             **kwargs)
         return ArgparseMain(main, dora, parser, use_underscore=use_underscore, slurm=slurm)
     return _decorator

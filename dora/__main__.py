@@ -20,6 +20,7 @@ from .info import info_action
 from .launch import launch_action
 from .log import fatal, setup_logging, simple_log
 from .run import run_action
+from .share import import_action, export_action
 from .utils import import_or_fatal
 
 
@@ -158,6 +159,13 @@ def get_parser():
     info.add_argument("-m", "--metrics", action="store_true", help="Show last metrics")
     info.add_argument("argv", nargs='*')
     info.set_defaults(action=info_action)
+
+    import_ = subparsers.add_parser("import")
+    import_.set_defaults(action=import_action)
+
+    export = subparsers.add_parser("export")
+    export.add_argument("sigs", nargs='*', help='All the XP sigs to export.')
+    export.set_defaults(action=export_action)
 
     return parser
 

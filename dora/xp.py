@@ -91,6 +91,18 @@ class XP:
     def _argv_cache(self) -> Path:
         return self.folder / ".argv.json"
 
+    @property
+    def _shared_folder(self) -> tp.Optional[Path]:
+        if self.dora.shared is not None:
+            return self.dora.shared / self.dora.xps / self.sig
+        return None
+
+    @property
+    def _shared_argv_cache(self) -> tp.Optional[Path]:
+        if self._shared_folder is not None:
+            return self._shared_folder / ".argv.json"
+        return None
+
     @contextmanager
     def enter(self, stack: bool = False):
         """Context manager, fake being in the XP for its duration.

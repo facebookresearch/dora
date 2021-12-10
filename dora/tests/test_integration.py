@@ -7,14 +7,15 @@
 import os
 import pickle
 import subprocess as sp
+import shutil
 
 import pytest
 
 from .test_main import get_main
 
 
-def run_cmd(argv):
-    return sp.run(["dora", "-P", "dora.tests.integ"] + argv, check=True, capture_output=False)
+def run_cmd(argv, **kwargs):
+    return sp.run(["dora", "-P", "dora.tests.integ"] + argv, check=True, **kwargs)
 
 
 def test_integration(tmpdir):
@@ -23,9 +24,17 @@ def test_integration(tmpdir):
         run_cmd(["info", "--", "a=32"])
     run_cmd(["info"])
     run_cmd(["run"])
-    run_cmd(["grid", "test", "--dry_run", "--no_monitor"])
+    run_cmd(["grid", "test", "--dry_run", "--init", "--no_monitor"])
     run_cmd(["info", "--", "--a=32"])
     run_cmd(["--main_module", "other_train", "run"])
+
+    main = get_main(tmpdir)
+    xp = main.get_xp(['--b=4'])
+    proc = run_cmd(["export", xp.sig], capture_output=True)
+    shutil.rmtree(xp.folder)
+    assert not xp.folder.exists()
+    run_cmd(["import"], input=proc.stdout)
+    assert xp.folder.exists()
 
 
 def test_git_save(tmpdir):
