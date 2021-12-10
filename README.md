@@ -23,6 +23,7 @@ width="1000px"></p>
 - [`dora info`: Inspecting an XP](#dora-info-inspecting-an-xp)
 - [`dora grid`: Managing a grid search](#dora-grid-managing-a-grid-search)
 - [The Dora API](#the-dora-api)
+- [Sharing XPs](#sharing-xps)
 - [Advanced configuration](#advanced-configuration)
 - [Contributing](#contributing)
 
@@ -535,6 +536,45 @@ dora.grid.run_grid(main, explorer, grid_name='jupy', rules=rules, args=args)
 # You can retrieve the short names by using `main.get_names()`
 short_names, ref_name = main.get_names([sheep.xp for sheep in sheeps])
 ```
+
+## Sharing XPs
+
+At the moment, checkpoints and metrics cannot be directly shared (you can always copy
+manually an XP folder in someone else XPs folder). However, there are now two ways to share easily an XP hyper-params
+using its signature. This is useful if you want someone else to quickly reproduce your XP!
+
+### Dora `import`/`export` command
+
+Given a list of signatures, you can export its hyper-params to a compact textual format with `dora export`:
+
+```bash
+dora export SIG1 [OTHER_SIG ...]
+```
+Copy paste the given string and your teammate can import it with
+
+```bash
+dora import
+# now paste to stdin
+```
+The command will show you the list of imported XPs. Once an XP is imported, you can simply run it or query hyper params
+with `dora run -f SIG`, `dora info -f SIG` etc. From a grid file, you can programmatically retrieve the hyper-params from that XP, e.g.
+
+```python
+from myproject.train import main
+
+xp = main.get_xp_from_sig(SIG)
+launcher.bind_(xp.argv)
+```
+
+### Secondary shared XPs repository
+
+You can now configure a secondary shared XPs repository where only mappings from SIG -> hyper params are stored. With Hydra you can add
+```yaml
+dora:
+    dir: outputs
+    shared: /shared_folder/shared_xps
+```
+Then other teammates can reference any SIG from an XP launched by other team members within the Dora commands. 
 
 
 ## Advanced configuration
