@@ -13,14 +13,15 @@ resolver.
 
 Add silent option for grid API, which suppress all printing.
 
-Adding `process_sheep` method in Explorer, that can replace `process_history`.
+Adding `process_sheep` method in Explorer, that can replace `process_history` and provide access to the sheep and XP (`sheep.xp`)
+in order to allow for processing that can depend on the config of the XP.
 
-Automatically simplfies argv list for Hydra experiments when same parameter is repeated multiple times.
+Automatically simplifies argv list for Hydra experiments when the same parameter is repeated multiple times.
 
 Better error message when making a typo in the grid name. Always show the traceback when getting an
 import error.
 
-Added import/export command to easily share XP hyper-params in text form.
+Added `import`/`export` command to easily share XP hyper-params in text form.
 
 Added shared repository option (`shared` option in Dora config). No metrics or
 checkpoints can be shared, this is still a bit dangerous, but this will act as a shared
