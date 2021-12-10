@@ -91,10 +91,12 @@ class DecoratedMain(NamesMixin):
         can be easily shared using its signature.
         """
         xp.folder.mkdir(exist_ok=True, parents=True)
-        for path in [xp._argv_cache, xp._shared_argv_cache]:
-            if path is not None:
-                path.parent.mkdir(exist_ok=True, parents=True)
-                json.dump(xp.argv, open(path, 'w'))
+        json.dump(xp.argv, open(xp._argv_cache, 'w'))
+        if xp._shared_argv_cache is not None:
+            xp._shared_argv_cache.parent.mkdir(exist_ok=True, parents=True, mode=0o777)
+            xp._shared_argv_cache.parent.chmod(0o777)
+            json.dump(xp.argv, open(xp._shared_argv_cache, 'w'))
+            xp._shared_argv_cache.chmod(0o777)
         return xp
 
     def get_argv_from_sig(self, sig: str) -> tp.Sequence[str]:
