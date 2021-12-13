@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## Unreleased
+## [0.1.8a] - 2021-12-?
 
 Always export RANK and WORLD_SIZE as env variable, so that they can be consumed by Hydra config
 resolver.
@@ -13,19 +13,19 @@ resolver.
 
 Add silent option for grid API, which suppress all printing.
 
-Adding `process_sheep` method in Explorer, that can replace `process_history`.
+Adding `process_sheep` method in Explorer, that can replace `process_history` and provide access to the sheep and XP (`sheep.xp`)
+in order to allow for processing that can depend on the config of the XP.
 
-Automatically simplfies argv list for Hydra experiments when same parameter is repeated multiple times.
+Automatically simplifies argv list for Hydra experiments when the same parameter is repeated multiple times.
 
 Better error message when making a typo in the grid name. Always show the traceback when getting an
 import error.
 
-Added import/export command to easily share XP hyper-params in text form.
-
+Easier sharing of XP hyper params. Added `import`/`export` command to easily share XP hyper-params in text form.
 Added shared repository option (`shared` option in Dora config). No metrics or
 checkpoints can be shared, this is still a bit dangerous, but this will act as a shared
 database for mappings from SIG -> hyper params, so that you can just pass a SIG
-to your teammate and launch the same XP.
+to your teammate and launch the same XP. See [the README section on sharing](https://github.com/facebookresearch/dora/blob/main/README.md#sharing-xps) for more details.
 
 ## [0.1.7] - 2021-11-08
 
