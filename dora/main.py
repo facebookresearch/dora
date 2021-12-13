@@ -93,6 +93,9 @@ class DecoratedMain(NamesMixin):
         xp.folder.mkdir(exist_ok=True, parents=True)
         json.dump(xp.argv, open(xp._argv_cache, 'w'))
         if xp._shared_argv_cache is not None:
+            # Create xps and XP folders with 0777 mode.
+            xp._shared_argv_cache.parent.parent.mkdir(exist_ok=True, parents=True, mode=0o777)
+            xp._shared_argv_cache.parent.parent.chmod(0o777)
             xp._shared_argv_cache.parent.mkdir(exist_ok=True, parents=True, mode=0o777)
             xp._shared_argv_cache.parent.chmod(0o777)
             json.dump(xp.argv, open(xp._shared_argv_cache, 'w'))
