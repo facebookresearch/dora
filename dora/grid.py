@@ -304,11 +304,11 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
         maybe_print = print
     maybe_print(f"Monitoring Grid {grid_name}")
     while True:
-        if args.jupyter:
+        if args.jupyter and not args.silent:
             from IPython import display
             display.clear_output(wait=True)
         shepherd.update()
-        if monitor(args, main, explorer, sheeps):
+        if monitor(args, main, explorer, sheeps, maybe_print):
             # All jobs finished or failed, stop monitoring
             break
         if not args.monitor:
@@ -362,7 +362,8 @@ def _filter_grid_sheeps(patterns: tp.List[str], main: DecoratedMain,
     return out
 
 
-def monitor(args: tp.Any, main: DecoratedMain, explorer: Explorer, herd: tp.List[Sheep]) -> bool:
+def monitor(args: tp.Any, main: DecoratedMain, explorer: Explorer, herd: tp.List[Sheep],
+            maybe_print: tp.Callable) -> bool:
     """Single iteration of monitoring of the jobs in a Grid.
     Returns `True` if all jobs are done or failed, and `False` otherwise.
     """
@@ -405,12 +406,12 @@ def monitor(args: tp.Any, main: DecoratedMain, explorer: Explorer, herd: tp.List
         lines.append(line)
 
     if base_name:
-        print("Base name: ", base_name)
+        maybe_print("Base name: ", base_name)
     table = tt.table(
         shorten=True,
         groups=[
             tt.group("Meta", explorer.get_grid_meta()),
         ] + explorer.get_grid_metrics()
     )
-    print(tt.treetable(lines, table, colors=explorer.get_colors()))
+    maybe_print(tt.treetable(lines, table, colors=explorer.get_colors()))
     return finished

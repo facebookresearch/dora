@@ -42,7 +42,7 @@ pip install -U dora-search
 
 See [the changelog](CHANGELOG.md) for details on releases.
 
-- 2021-12-10: version 0.1.8a: see changelog, many of small changes.
+- 2021-12-10: version 0.1.8: see changelog, many of small changes.
 - 2021-11-08: version 0.1.7: support for job arrays added.
 - 2021-10-20: version 0.1.6 released, bug fixes.
 - 2021-09-29: version 0.1.5 released.
@@ -574,7 +574,7 @@ dora:
     dir: outputs
     shared: /shared_folder/shared_xps
 ```
-Then other teammates can reference any SIG from an XP launched by other team members within the Dora commands. 
+Then other teammates can reference any SIG from an XP launched by other team members within the Dora commands.
 
 
 ## Advanced configuration
