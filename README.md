@@ -470,8 +470,8 @@ directly from an IPython notebook. See the
 ### DecoratedMain
 
 The most useful class is the
-[DecoratedMain](https://share.honu.io/dora/dora/main.html#dora.main.DecoratedMain), which is the decorated main function in your project. You can use it
-to retrieve an [XP object](https://share.honu.io/dora/dora/xp.html#dora.xp.XP)
+[DecoratedMain](https://facebookresearch.github.io/dora/dora/main.html#dora.main.DecoratedMain), which is the decorated main function in your project. You can use it
+to retrieve an [XP object](https://facebookresearch.github.io/dora/dora/xp.html#dora.xp.XP)
 from a list of argv, or a signature:
 
 ```python
@@ -497,9 +497,9 @@ custom class instead.
 
 You can schedule and manage grids from the Dora API rather than the command-line.
 This is useful to manage XPs from a notebook for instance!
-See the [dora.grid.run_grid](https://share.honu.io/dora/dora/grid.html#dora.grid.run_grid).
-Flags are passed with as an instance of  [dora.grid.RunGridArgs](https://share.honu.io/dora/dora/grid.html#dora.grid.RunGridArgs).
-Submission rules (e.g. cancel, retry etc.) are passed as a [dora.conf.SubmitRules](https://share.honu.io/dora/dora/conf.html#dora.conf.SubmitRules).
+See the [dora.grid.run_grid](https://facebookresearch.github.io/dora/dora/grid.html#dora.grid.run_grid).
+Flags are passed with as an instance of  [dora.grid.RunGridArgs](https://facebookresearch.github.io/dora/dora/grid.html#dora.grid.RunGridArgs).
+Submission rules (e.g. cancel, retry etc.) are passed as a [dora.conf.SubmitRules](https://facebookresearch.github.io/dora/dora/conf.html#dora.conf.SubmitRules).
 
 ```python
 import dora
