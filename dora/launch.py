@@ -8,7 +8,6 @@
 Launch command.
 """
 from functools import partial
-import shutil
 import subprocess as sp
 import time
 
@@ -16,6 +15,7 @@ from .conf import SubmitRules, update_from_args
 from .main import DecoratedMain
 from .shep import Shepherd
 from .log import simple_log
+from .utils import reliable_rmtree
 
 log = partial(simple_log, "Launch:")
 
@@ -46,7 +46,7 @@ def launch_action(args, main: DecoratedMain):
         shepherd.commit()
         log("Deleting XP folder...")
         if sheep.xp.folder.exists():
-            shutil.rmtree(sheep.xp.folder)
+            reliable_rmtree(sheep.xp.folder)
         sheep.job = None
 
     shepherd.maybe_submit_lazy(sheep, slurm, rules)

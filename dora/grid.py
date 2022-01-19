@@ -28,7 +28,7 @@ from .explore import Explorer, Launcher, Herd
 from .main import DecoratedMain
 from .log import colorize, simple_log, fatal
 from .shep import Sheep, Shepherd
-from .utils import import_or_fatal, try_load
+from .utils import import_or_fatal, reliable_rmtree, try_load
 
 import treetable as tt
 
@@ -191,7 +191,7 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
         log("Deleting XP folders...")
         for sheep in sheeps:
             if sheep.xp.folder.exists():
-                shutil.rmtree(sheep.xp.folder)
+                reliable_rmtree(sheep.xp.folder)
             sheep.job = None
 
     to_unlink = []

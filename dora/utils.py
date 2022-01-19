@@ -11,6 +11,8 @@ import logging
 import os
 from pathlib import Path
 import pickle
+from shutil import rmtree
+import tempfile
 import typing as tp
 
 from omegaconf.basecontainer import BaseContainer
@@ -76,3 +78,23 @@ def import_or_fatal(module_name: str) -> tp.Any:
     except ImportError:
         logger.info("Could not import module %s", module_name, exc_info=True)
         fatal(f"Failed to import module {module_name}.")
+
+
+def reliable_rmtree(path: Path):
+    """Reliably delete the given folder, trying to remove while ignoring errors,
+    and if any files remain, renaming to some trash folder."""
+    error = False
+
+    def _on_error(func, error_path, exc_info):
+        nonlocal error
+        error = True
+        logger.warning(f"Error deleting file {error_path}")
+
+    rmtree(path, onerror=_on_error)
+    if error:
+        assert path.exists()
+        target_name = tempfile.mkdtemp(dir=path.parent, prefix=path.name + "_", suffix="_trash")
+        logger.warning(f"Deletion of {path} failed, moving to {target_name}")
+        path.rename(target_name)
+    else:
+        assert not path.exists()
