@@ -35,6 +35,7 @@ class DoraEnvironment(ClusterEnvironment):
     def creates_children(self) -> bool:
         return True
 
+    @property
     def creates_processes_externally(self) -> bool:
         return True
 
