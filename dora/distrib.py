@@ -70,6 +70,10 @@ def init(backend='nccl'):
     logger.info(
         "Distributed init: %d/%d (local %d) from %s",
         spec.rank, spec.world_size, spec.local_rank, spec.source)
+    torch.distributed.barrier()
+    if rank() == 0:
+        # Delete rendez vous file early, let's hope this doesn't bug too much.
+        xp.rendezvous_file.unlink()
 
 
 def is_master():
