@@ -5,6 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 from contextlib import contextmanager
+import importlib.util
 import logging
 import os
 import shlex
@@ -12,7 +13,7 @@ import subprocess as sp
 import typing as tp
 from pathlib import Path
 
-from .conf import DoraConfig
+from .main import DecoratedMain
 from .log import fatal
 from .xp import XP
 
@@ -33,12 +34,45 @@ def run_command(command, **kwargs):
     return proc.stdout.decode().strip()
 
 
-def check_repo_clean():
+def check_repo_clean(root: Path, main: DecoratedMain):
     out = run_command(['git', 'status', '--porcelain'])
-    clean = out == ""
-    if not clean:
+    filtered = []
+    # Here we try to detect the grids package and allow uncommitted changes
+    # only to that folder. The rational is that as we edit the grid file, it is a pain
+    # to constantly be commiting change to it and it should not impact the actual run code.
+    grid_name = main.name + ".grids"
+    spec = importlib.util.find_spec(grid_name)
+    grid_path = None
+    if spec is not None:
+        grid_path = Path(spec.origin).resolve().parent.relative_to(root)
+    for line in out.split("\n"):
+        if not line:
+            continue
+        parts = shlex.split(line)
+        paths: tp.List[str] = []
+        if len(parts) == 2:
+            paths.append(parts[1])
+        elif len(parts) == 4:
+            assert parts[3] == "->"
+            paths += [parts[1], parts[2]]
+        else:
+            assert "Invalid parts", parts
+        line_clean = True
+        for path in paths:
+            if spec is None:
+                line_clean = False
+                break
+            rpath = Path(path).resolve().relative_to(root)
+            try:
+                rpath.relative_to(grid_path)
+            except ValueError:
+                line_clean = False
+        if not line_clean:
+            filtered.append(line)
+    if filtered:
+        files = '\n'.join(filtered)
         fatal("Repository is not clean! The following files should be commited "
-              f"or git ignored: \n {out}")
+              f"or git ignored: \n {files}")
 
 
 def get_git_root():
@@ -62,12 +96,12 @@ def shallow_clone(source: Path, target: Path):
     return actual_target
 
 
-def get_new_clone(dora_conf: DoraConfig) -> Path:
+def get_new_clone(main: DecoratedMain) -> Path:
     """Return a fresh clone in side the given path."""
     source = get_git_root()
     commit = get_git_commit()
-    check_repo_clean()
-    codes = dora_conf.dir / dora_conf.codes
+    check_repo_clean(source, main)
+    codes = main.dora.dir / main.dora.codes
     codes.mkdir(parents=True, exist_ok=True)
     target = codes / commit
     if not target.exists():

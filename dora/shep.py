@@ -356,7 +356,7 @@ class Shepherd:
         executor = self._get_submitit_executor(name, submitit_folder, slurm_config)
         jobs: tp.List[submitit.Job] = []
         if use_git_save and self._existing_git_clone is None:
-            self._existing_git_clone = git_save.get_new_clone(self.main.dora)
+            self._existing_git_clone = git_save.get_new_clone(self.main)
         with self._enter_orphan(name):
             with ExitStack() as stack:
                 if use_git_save:

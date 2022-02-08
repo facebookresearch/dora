@@ -10,6 +10,12 @@ Reliable rmtree used to avoid `--clear` being blocked by some locking issues on 
 
 Fix bug with PL.
 
+Early deletion of rendezvous file to avoid errors on job requeue. This might actually lead to
+bugs in the future as this is not officially supported but from a discussion with PyTorch engineers,
+"it should be okay".
+
+
+
 ## [0.1.8] - 2021-12-30
 
 Always export RANK and WORLD_SIZE as env variable, so that they can be consumed by Hydra config
