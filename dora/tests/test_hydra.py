@@ -51,7 +51,7 @@ def test_hydra_git_save(tmpdir):
     main.init_xp(xp)
     xp.dora.git_save = True
 
-    clone = get_new_clone(xp.dora)
+    clone = get_new_clone(main)
     assign_clone(xp, clone)
     with enter_clone(clone):
         call(main, argv)
