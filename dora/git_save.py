@@ -42,8 +42,9 @@ def check_repo_clean(root: Path, main: DecoratedMain):
     # to constantly be commiting change to it and it should not impact the actual run code.
     grid_name = main.name + ".grids"
     spec = importlib.util.find_spec(grid_name)
-    grid_path = None
+    grid_path: tp.Optional[Path] = None
     if spec is not None:
+        assert spec.origin is not None
         grid_path = Path(spec.origin).resolve().parent.relative_to(root)
     for line in out.split("\n"):
         if not line:
@@ -59,7 +60,7 @@ def check_repo_clean(root: Path, main: DecoratedMain):
             assert "Invalid parts", parts
         line_clean = True
         for path in paths:
-            if spec is None:
+            if grid_path is None:
                 line_clean = False
                 break
             rpath = Path(path).resolve().relative_to(root)
