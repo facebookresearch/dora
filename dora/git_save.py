@@ -45,7 +45,7 @@ def check_repo_clean(root: Path, main: DecoratedMain):
     grid_path: tp.Optional[Path] = None
     if spec is not None:
         assert spec.origin is not None
-        grid_path = Path(spec.origin).resolve().parent.relative_to(root)
+        grid_path = Path(spec.origin).resolve().parent
     for line in out.split("\n"):
         if not line:
             continue
@@ -63,7 +63,7 @@ def check_repo_clean(root: Path, main: DecoratedMain):
             if grid_path is None:
                 line_clean = False
                 break
-            rpath = Path(path).resolve().relative_to(root)
+            rpath = (root / path).resolve()
             try:
                 rpath.relative_to(grid_path)
             except ValueError:
