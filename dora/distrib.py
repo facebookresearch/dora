@@ -7,6 +7,8 @@
 from collections import namedtuple
 import logging
 import os
+import random
+import subprocess as sp
 
 import submitit
 import torch
@@ -18,6 +20,33 @@ logger = logging.getLogger(__name__)
 
 DistribSpec = namedtuple(
     "DistribSpec", "rank world_size local_rank node_rank num_nodes source")
+
+
+def set_distrib_env():
+    """Calling this function will set the distributed environement
+    including the master addr, master port etc. You shouldn't call
+    this if you call `dora.distrib.init`, but it can be useful if you need to let
+    some other framework handle the distributed initialization.
+    """
+    spec = get_distrib_spec()
+    if 'MASTER_ADDR' not in os.environ:
+        assert 'SLURM_JOB_NODELIST' in os.environ, "case not handled"
+        nodelist = os.environ['SLURM_JOB_NODELIST']
+        nodes = sp.run('scontrol show hostnames'.split() + [nodelist],
+                       capture_output=True, check=True).stdout.decode().split()
+        master_node = nodes[0]
+        os.environ['MASTER_ADDR'] = master_node
+    if 'MASTER_PORT' not in os.environ:
+        xp = get_xp()
+        # Note that running twice the same XP on the same node will crash,
+        # but that shouldn't really happen
+        rng = random.Random(int(xp.sig, 16))
+        master_port = rng.randint(20000, 60000)
+        os.environ['MASTER_PORT'] = str(master_port)
+    if 'WORLD_SIZE' not in os.environ:
+        os.environ['WORLD_SIZE'] = str(spec.world_size)
+        os.environ['RANK'] = str(spec.rank)
+        os.environ['LOCAL_RANK'] = str(spec.local_rank)
 
 
 def get_distrib_spec():
@@ -62,18 +91,24 @@ def init(backend='nccl'):
         return
     xp = get_xp()
     torch.cuda.set_device(spec.local_rank)
+    if xp.dora.use_rendezvous:
+        init_method = 'file://' + os.path.abspath(xp.rendezvous_file)
+    else:
+        set_distrib_env()
+        init_method = 'env://'
     torch.distributed.init_process_group(
         backend=backend,
-        init_method='file://' + os.path.abspath(xp.rendezvous_file),
+        init_method=init_method,
         world_size=spec.world_size,
         rank=spec.rank)
     logger.info(
         "Distributed init: %d/%d (local %d) from %s",
         spec.rank, spec.world_size, spec.local_rank, spec.source)
-    torch.distributed.barrier()
-    if rank() == 0:
-        # Delete rendez vous file early, let's hope this doesn't bug too much.
-        xp.rendezvous_file.unlink()
+    if xp.dora.use_rendezvous:
+        torch.distributed.barrier()
+        if rank() == 0:
+            # Delete rendez vous file early, let's hope this doesn't bug too much.
+            xp.rendezvous_file.unlink()
 
 
 def is_master():
