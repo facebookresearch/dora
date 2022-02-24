@@ -75,6 +75,7 @@ def start_ddp_workers(package, main, argv):
             env = dict(os.environ)
             env['RANK'] = str(rank)
             env['WORLD_SIZE'] = str(world_size)
+            env['MASTER_ADDR'] = '127.0.0.1'
             args = ["-m", "dora", "-P", package, "run", "--"]
             args += argv
             if rank > 0:

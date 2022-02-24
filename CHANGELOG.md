@@ -14,6 +14,9 @@ Early deletion of rendezvous file to avoid errors on job requeue. This might act
 bugs in the future as this is not officially supported but from a discussion with PyTorch engineers,
 "it should be okay".
 
+Actually, because rendezvous file are not that reliable, added using Slurm to find
+the master addr. Port is decided based on the XP signature (running twice the same XP on the
+same machine will crash, but anyway this is probably a bad idea). Set `dora.use_rendezvous: false` to test out. This will soon become the default value.
 
 
 ## [0.1.8] - 2021-12-30
