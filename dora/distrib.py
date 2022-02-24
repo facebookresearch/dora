@@ -42,11 +42,11 @@ def set_distrib_env():
         # but that shouldn't really happen
         rng = random.Random(int(xp.sig, 16))
         master_port = rng.randint(20000, 60000)
-        os.environ['MASTER_PORT'] = master_port
+        os.environ['MASTER_PORT'] = str(master_port)
     if 'WORLD_SIZE' not in os.environ:
-        os.environ['WORLD_SIZE'] = spec.world_size
-        os.environ['RANK'] = spec.rank
-        os.environ['LOCAL_RANK'] = spec.local_rank
+        os.environ['WORLD_SIZE'] = str(spec.world_size)
+        os.environ['RANK'] = str(spec.rank)
+        os.environ['LOCAL_RANK'] = str(spec.local_rank)
 
 
 def get_distrib_spec():
