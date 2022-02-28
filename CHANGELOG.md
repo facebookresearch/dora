@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [0.1.9a]
+## [0.1.9] - 2022-02-28
 
 Reliable rmtree used to avoid `--clear` being blocked by some locking issues on NFS.
 
