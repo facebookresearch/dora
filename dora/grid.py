@@ -205,8 +205,9 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
                 log(f"Error when trying to load old sheep {child.name}: {error}")
                 # We fallback on manually loading the job file.
                 job_file = child / main.dora.shep.job_file
-                job = try_load(job_file)
-                if job is not None:
+                jobs = try_load(job_file)
+                if jobs is not None:
+                    job = jobs[0]
                     log(f"Canceling job {job.job_id} from unloadable sheep {child.name}.")
                     shepherd.cancel_lazy(job)
             else:
