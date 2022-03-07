@@ -17,8 +17,6 @@ import typing as tp
 from pytorch_lightning.callbacks import Callback
 from pytorch_lightning.loggers import LightningLoggerBase, TensorBoardLogger
 from pytorch_lightning.plugins.environments import ClusterEnvironment
-from pytorch_lightning.plugins import TrainingTypePluginsRegistry
-from pytorch_lightning.plugins.training_type.ddp import DDPPlugin
 from pytorch_lightning.trainer import Trainer
 from pytorch_lightning.utilities.argparse import from_argparse_args
 import torch
@@ -31,6 +29,7 @@ class DoraEnvironment(ClusterEnvironment):
     def __init__(self):
         super().__init__()
         self.spec = distrib.get_distrib_spec()
+        distrib.set_distrib_env()
 
     def creates_children(self) -> bool:
         return True
@@ -40,10 +39,10 @@ class DoraEnvironment(ClusterEnvironment):
         return True
 
     def master_address(self) -> str:
-        return ""
+        return os.environ['MASTER_ADDR']
 
     def master_port(self) -> int:
-        assert False
+        return int(os.environ['MASTER_PORT'])
 
     def world_size(self) -> int:
         return self.spec.world_size
@@ -62,15 +61,6 @@ class DoraEnvironment(ClusterEnvironment):
 
     def node_rank(self) -> int:
         return self.spec.node_rank
-
-
-@TrainingTypePluginsRegistry.register("dora_ddp")
-class DoraDDPPlugin(DDPPlugin):
-    """DDP plugin for compatibility with Dora.
-    """
-    def init_ddp_connection(self, global_rank: tp.Optional[int] = None,
-                            world_size: tp.Optional[int] = None) -> None:
-        distrib.init(self.torch_distributed_backend)
 
 
 class RestoreDoraHistory(Callback):
@@ -190,7 +180,7 @@ def get_trainer(*args, add_dora_logger=True, no_unfinished_epochs=True, **kwargs
 
     gpus = min(torch.cuda.device_count(), env.world_size())
     if env.world_size() > 1:
-        plugins += [env, 'dora_ddp']
+        plugins += [env, 'ddp']
     kwargs['plugins'] = plugins
 
     callbacks = kwargs.pop("callbacks", [])

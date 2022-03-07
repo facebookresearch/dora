@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.1.10a] - ...
 
+Updated and simplified PyTorch Lightning distributed integration.
+
 Adding HiPlot support out of the box.
 
 ## [0.1.9] - 2022-02-28

@@ -85,6 +85,8 @@ def init(backend='nccl'):
     """
     Initialize DDP.
     """
+    if torch.distributed.is_initialized():
+        return
     spec = get_distrib_spec()
     if spec.world_size == 1:
         logger.info("world_size is 1, skipping init.")
