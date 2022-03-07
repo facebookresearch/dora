@@ -471,7 +471,7 @@ you can run
 python -m hiplot dora.hiplot.load --port=XXXX
 ```
 In the prompt, you can type any number of grid names or XP sig, separated by spaces.
-You can customize the metrics displayed by inheriting `dora.hiplot.HiPlotExplorer`
+You can customize the metrics displayed by inheriting [dora.hiplot.HiPlotExplorer](https://facebookresearch.github.io/dora/dora/hiplot.html#dora.hiplot.HiPlotExplorer)
 in a class inside `yourproject.grids._hiplot`. Then, select your explorer with
 the command `explorer=MyExplorer` inside the HiPlot prompt (along the grid names and XP
 sigs, in any order).
