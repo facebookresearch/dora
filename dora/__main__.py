@@ -10,38 +10,14 @@ check grid files, launch XPs, check their logs etc, as well
 as doing local runs for debugging.
 """
 import argparse
-from pathlib import Path
-import os
-import sys
 
-from .main import DecoratedMain
 from .grid import grid_action
 from .info import info_action
 from .launch import launch_action
 from .log import fatal, setup_logging, simple_log
 from .run import run_action
 from .share import import_action, export_action
-from .utils import import_or_fatal
-
-
-def _find_package(main_module):
-    cwd = Path(".")
-    candidates = []
-    for child in cwd.iterdir():
-        if child.is_dir() and (child / "__init__.py").exists():
-            if (child / f"{main_module}.py").exists():
-                candidates.append(child.name)
-    if len(candidates) == 0:
-        fatal("Could not find a training package. Use -P, or set DORA_PACKAGE to set the "
-              "package. Use --main_module or set DORA_MAIN_MODULE to set the module to "
-              "be excecuted inside the defined package.")
-    elif len(candidates) == 1:
-        return candidates[0]
-    else:
-        fatal(f"Found multiple candidates: {', '.join(candidates)}. "
-              "Use -P, or set DORA_PACKAGE to set package being searched. "
-              "Use --main_module or set DORA_MAIN_MODULE to set the module being searched "
-              "inside the package.")
+from ._utils import get_main
 
 
 def add_submit_rules(parser):
@@ -66,18 +42,16 @@ def add_slurm_config(parser):
 
 def get_parser():
     parser = argparse.ArgumentParser()
-    module = os.environ.get('DORA_PACKAGE')
-    main_module = os.environ.get('DORA_MAIN_MODULE') or 'train'
     parser.add_argument(
         '--package', '-P',
-        default=module,
+        default=None,
         help='Training module. '
              'You can also set the DORA_PACKAGE env. In last resort, '
              'Dora will look for a package in the current folder with module defined '
              'at --runfile flag.')
     parser.add_argument(
         '--main_module',
-        default=main_module,
+        default=None,
         help='Training exec name. '
              'Dora will search for this module to run within the package provided by --package '
              'flag. You can also set DORA_MAIN_MODULE env. Defaults to \'train\' module.')
@@ -179,18 +153,7 @@ def main():
     if args.action is None:
         fatal("You must give an action.")
 
-    if args.package is None:
-        args.package = _find_package(args.main_module)
-    module_name = args.package + "." + args.main_module
-    sys.path.insert(0, str(Path(".").resolve()))
-    module = import_or_fatal(module_name)
-    try:
-        main = module.main
-    except AttributeError:
-        fatal(f"Could not find function `main` in {module_name}.")
-
-    if not isinstance(main, DecoratedMain):
-        fatal(f"{module_name}.main was not decorated with `dora.main`.")
+    main = get_main(args.main_module, args.package)
 
     if getattr(args, 'from_sig', None) is not None:
         try:
