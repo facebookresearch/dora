@@ -76,7 +76,7 @@ def load(uri: str) -> tp.Any:
             if key == 'explorer':
                 explorer_name = value
                 if explorer_module is None:
-                    explorer_module = main.__module__ + '.grids._hiplot'
+                    explorer_module = main.package + '.grids._hiplot'
             elif key == 'explorer_module':
                 explorer_module = value
             else:
@@ -90,7 +90,9 @@ def load(uri: str) -> tp.Any:
             sigs.add(token)
     if explorer_module is None:
         explorer_module = 'dora.hiplot'
-    explorer_klass = pydoc.locate(explorer_module + "." + explorer_name)
+    explorer_qualified = explorer_module + "." + explorer_name
+    explorer_klass = pydoc.locate(explorer_qualified)
+    assert explorer_klass is not None, explorer_qualified
     explorer = explorer_klass()  # type: ignore
 
     with ProcessPoolExecutor(10) as pool:
