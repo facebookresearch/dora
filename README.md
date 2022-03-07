@@ -42,6 +42,8 @@ pip install -U dora-search
 
 See [the changelog](CHANGELOG.md) for details on releases.
 
+- TBD: version 0.1.10: adding HiPlot support !
+- 2022-02-28: version 0.1.9
 - 2021-12-10: version 0.1.8: see changelog, many of small changes.
 - 2021-11-08: version 0.1.7: support for job arrays added.
 - 2021-10-20: version 0.1.6 released, bug fixes.
@@ -460,6 +462,19 @@ See [Customize metrics displayed](#customize-metrics-displayed-in-explorer) here
 
 By convention, files starting with `_` inside the `grids` folder are ignored by Dora, and are a good place to put utility code such as your custom `Explorer` classes.
 For an example with detailed comments, go checkout [the Explorer classes for BrainMagick](https://github.com/fairinternal/brainmagick/blob/main/bm/grids/_explorers.py#L7).
+
+### HiPlot support
+
+Dora supports HiPlot out of the box. Make sure it is installed (`pip install hiplot`), then
+you can run
+```bash
+python -m hiplot dora.hiplot.load --port=XXXX
+```
+In the prompt, you can type any number of grid names or XP sig, separated by spaces.
+You can customize the metrics displayed by inheriting `dora.hiplot.HiPlotExplorer`
+in a class inside `yourproject.grids._hiplot`. Then, select your explorer with
+the command `explorer=MyExplorer` inside the HiPlot prompt (along the grid names and XP
+sigs, in any order).
 
 ## The Dora API
 
