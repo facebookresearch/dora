@@ -143,6 +143,7 @@ def load(uri: str) -> tp.Any:
             if isinstance(value, list):
                 value = ', '.join(value)
             values[key] = value
+        values['sig'] = xp.sig
         from_uid: tp.Optional[str] = None
         xp.link.load()
         history = explorer.process_history(xp, xp.link.history)
@@ -169,9 +170,10 @@ def load(uri: str) -> tp.Any:
     })
     exp.display_data(hiplot.Displays.TABLE).update({
         'hide': ['from_uid'],
-        'order': ['last', 'epoch'] + list(metric_names),
+        'order': ['sig', 'last', 'epoch'] + list(metric_names),
     })
     exp.parameters_definition['epoch'].label_css = STYLE.internal
     exp.parameters_definition['last'].label_css = STYLE.internal
+    exp.parameters_definition['sig'].label_css = STYLE.internal
     explorer.postprocess_exp(exp)
     return exp
