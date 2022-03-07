@@ -89,10 +89,9 @@ class RunGridArgs:
     _from_commandline: bool = False
 
 
-def _get_explore(args):
+def _get_explore(args, main):
     # Finds the explorer.
-    package = args.package
-    root_name = package + ".grids"
+    root_name = main.package + ".grids"
     grids = import_or_fatal(root_name)
 
     grid_file = Path(grids.__file__).parent / f'{args.grid}.py'
@@ -120,7 +119,7 @@ def _get_explore(args):
 
 
 def grid_action(args: tp.Any, main: DecoratedMain):
-    explorer = _get_explore(args)
+    explorer = _get_explore(args, main)
     slurm = main.get_slurm_config()
     update_from_args(slurm, args)
     rules = SubmitRules()

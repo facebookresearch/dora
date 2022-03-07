@@ -1,3 +1,10 @@
+# Copyright (c) Facebook, Inc. and its affiliates.
+# All rights reserved.
+#
+# This source code is licensed under the license found in the
+# LICENSE file in the root directory of this source tree.
+"HiPlot support."""
+
 from concurrent.futures import ProcessPoolExecutor
 import math
 import pydoc
@@ -157,7 +164,7 @@ def load(uri: str) -> tp.Any:
                 exp.parameters_definition[key].label_css = STYLE.metrics
 
     exp.display_data(hiplot.Displays.PARALLEL_PLOT).update({
-        'hide': ['from_uid'],
+        'hide': ['from_uid', 'uid'],
         'order': ['last', 'epoch'] + list(metric_names),
     })
     exp.display_data(hiplot.Displays.TABLE).update({
