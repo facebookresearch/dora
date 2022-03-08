@@ -234,6 +234,7 @@ class PLLogProgress(ProgressBarBase):
         super().on_fit_start(trainer, pl_module)
         self._in_train = False
         self._first_valid = True
+        self._replay_history: tp.List[tp.Any] = []
 
     @property
     def pl_module(self) -> LightningModule:
@@ -310,6 +311,7 @@ class PLLogProgress(ProgressBarBase):
         self._show_epoch_summary(stage, self.trainer.current_epoch, metrics)
 
     def _show_epoch_summary(self, stage, epoch, metrics):
+        self._replay_history.append((stage, epoch, metrics))
         formatted = self._format_metrics(metrics, stage, epoch=True)
         name = stage.capitalize()
         summary = " | ".join(
@@ -338,3 +340,14 @@ class PLLogProgress(ProgressBarBase):
         # we do nothing here for now. This is called by PL when using DDP,
         # but Dora already separates the stdout and stderr from the different workers.
         pass
+
+    def on_load_checkpoint(self, trainer, pl_module, checkpoint):
+        replay_history = checkpoint.get('dora_replay_history', [])
+        if replay_history:
+            self.logger.info("Replaying past metrics...")
+        for step in replay_history:
+            self._show_epoch_summary(*replay_history)
+
+    def on_save_checkpoint(self, trainer, pl_module, checkpoint):
+        checkpoint['dora_replay_history'] = self._replay_history
+        return checkpoint
