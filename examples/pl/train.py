@@ -17,6 +17,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 
 from .data import DataModule
+from .log import colorize
 
 
 class MainModule(pl.LightningModule):
@@ -51,6 +52,13 @@ class MainModule(pl.LightningModule):
         return optimizer
 
     def mylog(self, name, value, train=False):
+        # Here, it is quite important to have `sync_dist` set to True for valid,
+        # as otherwise you will get inacurate validation metrics (only on a shard of the data).
+        # If you are using PLLogProgress, set `prog_bar=True` along with `on_step=True`.
+        # If you want to metric logged to Dora link history, so that it appears in
+        # grid searches table, set `on_epoch=True`. PL typically add a `_epoch` suffix
+        # for epoch wise metrics. This will be automatically stripped and only the
+        # epoch wise metric will be saved.
         self.log(name, value, on_epoch=True, sync_dist=not train, on_step=True, prog_bar=True)
 
 
@@ -69,7 +77,17 @@ EXCLUDE = ['data', 'restart']
 
 @argparse_main(parser=get_parser(), dir='outputs_pl', exclude=EXCLUDE, use_underscore=True)
 def main():
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    log_format = "".join([
+        "[" + colorize("%(asctime)s", "36") + "]",
+        "[" + colorize("%(name)s", "34") + "]",
+        "[" + colorize("%(levelname)s", "32") + "]",
+        " - ",
+        "%(message)s",
+    ])
+    logging.basicConfig(
+        stream=sys.stdout, level=logging.INFO,
+        datefmt="%m-%d %H:%M:%S",
+        format=log_format)
     logger_prog = logging.getLogger("progress")
     progress = PLLogProgress(logger_prog, updates=10)
     args = get_xp().cfg

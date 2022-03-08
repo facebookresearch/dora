@@ -108,6 +108,7 @@ def bold(text: str) -> str:
 def red(text: str) -> str:
     """Display text in red.
     """
+    # see https://stackoverflow.com/questions/4842424/list-of-ansi-color-escape-sequences
     return colorize(text, "31")
 
 
