@@ -229,12 +229,12 @@ class PLLogProgress(ProgressBarBase):
     def setup(self, trainer, pl_module, stage: tp.Optional[str] = None) -> None:
         super().setup(trainer, pl_module, stage)
         self._pl_module = pl_module
+        self._replay_history: tp.List[tp.Any] = []
 
     def on_fit_start(self, trainer, pl_module):
         super().on_fit_start(trainer, pl_module)
         self._in_train = False
         self._first_valid = True
-        self._replay_history: tp.List[tp.Any] = []
 
     @property
     def pl_module(self) -> LightningModule:
@@ -346,7 +346,7 @@ class PLLogProgress(ProgressBarBase):
         if replay_history:
             self.logger.info("Replaying past metrics...")
         for step in replay_history:
-            self._show_epoch_summary(*replay_history)
+            self._show_epoch_summary(*step)
 
     def on_save_checkpoint(self, trainer, pl_module, checkpoint):
         checkpoint['dora_replay_history'] = self._replay_history
