@@ -27,9 +27,9 @@ from .xp import get_xp, is_xp
 from .log import bold, LogProgress
 
 
-def filter_metrics(self, metrics: tp.Dict[str, tp.Any], epoch: bool = True):
+def filter_metrics(metrics: tp.Dict[str, tp.Any], epoch: bool = True):
     """Use this to filter metrics, in particular to remove the `_step` or `_epoch`
-    suffix.
+    suffix. This will also convert torch tensors to float.
     Args:
         metrics: dict given by PL.
         epoch: if True, keep only epoch level metrics, otherwise, keep only step level metrics.
@@ -42,6 +42,8 @@ def filter_metrics(self, metrics: tp.Dict[str, tp.Any], epoch: bool = True):
             continue
         if key.endswith('_step') or key.endswith('_epoch'):
             key = key.rsplit('_', 1)[0]
+        if isinstance(value, torch.Tensor) and value.numel() == 1:
+            value = value.item()
         out[key] = value
     return out
 
@@ -84,29 +86,42 @@ class DoraEnvironment(ClusterEnvironment):
         return self.spec.node_rank
 
 
-class RestoreDoraHistory(Callback):
+class DoraCheckpointSync(Callback):
     """Make sure Dora history, and checkpoint state are in sync.
     """
     def __init__(self):
-        self.link = get_xp().link
+        self.xp = get_xp()
 
     def on_load_checkpoint(self, trainer, pl_module, checkpoint):
         history = checkpoint['dora_link_history']
-        self.link.update_history(history)
+        self.xp.link.update_history(history)
 
     def on_save_checkpoint(self, trainer, pl_module, checkpoint):
-        checkpoint['dora_link_history'] = self.link.history
+        checkpoint['dora_link_history'] = self.xp.link.history
+        checkpoint['dora_sig'] = self.xp.sig
+        checkpoint['dora_cfg'] = self.xp.cfg
         return checkpoint
 
 
-class DoraLogger(Callback):
+class DoraHistoryLogger(Callback):
+    """Save metrics to Dora using the XP link.
+    """
     def __init__(self):
         super().__init__()
         self.link = get_xp().link
 
+    def on_fit_start(self, trainer, pl_module):
+        self._first_valid = True
+
+    def on_train_epoch_start(self, trainer, pl_module):
+        self._first_valid = False
+
     def on_epoch_end(self, trainer, pl_module):
-        metrics = trainer.callback_metrics
-        print("CALLED", metrics)
+        if self._first_valid:
+            # We ignore the first fake epoch of PL that only does a few valid batches.
+            return
+        metrics = trainer.logged_metrics
+        metrics = filter_metrics(metrics, epoch=True)
         self.link.push_metrics(metrics)
 
 
@@ -150,14 +165,13 @@ def get_trainer(*args, auto_resume=True, add_dora_logger=True, no_unfinished_epo
 
     plugins = kwargs.pop("plugins") or []
     env = DoraEnvironment()
-
     gpus = min(torch.cuda.device_count(), env.world_size())
     if env.world_size() > 1:
         plugins += [env, 'ddp']
     kwargs['plugins'] = plugins
 
     callbacks = kwargs.pop("callbacks", [])
-    callbacks.append(RestoreDoraHistory())
+    callbacks.append(DoraCheckpointSync())
     kwargs['callbacks'] = callbacks
 
     if kwargs['gpus'] is not None:
@@ -170,7 +184,7 @@ def get_trainer(*args, auto_resume=True, add_dora_logger=True, no_unfinished_epo
     kwargs['default_root_dir'] = get_xp().folder
 
     if add_dora_logger:
-        kwargs['callbacks'].append(DoraLogger())
+        kwargs['callbacks'].append(DoraHistoryLogger())
 
     resume_from_checkpoint = kwargs.get('resume_from_checkpoint')
     if auto_resume and resume_from_checkpoint is None:
@@ -216,6 +230,17 @@ class PLLogProgress(ProgressBarBase):
         super().setup(trainer, pl_module, stage)
         self._pl_module = pl_module
 
+    def on_fit_start(self, trainer, pl_module):
+        super().on_fit_start(trainer, pl_module)
+        self._in_train = False
+        self._first_valid = True
+        history = get_xp().link.history
+        if history:
+            self.logger.info("Replaying past metrics...")
+        for epoch, metrics in enumerate(history):
+            self._show_epoch_summary("train", epoch, metrics)
+            self._show_epoch_summary("valid", epoch, metrics)
+
     @property
     def pl_module(self) -> LightningModule:
         assert self._pl_module is not None
@@ -260,6 +285,8 @@ class PLLogProgress(ProgressBarBase):
 
     def on_train_epoch_start(self, trainer, pl_module):
         self._on_epoch_start("train")
+        self._in_train = True
+        self._first_valid = False
         return super().on_train_epoch_start(trainer, pl_module)
 
     def on_validation_epoch_start(self, trainer, pl_module):
@@ -282,14 +309,14 @@ class PLLogProgress(ProgressBarBase):
 
     def _on_stage_end(self, stage):
         if stage == "train":
-            breakpoint()
+            # dirty hack as we might not yet be at the end of the epoch.
             metrics = self.trainer.fit_loop.epoch_loop._results.metrics(False)["log"]
         else:
-            metrics = self.trainer._results.metrics(False)["log"]
+            metrics = self.trainer.fit_loop.epoch_loop.val_loop._results.metrics(False)["log"]
         self._show_epoch_summary(stage, self.trainer.current_epoch, metrics)
 
     def _show_epoch_summary(self, stage, epoch, metrics):
-        formatted = self._format_metrics(metrics, stage, step=True)
+        formatted = self._format_metrics(metrics, stage, epoch=True)
         name = stage.capitalize()
         summary = " | ".join(
             f"{key.capitalize()}={val}" for key, val in formatted.items()
@@ -298,19 +325,22 @@ class PLLogProgress(ProgressBarBase):
 
     def on_validation_start(self, trainer, pl_module):
         super().on_train_end(trainer, pl_module)
-        self._on_stage_end("train")
+        assert self._in_train or self._first_valid
+        if not self._first_valid:
+            self._on_stage_end("train")
+            self._in_train = False
+
+    def on_epoch_end(self, trainer, pl_module):
+        super().on_epoch_end(trainer, pl_module)
+        if self._in_train:
+            self._on_stage_end("train")
+        self._in_train = False
 
     def on_validation_end(self, trainer, pl_module):
         super().on_validation_end(trainer, pl_module)
         self._on_stage_end("valid")
 
-    def on_train_start(self, trainer, pl_module):
-        history = get_xp().link.history
-        if history:
-            self.logger.info("Replaying past metrics...")
-        for epoch, metrics in enumerate(history):
-            self._show_epoch_summary("train", epoch, metrics)
-            self._show_epoch_summary("valid", epoch, metrics)
-
     def disable(self):
-        self.logger.disable = True
+        # we do nothing here for now. This is called by PL when using DDP,
+        # but Dora already separates the stdout and stderr from the different workers.
+        pass

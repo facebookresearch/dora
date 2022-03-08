@@ -51,7 +51,7 @@ class MainModule(pl.LightningModule):
         return optimizer
 
     def mylog(self, name, value, train=False):
-        self.log(name, value, on_epoch=True, sync_dist=not train, on_step=False)
+        self.log(name, value, on_epoch=True, sync_dist=not train, on_step=True, prog_bar=True)
 
 
 def get_parser():
@@ -69,7 +69,7 @@ EXCLUDE = ['data', 'restart']
 
 @argparse_main(parser=get_parser(), dir='outputs_pl', exclude=EXCLUDE, use_underscore=True)
 def main():
-    logging.basicConfig(stream=sys.stdout)
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
     logger_prog = logging.getLogger("progress")
     progress = PLLogProgress(logger_prog, updates=10)
     args = get_xp().cfg
