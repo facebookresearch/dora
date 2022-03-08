@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.1.10a] - ...
 
 Updated and simplified PyTorch Lightning distributed integration.
+Improved overall integration with PL, in particular with PLLogProgress and simplified
+Dora logger.
 
 Adding HiPlot support out of the box.
 
