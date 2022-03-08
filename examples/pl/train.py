@@ -10,6 +10,7 @@ import sys
 
 from dora import argparse_main, get_xp, distrib
 from dora.lightning import trainer_from_argparse_args, PLLogProgress
+from dora.log import colorize
 import torch
 import torch.nn.functional as F
 from torchvision import models
@@ -17,7 +18,6 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 
 from .data import DataModule
-from .log import colorize
 
 
 class MainModule(pl.LightningModule):

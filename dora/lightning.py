@@ -234,12 +234,6 @@ class PLLogProgress(ProgressBarBase):
         super().on_fit_start(trainer, pl_module)
         self._in_train = False
         self._first_valid = True
-        history = get_xp().link.history
-        if history:
-            self.logger.info("Replaying past metrics...")
-        for epoch, metrics in enumerate(history):
-            self._show_epoch_summary("train", epoch, metrics)
-            self._show_epoch_summary("valid", epoch, metrics)
 
     @property
     def pl_module(self) -> LightningModule:

@@ -29,6 +29,8 @@ def set_distrib_env():
     some other framework handle the distributed initialization.
     """
     spec = get_distrib_spec()
+    if spec.world_size == 1:
+        return
     if 'MASTER_ADDR' not in os.environ:
         assert 'SLURM_JOB_NODELIST' in os.environ, "case not handled"
         nodelist = os.environ['SLURM_JOB_NODELIST']
