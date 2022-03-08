@@ -64,6 +64,7 @@ def run_action(args, main: DecoratedMain):
                 check_job_and_clear(args.argv, main, args.clear)
                 os.environ['RANK'] = '0'
                 os.environ['WORLD_SIZE'] = '1'
+                os.environ['MASTER_ADDR'] = '127.0.0.1'
             sys.argv[1:] = args.argv
             disable_logging()  # disable logging to avoid messing up with the wrapped project.
             main()

@@ -5,9 +5,11 @@
 # LICENSE file in the root directory of this source tree.
 
 import argparse
+import logging
+import sys
 
 from dora import argparse_main, get_xp, distrib
-from dora.lightning import trainer_from_argparse_args
+from dora.lightning import trainer_from_argparse_args, PLLogProgress
 import torch
 import torch.nn.functional as F
 from torchvision import models
@@ -67,6 +69,9 @@ EXCLUDE = ['data', 'restart']
 
 @argparse_main(parser=get_parser(), dir='outputs_pl', exclude=EXCLUDE, use_underscore=True)
 def main():
+    logging.basicConfig(stream=sys.stdout)
+    logger_prog = logging.getLogger("progress")
+    progress = PLLogProgress(logger_prog, updates=10)
     args = get_xp().cfg
     world_size = distrib.get_distrib_spec().world_size
     assert args.batch_size % world_size == 0
@@ -76,12 +81,7 @@ def main():
     data = DataModule(args.data, args.batch_size)
     module = MainModule(10)
 
-    last = get_xp().folder / 'last.ckpt'
-    resume = None
-    if last.is_file() and not args.restart:
-        resume = str(last)
     checkpoint_callback = ModelCheckpoint(
         dirpath=get_xp().folder, monitor='valid_loss', save_last=True)
-    trainer = trainer_from_argparse_args(
-        args, resume_from_checkpoint=resume, callbacks=[checkpoint_callback])
+    trainer = trainer_from_argparse_args(args, callbacks=[checkpoint_callback, progress])
     trainer.fit(module, data)
