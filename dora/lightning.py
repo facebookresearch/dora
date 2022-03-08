@@ -27,8 +27,8 @@ from .xp import get_xp, is_xp
 from .log import bold, LogProgress
 
 
-def filter_metrics(metrics: tp.Dict[str, tp.Any], epoch: bool = True):
-    """Use this to filter metrics, in particular to remove the `_step` or `_epoch`
+def _filter_metrics(metrics: tp.Dict[str, tp.Any], epoch: bool = True):
+    """Filters metrics before formatting, in particular to remove the `_step` or `_epoch`
     suffix. This will also convert torch tensors to float.
     Args:
         metrics: dict given by PL.
@@ -121,7 +121,7 @@ class DoraHistoryLogger(Callback):
             # We ignore the first fake epoch of PL that only does a few valid batches.
             return
         metrics = trainer.logged_metrics
-        metrics = filter_metrics(metrics, epoch=True)
+        metrics = _filter_metrics(metrics, epoch=True)
         self.link.push_metrics(metrics)
 
 
@@ -253,7 +253,6 @@ class PLLogProgress(ProgressBarBase):
             epoch: if True, provided metrics are for the end of epoch summary.
         """
         out = {}
-        metrics = filter_metrics(metrics, epoch)
         for key, value in metrics.items():
             if isinstance(value, float):
                 out[key] = format(value, '.5f')
@@ -290,6 +289,7 @@ class PLLogProgress(ProgressBarBase):
 
     def _on_batch_end(self, stage):
         metrics = self.get_metrics(self.trainer, self.pl_module)
+        metrics = _filter_metrics(metrics, epoch=False)
         formatted = self._format_metrics(metrics, stage, epoch=False)
         self.logprog.update(**formatted)
         next(self.logprog)
@@ -308,6 +308,7 @@ class PLLogProgress(ProgressBarBase):
             metrics = self.trainer.fit_loop.epoch_loop._results.metrics(False)["log"]
         else:
             metrics = self.trainer.fit_loop.epoch_loop.val_loop._results.metrics(False)["log"]
+        metrics = _filter_metrics(metrics, epoch=False)
         self._show_epoch_summary(stage, self.trainer.current_epoch, metrics)
 
     def _show_epoch_summary(self, stage, epoch, metrics):
