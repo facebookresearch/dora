@@ -5,9 +5,12 @@
 # LICENSE file in the root directory of this source tree.
 
 import argparse
+import logging
+import sys
 
 from dora import argparse_main, get_xp, distrib
-from dora.lightning import trainer_from_argparse_args
+from dora.lightning import trainer_from_argparse_args, PLLogProgress
+from dora.log import colorize
 import torch
 import torch.nn.functional as F
 from torchvision import models
@@ -49,7 +52,14 @@ class MainModule(pl.LightningModule):
         return optimizer
 
     def mylog(self, name, value, train=False):
-        self.log(name, value, on_epoch=True, sync_dist=not train, on_step=False)
+        # Here, it is quite important to have `sync_dist` set to True for valid,
+        # as otherwise you will get inacurate validation metrics (only on a shard of the data).
+        # If you are using PLLogProgress, set `prog_bar=True` along with `on_step=True`.
+        # If you want to metric logged to Dora link history, so that it appears in
+        # grid searches table, set `on_epoch=True`. PL typically add a `_epoch` suffix
+        # for epoch wise metrics. This will be automatically stripped and only the
+        # epoch wise metric will be saved.
+        self.log(name, value, on_epoch=True, sync_dist=not train, on_step=True, prog_bar=True)
 
 
 def get_parser():
@@ -67,6 +77,19 @@ EXCLUDE = ['data', 'restart']
 
 @argparse_main(parser=get_parser(), dir='outputs_pl', exclude=EXCLUDE, use_underscore=True)
 def main():
+    log_format = "".join([
+        "[" + colorize("%(asctime)s", "36") + "]",
+        "[" + colorize("%(name)s", "34") + "]",
+        "[" + colorize("%(levelname)s", "32") + "]",
+        " - ",
+        "%(message)s",
+    ])
+    logging.basicConfig(
+        stream=sys.stdout, level=logging.INFO,
+        datefmt="%m-%d %H:%M:%S",
+        format=log_format)
+    logger_prog = logging.getLogger("progress")
+    progress = PLLogProgress(logger_prog, updates=10)
     args = get_xp().cfg
     world_size = distrib.get_distrib_spec().world_size
     assert args.batch_size % world_size == 0
@@ -76,12 +99,7 @@ def main():
     data = DataModule(args.data, args.batch_size)
     module = MainModule(10)
 
-    last = get_xp().folder / 'last.ckpt'
-    resume = None
-    if last.is_file() and not args.restart:
-        resume = str(last)
     checkpoint_callback = ModelCheckpoint(
         dirpath=get_xp().folder, monitor='valid_loss', save_last=True)
-    trainer = trainer_from_argparse_args(
-        args, resume_from_checkpoint=resume, callbacks=[checkpoint_callback])
+    trainer = trainer_from_argparse_args(args, callbacks=[checkpoint_callback, progress])
     trainer.fit(module, data)
