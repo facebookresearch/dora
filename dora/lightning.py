@@ -271,7 +271,7 @@ class PLLogProgress(ProgressBarBase):
         elif stage == "valid":
             total = int(self.total_val_batches)
         else:
-            raise ValueError
+            raise RuntimeError(f"Invalid stage {stage}")
 
         loader = range(total)
         self.logprog = LogProgress(self.logger, loader, total=total, name=name, **self.kwargs)
