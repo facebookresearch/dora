@@ -35,6 +35,17 @@ def _load_main(full_name):
     return getattr(module, fun_name)
 
 
+def get_module_name(module):
+    if module == "__main__":
+        spec = sys.modules[module].__spec__
+        if spec is None:
+            return None
+        else:
+            return spec.name
+    else:
+        return module
+
+
 class DecoratedMain(NamesMixin):
     """
     Main function that will actually run the XP, wrapped with tons of meta-informations.
@@ -49,8 +60,19 @@ class DecoratedMain(NamesMixin):
     def __init__(self, main: MainFun, dora: DoraConfig):
         self.main = main
         self.dora = dora
-        self.package = main.__module__.rsplit(".", 1)[0]
-        self.main_module = main.__module__.rsplit(".", 1)[1]
+        module_name = get_module_name(main.__module__)
+        if module_name is None:
+            # we are being called in a weird way and definitely not from
+            # a Dora command.
+            self.package = 'unknown'
+            self.main_module = 'train'
+        else:
+            if '.' in module_name:
+                self.package, self.main_module = module_name.rsplit(".", 1)
+            else:
+                self.package = 'unknown'
+                self.main_module = module_name
+
         self.name = self.package
         self._full_name = main.__module__ + "." + main.__name__
 
