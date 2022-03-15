@@ -12,6 +12,10 @@ Dora logger.
 
 Adding HiPlot support out of the box.
 
+Fixed bug with nested grid searches.
+
+Set `use_rendezvous=False` by default.
+
 ## [0.1.9] - 2022-02-28
 
 Reliable rmtree used to avoid `--clear` being blocked by some locking issues on NFS.
