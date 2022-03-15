@@ -189,7 +189,7 @@ class HydraMain(DecoratedMain):
         with initialize_config_dir(str(self.full_config_path), job_name=self._job_name):
             gh = GlobalHydra.instance().hydra
             assert gh is not None
-            return gh.list_all_config_groups()
+            return list(gh.list_all_config_groups())
 
     def _is_active(self, argv: tp.List[str]) -> bool:
         if '-m' in argv or '--multirun' in argv:
