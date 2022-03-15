@@ -94,7 +94,8 @@ def _get_explore(args, main):
     root_name = main.package + ".grids"
     grids = import_or_fatal(root_name)
 
-    grid_file = Path(grids.__file__).parent / f'{args.grid}.py'
+    grid_filename = args.grid.replace('.', '/') + '.py'
+    grid_file = Path(grids.__file__).parent / grid_filename
     if args.grid is None or not grid_file.exists():
         candidates = []
         for info in pkgutil.walk_packages([Path(grids.__file__).parent]):
