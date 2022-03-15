@@ -153,7 +153,7 @@ class DoraConfig:
 
     shep: ShepConfig = field(default_factory=ShepConfig)
     rendezvous_file: str = "rendezvous.txt"
-    use_rendezvous: bool = True
+    use_rendezvous: bool = False
     grids: str = "grids"
     codes: str = "codes"
 
