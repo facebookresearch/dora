@@ -11,6 +11,7 @@ the end user `main` function and Hydra.
 import copy
 from collections import namedtuple, OrderedDict
 from importlib.util import find_spec
+import json
 import logging
 from pathlib import Path
 import sys
@@ -117,6 +118,7 @@ class HydraMain(DecoratedMain):
 
         self._initialized = False
         self._base_cfg = self._get_config()
+        self._config_groups = self._get_config_groups()
         dora = self._get_dora()
         super().__init__(main, dora)
         # this is a really dirty hack to make Hydra believe that this is
@@ -154,6 +156,8 @@ class HydraMain(DecoratedMain):
             argv.append(arg)
         elif isinstance(arg, dict):
             for key, value in arg.items():
+                if key not in self._config_groups:
+                    value = json.dumps(value)
                 argv.append(f"{key}={value}")
         elif isinstance(arg, (list, tuple)):
             for part in arg:
@@ -181,6 +185,12 @@ class HydraMain(DecoratedMain):
             if is_xp():
                 sys.argv.remove(run_dir)
 
+    def _get_config_groups(self) -> tp.List[str]:
+        with initialize_config_dir(str(self.full_config_path), job_name=self._job_name):
+            gh = GlobalHydra.instance().hydra
+            assert gh is not None
+            return gh.list_all_config_groups()
+
     def _is_active(self, argv: tp.List[str]) -> bool:
         if '-m' in argv or '--multirun' in argv:
             return False
@@ -196,11 +206,10 @@ class HydraMain(DecoratedMain):
         with initialize_config_dir(str(self.full_config_path), job_name=self._job_name):
             gh = GlobalHydra.instance().hydra
             assert gh is not None
-            groups = gh.list_all_config_groups()
             to_keep = []
             delta: tp.List[tp.Tuple[str, str]] = []
             for arg in overrides:
-                for group in groups:
+                for group in self._config_groups:
                     if arg.startswith(f'{group}='):
                         to_keep.append(arg)
                         _, value = arg.split('=', 1)
