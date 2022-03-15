@@ -102,7 +102,7 @@ def _get_explore(args, main):
             if not info.name.startswith('_'):
                 candidates.append(info.name)
         if not grid_file.exists():
-            log(f'No grid file {grid_file.name} in package {root_name}. '
+            log(f'No grid file {grid_filename} in package {root_name}. '
                 'Maybe you made a typo?')
         log(f"Potential grids are: {', '.join(candidates)}")
         sys.exit(0)
