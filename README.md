@@ -544,9 +544,13 @@ rules = dora.conf.SubmitRules(retry=True)  # Should we reschedule failed jobs?
 # each sheep as 2 attributues: sheep.xp and sheep.job_id.
 sheeps = dora.grid.run_grid(main, explorer, grid_name='jupy', rules=rules, args=args)
 args.monitor = True
+args.jupyter = True
 # The jupyter flag will make the grid API use the display API to clear the cell
 # output and update it regularly. This one will not return until all jobs
 # are done or failed.
+# In the following, `grid_name` should be unique. It will be used
+# to determine which experiments were previously scheduled with that grid
+# and should potentially be cancelled if no longer needed.
 dora.grid.run_grid(main, explorer, grid_name='jupy', rules=rules, args=args)
 # You can retrieve the short names by using `main.get_names()`
 short_names, ref_name = main.get_names([sheep.xp for sheep in sheeps])
