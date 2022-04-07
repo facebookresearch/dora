@@ -252,7 +252,7 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
         for sheep in sheeps:
             link = (grid_folder / sheep.xp.sig)
             if link.exists() or link.is_symlink():
-                assert link.is_symlink() and link.resolve() == sheep.xp.folder
+                assert link.is_symlink() and link.resolve() == sheep.xp.folder.resolve()
             else:
                 link.symlink_to(sheep.xp.folder)
 
