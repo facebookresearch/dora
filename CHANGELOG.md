@@ -20,6 +20,8 @@ More reliable passing of arguments of Hydra (before, setting None would actually
 
 Allow for empty `mem` constraint in Slurm.
 
+Fixing `callbacks` default value in PL.
+
 ## [0.1.9] - 2022-02-28
 
 Reliable rmtree used to avoid `--clear` being blocked by some locking issues on NFS.

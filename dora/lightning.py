@@ -170,7 +170,7 @@ def get_trainer(*args, auto_resume=True, add_dora_logger=True, no_unfinished_epo
         plugins += [env, 'ddp']
     kwargs['plugins'] = plugins
 
-    callbacks = kwargs.pop("callbacks", [])
+    callbacks = kwargs.pop("callbacks", None) or []
     callbacks.append(DoraCheckpointSync())
     kwargs['callbacks'] = callbacks
 
