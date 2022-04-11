@@ -94,14 +94,15 @@ def _get_explore(args, main):
     root_name = main.package + ".grids"
     grids = import_or_fatal(root_name)
 
-    grid_filename = args.grid.replace('.', '/') + '.py'
-    grid_file = Path(grids.__file__).parent / grid_filename
+    if args.grid is not None:
+        grid_filename = args.grid.replace('.', '/') + '.py'
+        grid_file = Path(grids.__file__).parent / grid_filename
     if args.grid is None or not grid_file.exists():
         candidates = []
         for info in pkgutil.walk_packages([Path(grids.__file__).parent]):
             if not info.name.startswith('_'):
                 candidates.append(info.name)
-        if not grid_file.exists():
+        if args.grid is not None and not grid_file.exists():
             log(f'No grid file {grid_filename} in package {root_name}. '
                 'Maybe you made a typo?')
         log(f"Potential grids are: {', '.join(candidates)}")
@@ -251,7 +252,7 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
         for sheep in sheeps:
             link = (grid_folder / sheep.xp.sig)
             if link.exists() or link.is_symlink():
-                assert link.is_symlink() and link.resolve() == sheep.xp.folder
+                assert link.is_symlink() and link.resolve() == sheep.xp.folder.resolve()
             else:
                 link.symlink_to(sheep.xp.folder)
 

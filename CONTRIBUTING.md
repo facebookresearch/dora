@@ -1,4 +1,4 @@
-# Contributing to Demucs
+# Contributing to Dora
 
 ## Pull Requests
 
@@ -7,7 +7,7 @@ to do this once to work on any of Facebook's open source projects.
 
 Complete your CLA here: <https://code.facebook.com/cla>
 
-Wev welcome pull requests and bug fixes, however, as
+We welcome pull requests and bug fixes, however, as
 Dora is primarily intended to support research work conduted at Facebook Research,
 we do not provide strong support for running on other clusters.
 
