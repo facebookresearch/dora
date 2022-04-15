@@ -46,6 +46,13 @@ def _no_copy(self: tp.Any, memo: tp.Any):
 _Difference = namedtuple("_Difference", "path key ref other ref_value other_value")
 
 
+class _NotThere:
+    pass
+
+
+NotThere = _NotThere()
+
+
 def _compare_config(ref, other, path=[]):
     """
     Given two configs, gives an iterator over all the differences. For each difference,
@@ -58,7 +65,8 @@ def _compare_config(ref, other, path=[]):
     for key in keys:
         path[-1] = key
         ref_value = ref[key]
-        assert key in other, f"Structure of config should be identical between XPs. Extra key {key}"
+        if key not in other:
+            other_value = NotThere()
         other_value = other[key]
 
         if isinstance(ref_value, DictConfig):

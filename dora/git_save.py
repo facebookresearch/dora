@@ -102,7 +102,7 @@ def get_new_clone(main: DecoratedMain) -> Path:
     source = get_git_root()
     commit = get_git_commit()
     check_repo_clean(source, main)
-    codes = main.dora.dir / main.dora.codes
+    codes = main.dora.dir / main.dora._codes
     codes.mkdir(parents=True, exist_ok=True)
     target = codes / commit
     if not target.exists():

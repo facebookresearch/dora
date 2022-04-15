@@ -141,11 +141,14 @@ class DoraConfig:
         shared (Path or None): if provided, the path to a central repository of XPs.
             For the moment, this only supports sharing hyper-params, logs etc. will stay
             in the per user folder.
+        grid_package (str or None): if provided, package to look for grids. Default
+            to the package with the `train.py` module followed by `.grids`.
     """
     dir: Path = Path("./outputs")  # where everything will be stored
     exclude: tp.List[str] = field(default_factory=list)
     git_save: bool = False
     shared: tp.Optional[Path] = None  # Optional path for shared XPs.
+    grid_package: tp.Optional[str] = None
 
     # Those are internal config values and are unlikely to be changed
     history: str = "history.json"  # where metrics will be stored
@@ -154,8 +157,9 @@ class DoraConfig:
     shep: ShepConfig = field(default_factory=ShepConfig)
     rendezvous_file: str = "rendezvous.txt"
     use_rendezvous: bool = False
-    grids: str = "grids"
-    codes: str = "codes"
+    # Filenames used in various places, you shouldn't edit that
+    _grids: str = "grids"
+    _codes: str = "codes"
 
     def is_excluded(self, arg_name: str) -> bool:
         """Return True if the given argument name should be excluded from

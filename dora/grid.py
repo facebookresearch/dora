@@ -17,7 +17,6 @@ import fnmatch
 from functools import partial
 import os
 from pathlib import Path
-import pkgutil
 import typing as tp
 import shutil
 import sys
@@ -91,24 +90,30 @@ class RunGridArgs:
 
 def _get_explore(args, main):
     # Finds the explorer.
-    root_name = main.package + ".grids"
-    grids = import_or_fatal(root_name)
+    grid_package = main.dora.grid_package
+    if grid_package is None:
+        grid_package = main.package + ".grids"
+
+    grids = import_or_fatal(grid_package)
 
     if args.grid is not None:
         grid_filename = args.grid.replace('.', '/') + '.py'
         grid_file = Path(grids.__file__).parent / grid_filename
     if args.grid is None or not grid_file.exists():
         candidates = []
-        for info in pkgutil.walk_packages([Path(grids.__file__).parent]):
-            if not info.name.startswith('_'):
-                candidates.append(info.name)
+        pkg_root = Path(grids.__file__).parent
+        for root, folders, files in os.walk(pkg_root):
+            for file in files:
+                fullpath = (Path(root) / file).relative_to(pkg_root)
+                if fullpath.name.endswith('.py') and not fullpath.name.starswith('_'):
+                    candidates.append(str(fullpath).replace('/', '.'))
         if args.grid is not None and not grid_file.exists():
-            log(f'No grid file {grid_filename} in package {root_name}. '
+            log(f'No grid file {grid_filename} in package {grid_package}. '
                 'Maybe you made a typo?')
         log(f"Potential grids are: {', '.join(candidates)}")
         sys.exit(0)
 
-    grid_name = root_name + "." + args.grid
+    grid_name = grid_package + "." + args.grid
     grid = import_or_fatal(grid_name)
 
     try:
@@ -157,7 +162,7 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
     if slurm is None:
         slurm = main.get_slurm_config()
 
-    grid_folder = main.dora.dir / main.dora.grids / grid_name
+    grid_folder = main.dora.dir / main.dora._grids / grid_name
     grid_folder.mkdir(exist_ok=True, parents=True)
 
     herd = Herd()
