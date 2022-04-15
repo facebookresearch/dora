@@ -105,7 +105,8 @@ def _get_explore(args, main):
         for root, folders, files in os.walk(pkg_root):
             for file in files:
                 fullpath = (Path(root) / file).relative_to(pkg_root)
-                if fullpath.name.endswith('.py') and not fullpath.name.starswith('_'):
+                if fullpath.name.endswith('.py') and not fullpath.name.startswith('_'):
+                    fullpath = fullpath.parent / fullpath.stem
                     candidates.append(str(fullpath).replace('/', '.'))
         if args.grid is not None and not grid_file.exists():
             log(f'No grid file {grid_filename} in package {grid_package}. '
