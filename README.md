@@ -442,7 +442,9 @@ also allows for nested keys in Hydra: `launcher.bind({'model.channels': 256})`. 
 also define new keys with `{'+model.activation': 'relu'}`. You must not remove keys though.
 - Finally you can combine all of those (for a Hydra project here):
 
-```launcher.bind(['optim.lr=1e-4'], {'model.channels': 256, 'seed': 42}, {'+model.activation': 'relu'}, batch_size=64)```
+```python
+launcher.bind(['optim.lr=1e-4'], {'model.channels': 256, 'seed': 42}, {'+model.activation': 'relu'}, batch_size=64)
+```
 
 
 ### Flags
