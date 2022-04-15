@@ -426,7 +426,7 @@ Creating a sub-launcher is especially recommended inside loops, to avoid leaking
 - `launcher(...)`: schedules an experiment with the given params, plus all the ones that have
 been aggregated through the various calls to `bind_` and to `bind`. This is equivalent to
 `launcher.bind(...)()`.
-- `launcher.slurm_(key=value, ... and `launcher.slurm(key=value, ...)`: same as `bind_` and `bind`
+- `launcher.slurm_(key=value, ...)` and `launcher.slurm(key=value, ...)`: same as `bind_` and `bind`
 but for the slurm config (nb of GPUs etc). For a list of possible options, checkout
 [SlurmConf](https://facebookresearch.github.io/dora/dora/conf.html#dora.conf.SlurmConfig).
 
@@ -441,7 +441,7 @@ do `launcher.bind(batch_size=64)`.
 also allows for nested keys in Hydra: `launcher.bind({'model.channels': 256})`. With Hydra, you can
 also define new keys with `{'+model.activation': 'relu'}`. You must not remove keys though.
 - Finally you can combine all of those (for a Hydra project here):
-`launcher.bind(['optim.lr=1e-4'], {'model.channels': 256, 'seed': 42}, {'+model.activation': 'relu'}, batch_size=64)`.
+```launcher.bind(['optim.lr=1e-4'], {'model.channels': 256, 'seed': 42}, {'+model.activation': 'relu'}, batch_size=64)```
 
 
 ### Flags
