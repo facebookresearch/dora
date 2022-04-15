@@ -26,6 +26,8 @@ Extra "keys" in Hydra config files are now allowed (i.e. overrides with `+someth
 
 The package where Dora looks for grids can be customized, in Hydra with `dora.grid_package` in the base config or passing `grid_package='...'` to `argparse_main`.
 
+Better doc for launcher API.
+
 ## [0.1.9] - 2022-02-28
 
 Reliable rmtree used to avoid `--clear` being blocked by some locking issues on NFS.
