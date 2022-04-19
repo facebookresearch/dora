@@ -412,6 +412,41 @@ This will do 3 thing:
 - A table containing job status and metadata as well as the latest metrics will
     be printed every 5 minutes.
 
+### The Launcher API
+
+Here is a more comprehensive description of what `Launcher` object can do.
+
+- `launcher.bind_(...)`: remember the given parameters (command line option for argparse based
+project, or overrides for Hydra based ones) for future scheduling, i.e. all experiments
+later scheduled with that launcher will have those parameters set.
+- `sub = launcher.bind(...)`: same as bind, but returns a new "sub" launcher, i.e. the object
+`launcher` is not changed, only experiments scheduled with `sub` will use the given params.
+`sub` also inherits from all the params already bound to its parent launcher (i.e. previous call to `launcher.bind_`).
+Creating a sub-launcher is especially recommended inside loops, to avoid leaking params to the next loop iteration.
+- `launcher(...)`: schedules an experiment with the given params, plus all the ones that have
+been aggregated through the various calls to `bind_` and to `bind`. This is equivalent to
+`launcher.bind(...)()`.
+- `launcher.slurm_(key=value, ...)` and `launcher.slurm(key=value, ...)`: same as `bind_` and `bind`
+but for the slurm config (nb of GPUs etc). For a list of possible options, checkout
+[SlurmConf](https://facebookresearch.github.io/dora/dora/conf.html#dora.conf.SlurmConfig).
+
+
+Now let us describe the format for passing parameters overrides or command line flags to
+`launcher.bind_()`, `launcher.bind()` or `launcher()`:
+
+- Simple parameters (i.e. not nested) can be passed as kwargs, for instance if you have a `--batch_size` flag, you can
+do `launcher.bind(batch_size=64)`.
+- Command line flags can be explicitely passed as a list of strings, for instance `launcher.bind(['--lr=1e-4'])`.
+- A dictionary of overrides can be passed, for instance `launcher.bind({'batch_size': 64})`. Note that this
+also allows for nested keys in Hydra: `launcher.bind({'model.channels': 256})`. With Hydra, you can
+also define new keys with `{'+model.activation': 'relu'}`. You must not remove keys though.
+- Finally you can combine all of those (for a Hydra project here):
+
+```python
+launcher.bind(['optim.lr=1e-4'], {'model.channels': 256, 'seed': 42}, {'+model.activation': 'relu'}, batch_size=64)
+```
+
+
 ### Flags
 
 The `dora grid` command supports the following flags:

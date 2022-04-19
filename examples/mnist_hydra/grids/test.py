@@ -30,7 +30,7 @@ def explorer(launcher):
         # sub = launcher.bind([f"model.hidden_dim={hidden_dim}"])
         sub()
         sub(gamma=0.6)
-        
+        sub({'+new_param': 'whatever'})  # you can define extra keys with '+' if required
 
     launcher.bind_(gamma=0.6)
     launcher.slurm_(mem_per_gpu=20)

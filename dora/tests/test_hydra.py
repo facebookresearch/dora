@@ -98,8 +98,8 @@ def test_hydra(tmpdir):
     assert name == "opt.loss=l1"
 
     argv = ["+k=youpi"]
-    with pytest.raises(AssertionError):
-        xp2 = call(main, argv)
+    xp2 = call(main, argv)
+    assert xp2.cfg.k == 'youpi'
 
     with pytest.raises(ValueError):
         main.value_to_argv(0.5)
