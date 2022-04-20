@@ -192,6 +192,8 @@ Explore = tp.Callable[[Launcher], None]
 
 
 class Explorer:
+    update_modes = {}
+
     def __init__(self, explore: Explore):
         self.explore = explore
 
@@ -229,13 +231,35 @@ class Explorer:
         """
         raise NotImplementedError()
 
+    def get_update_mode(self, metric_name):
+        return self.update_modes.get(metric_name, "last")
+
+    def update_metric(self, mode, previous_value, current_value):
+        if previous_value is None or mode == "last":
+            return current_value
+        if mode == "max":
+            return max(previous_value, current_value)
+        if mode == "min":
+            return min(previous_value, current_value)
+        raise ValueError(f"Unknown update mode {mode}")
+
+    def update_metrics(self, previous_metrics, current_metrics):
+        updated_metrics = {}
+        for metric_name in list(previous_metrics.keys()) + list(current_metrics.keys()):
+            updated_metrics[metric_name] = self.update_metric(
+                mode=self.get_update_mode(metric_name),
+                previous_value=previous_metrics.get(metric_name),
+                current_value=current_metrics.get(metric_name),
+            )
+        return updated_metrics
+
     def process_history(self, history: tp.List[dict]) -> dict:
         """Process history to return a dict (with possibly nested dict inside)
         matching the schema given by `get_grid_metrics`.
         """
-        out = {
+        updated_metrics = {
             'epoch': len(history)
         }
         for metrics in history:
-            out.update(metrics)
-        return out
+            updated_metrics = self.update_metrics(updated_metrics, metrics)
+        return updated_metrics
