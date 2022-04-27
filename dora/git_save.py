@@ -40,7 +40,9 @@ def check_repo_clean(root: Path, main: DecoratedMain):
     # Here we try to detect the grids package and allow uncommitted changes
     # only to that folder. The rational is that as we edit the grid file, it is a pain
     # to constantly be commiting change to it and it should not impact the actual run code.
-    grid_name = main.name + ".grids"
+    grid_name = main.dora.grid_package
+    if grid_name is None:
+        grid_name = main.package + ".grids"
     spec = importlib.util.find_spec(grid_name)
     grid_path: tp.Optional[Path] = None
     if spec is not None:
