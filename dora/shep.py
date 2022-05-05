@@ -305,7 +305,7 @@ class Shepherd:
                            "but Dora or Slurm crashed before the job id was saved.")
             proc = sp.run(["squeue", "-u", os.getlogin(), "-n", name, "-o", "%i", "-h"],
                           capture_output=True, check=True)
-            ids = [line for line in proc.stdout.decode().strip().split("\n") if line]
+            ids = [line.split('_')[0] for line in proc.stdout.decode().strip().split("\n") if line]
             if ids:
                 logger.warning(f"Found orphan job ids {ids}, will cancel")
                 sp.run(["scancel"] + ids, check=True)
