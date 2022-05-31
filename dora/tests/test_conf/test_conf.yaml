@@ -7,6 +7,10 @@ optim:
   loss: mse
 num_workers: 10
 
+complex_types:
+  a: [1, 2, 3]
+  b: {"a": 1, "b": 2}
+
 useless:
   a: 5
   b: true

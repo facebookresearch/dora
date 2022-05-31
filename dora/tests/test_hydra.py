@@ -117,3 +117,13 @@ def test_hydra(tmpdir):
     argv = ["group=lapin", "plop.b=5"]
     with pytest.raises(Exception):
         xp2 = call(main, argv)
+
+
+def test_complex_types(tmpdir):
+    # Test complex types parsing (e.g. lists and dict)
+    _main.__module__ = __name__
+    main = get_main(tmpdir)
+    xp = call(main, ['complex.a=[0]'])
+    assert xp.cfg.complex.a == [0]
+    xp = call(main, ['complex.b={"c": "hello"}'])
+    assert xp.cfg.complex.b == {"c": "hello"}
