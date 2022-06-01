@@ -99,12 +99,43 @@ def _simplify_argv(argv: tp.Sequence[str]) -> tp.List[str]:
     return simplified[::-1]
 
 
+def _dump_key(key):
+    if key is None:
+        return "null"
+    elif isinstance(key, (bool, int, float)):
+        return str(key)
+    elif isinstance(key, str):
+        assert ":" not in key
+        return key
+    else:
+        raise TypeError(f"Unsupported dict key type {type(key)} for key {key}")
+
+
+def _hydra_value_as_override(value):
+    # hydra doesn't support parsing dict with the json format, so for now
+    # we have to use a custom function to dump a value.
+    if value is None:
+        return "null"
+    elif isinstance(value, (bool, int, float, str)):
+        return json.dumps(value)
+    elif isinstance(value, dict):
+        return "{" + ", ".join(
+            f"{_dump_key(key)}: {_hydra_value_as_override(val)}"
+            for key, val in value.items()
+        ) + "}"
+    elif isinstance(value, (list, tuple)):
+        return "[" + ", ".join(_hydra_value_as_override(val) for val in value) + "]"
+    else:
+        raise TypeError(f"Unsupported value type {type(value)} for value {value}")
+
+
 class HydraMain(DecoratedMain):
     _slow = True
 
-    def __init__(self, main: MainFun, config_name: str, config_path: str):
+    def __init__(self, main: MainFun, config_name: str, config_path: str, **kwargs):
         self.config_name = config_name
         self.config_path = config_path
+        self.hydra_kwargs = kwargs
 
         module = main.__module__
         if module == "__main__":
@@ -161,13 +192,19 @@ class HydraMain(DecoratedMain):
         return xp
 
     def value_to_argv(self, arg: tp.Any) -> tp.List[str]:
+        # Here we get the raw stuff from what is passed to the grid launcher.
+        # arg is either a str (in which case it is a raw override)
+        # or a dict, in which case each entry is an override,
+        # or a list of dict or a list of str.
         argv = []
         if isinstance(arg, str):
             argv.append(arg)
         elif isinstance(arg, dict):
             for key, value in arg.items():
                 if key not in self._config_groups:
-                    value = json.dumps(value)
+                    # We need to convert the value using a custom function
+                    # to respect how Hydra parses overrides.
+                    value = _hydra_value_as_override(value)
                 argv.append(f"{key}={value}")
         elif isinstance(arg, (list, tuple)):
             for part in arg:
@@ -190,7 +227,8 @@ class HydraMain(DecoratedMain):
         try:
             return hydra.main(
                 config_name=self.config_name,
-                config_path=self.config_path)(self.main)()
+                config_path=self.config_path,
+                **self.hydra_kwargs)(self.main)()
         finally:
             if is_xp():
                 sys.argv.remove(run_dir)
@@ -259,7 +297,11 @@ class HydraMain(DecoratedMain):
         return delta
 
 
-def hydra_main(config_name: str, config_path: str):
+def hydra_main(config_name: str, config_path: str, **kwargs):
+    """Wrap your main function with this.
+    You can pass extra kwargs, e.g. `version_base` introduced in 1.2.
+    """
     def _decorator(main: MainFun):
-        return HydraMain(main, config_name=config_name, config_path=config_path)
+        return HydraMain(main, config_name=config_name, config_path=config_path,
+                         **kwargs)
     return _decorator
