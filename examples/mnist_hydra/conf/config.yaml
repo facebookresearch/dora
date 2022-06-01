@@ -23,6 +23,8 @@ slurm:
   cpus_per_gpu: 10
 
 hydra:
+  job:
+    chdir: true
   job_logging:
     handlers:
       file:

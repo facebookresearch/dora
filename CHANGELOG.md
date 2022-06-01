@@ -28,6 +28,8 @@ The package where Dora looks for grids can be customized, in Hydra with `dora.gr
 
 Better doc for launcher API.
 
+Fix dict support with Hydra. Okay it is time that I release a new version now...
+
 ## [0.1.9] - 2022-02-28
 
 Reliable rmtree used to avoid `--clear` being blocked by some locking issues on NFS.

@@ -7,6 +7,10 @@ optim:
   loss: mse
 num_workers: 10
 
+complex:
+  a: [1, 2, 3]
+  b: {"a": 1, "b": 2}
+
 useless:
   a: 5
   b: true
@@ -17,3 +21,7 @@ dora:
 
 slurm:
   cpus_per_task: 5
+
+hydra:
+  job:
+    chdir: true
