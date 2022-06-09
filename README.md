@@ -42,7 +42,7 @@ pip install -U dora-search
 
 See [the changelog](CHANGELOG.md) for details on releases.
 
-- TBD: version 0.1.10: adding HiPlot support ! Updated PL support.
+- 2022-06-09: version 0.1.10: adding HiPlot support ! Updated PL support, many small fixes.
 - 2022-02-28: version 0.1.9
 - 2021-12-10: version 0.1.8: see changelog, many of small changes.
 - 2021-11-08: version 0.1.7: support for job arrays added.
