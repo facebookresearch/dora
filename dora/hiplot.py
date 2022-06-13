@@ -144,7 +144,7 @@ def load(uri: str) -> tp.Any:
             if isinstance(value, BaseContainer):
                 value = OmegaConf.to_container(value, resolve=True)
             if isinstance(value, list):
-                value = ', '.join(value)
+                value = ', '.join(map(str, value))
             values[key] = value
         values['sig'] = xp.sig
         from_uid: tp.Optional[str] = None
