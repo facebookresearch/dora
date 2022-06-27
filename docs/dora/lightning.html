@@ -1,0 +1,1405 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>dora.lightning API documentation</title>
+<meta name="description" content="Support for PyTorch lightning. You should just replace the call
+to `Trainer(...)` with `get_trainer(...)`.
+For using `dora.log.LogProgress` as a …" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>dora.lightning</code></h1>
+</header>
+<section id="section-intro">
+<p>Support for PyTorch lightning. You should just replace the call
+to <code>Trainer(&hellip;)</code> with <code><a title="dora.lightning.get_trainer" href="#dora.lightning.get_trainer">get_trainer()</a>(&hellip;)</code>.
+For using <code><a title="dora.log.LogProgress" href="log.html#dora.log.LogProgress">LogProgress</a></code> as a progress bar with PL, see <code><a title="dora.lightning.PLLogProgress" href="#dora.lightning.PLLogProgress">PLLogProgress</a></code>.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># Copyright (c) Facebook, Inc. and its affiliates.
+# All rights reserved.
+#
+# This source code is licensed under the license found in the
+# LICENSE file in the root directory of this source tree.
+
+&#34;&#34;&#34;
+Support for PyTorch lightning. You should just replace the call
+to `Trainer(...)` with `get_trainer(...)`.
+For using `dora.log.LogProgress` as a progress bar with PL, see `PLLogProgress`.
+&#34;&#34;&#34;
+import functools
+import inspect
+import os
+import typing as tp
+
+from pytorch_lightning import LightningModule
+from pytorch_lightning.callbacks import Callback
+from pytorch_lightning.callbacks.progress import ProgressBarBase
+from pytorch_lightning.plugins.environments import ClusterEnvironment
+from pytorch_lightning.trainer import Trainer
+from pytorch_lightning.utilities.argparse import from_argparse_args
+import torch
+
+from . import distrib
+from .xp import get_xp, is_xp
+from .log import bold, LogProgress
+
+
+def _filter_metrics(metrics: tp.Dict[str, tp.Any], epoch: bool = True):
+    &#34;&#34;&#34;Filters metrics before formatting, in particular to remove the `_step` or `_epoch`
+    suffix. This will also convert torch tensors to float.
+    Args:
+        metrics: dict given by PL.
+        epoch: if True, keep only epoch level metrics, otherwise, keep only step level metrics.
+    &#34;&#34;&#34;
+    out = {}
+    for key, value in metrics.items():
+        if epoch and key.endswith(&#39;_step&#39;):
+            continue
+        if not epoch and key.endswith(&#39;_epoch&#39;):
+            continue
+        if key.endswith(&#39;_step&#39;) or key.endswith(&#39;_epoch&#39;):
+            key = key.rsplit(&#39;_&#39;, 1)[0]
+        if isinstance(value, torch.Tensor) and value.numel() == 1:
+            value = value.item()
+        out[key] = value
+    return out
+
+
+class DoraEnvironment(ClusterEnvironment):
+    def __init__(self):
+        super().__init__()
+        self.spec = distrib.get_distrib_spec()
+        distrib.set_distrib_env()
+
+    def creates_children(self) -&gt; bool:
+        return True
+
+    @property
+    def creates_processes_externally(self) -&gt; bool:
+        return True
+
+    def master_address(self) -&gt; str:
+        return os.environ[&#39;MASTER_ADDR&#39;]
+
+    def master_port(self) -&gt; int:
+        return int(os.environ[&#39;MASTER_PORT&#39;])
+
+    def world_size(self) -&gt; int:
+        return self.spec.world_size
+
+    def set_world_size(self, size: int) -&gt; None:
+        pass
+
+    def global_rank(self) -&gt; int:
+        return self.spec.rank
+
+    def set_global_rank(self, rank: int) -&gt; None:
+        pass
+
+    def local_rank(self) -&gt; int:
+        return self.spec.local_rank
+
+    def node_rank(self) -&gt; int:
+        return self.spec.node_rank
+
+
+class DoraCheckpointSync(Callback):
+    &#34;&#34;&#34;Make sure Dora history, and checkpoint state are in sync.
+    &#34;&#34;&#34;
+    def __init__(self):
+        self.xp = get_xp()
+
+    def on_load_checkpoint(self, trainer, pl_module, checkpoint):
+        history = checkpoint[&#39;dora_link_history&#39;]
+        self.xp.link.update_history(history)
+
+    def on_save_checkpoint(self, trainer, pl_module, checkpoint):
+        checkpoint[&#39;dora_link_history&#39;] = self.xp.link.history
+        checkpoint[&#39;dora_sig&#39;] = self.xp.sig
+        checkpoint[&#39;dora_cfg&#39;] = self.xp.cfg
+        return checkpoint
+
+
+class DoraHistoryLogger(Callback):
+    &#34;&#34;&#34;Save metrics to Dora using the XP link.
+    &#34;&#34;&#34;
+    def __init__(self):
+        super().__init__()
+        self.link = get_xp().link
+
+    def on_fit_start(self, trainer, pl_module):
+        self._first_valid = True
+
+    def on_train_epoch_start(self, trainer, pl_module):
+        self._first_valid = False
+
+    def on_epoch_end(self, trainer, pl_module):
+        if self._first_valid:
+            # We ignore the first fake epoch of PL that only does a few valid batches.
+            return
+        metrics = trainer.logged_metrics
+        metrics = _filter_metrics(metrics, epoch=True)
+        self.link.push_metrics(metrics)
+
+
+class _DummySLURMConnector:
+    # Deactivate SLURM connector because Submitit does it already,
+    # and this can cost us an unfinished epoch, which we don&#39;t want!!
+    def register_slurm_signal_handlers(self):
+        pass
+
+
+def get_trainer(*args, auto_resume=True, add_dora_logger=True, no_unfinished_epochs=True,
+                **kwargs):
+    &#34;&#34;&#34;Return a PL trainer, adding the necessary glue code to make everything works.
+    The arguments are exactly the same as for `pytorch_lightning.trainer.Trainer`,
+    with a few extras documented after.
+
+    ..note:: You should not pass `gpus=` or `num_nodes=` arguments as those will be filled by Dora.
+
+    Args:
+        auto_resume (bool): if True, automatically resume previous checkpoints.
+            You are still responsible for creating the `ModelCheckpoint` callback,
+            this only handles the `resume_from_checkpoint` part.
+        add_dora_logger (bool): if True, adds a Dora Logger to automatically
+            forward the metrics (those logged with per_epoch=True), otherwise
+            pushing metrics will be up to you.
+        no_unfinished_epochs (bool): if True, deactivates SLURM signal handling
+            by PL, which can result in half finished epoch with each interruption.
+            It is recommended to instead dump a checkpoint every epoch and resume
+            from that one so that training is reliable.
+
+    &#34;&#34;&#34;
+    if not is_xp():
+        raise RuntimeError(&#34;This can only be called from inside a Dora XP.&#34;)
+
+    # Convert all to kwargs, add [None] dummy for self which is missing.
+    init = Trainer.__init__
+    while hasattr(init, &#39;__wrapped__&#39;):
+        init = init.__wrapped__
+    kwargs = inspect.getcallargs(init, [None] + list(args), **kwargs)
+    del kwargs[&#39;self&#39;]
+
+    plugins = kwargs.pop(&#34;plugins&#34;) or []
+    env = DoraEnvironment()
+    gpus = min(torch.cuda.device_count(), env.world_size())
+    if env.world_size() &gt; 1:
+        plugins += [env, &#39;ddp&#39;]
+    kwargs[&#39;plugins&#39;] = plugins
+
+    callbacks = kwargs.pop(&#34;callbacks&#34;, None) or []
+    callbacks.append(DoraCheckpointSync())
+    kwargs[&#39;callbacks&#39;] = callbacks
+
+    if kwargs[&#39;gpus&#39;] is not None:
+        raise RuntimeError(&#34;You cannot specify the number of GPUs, as this is provided by Dora.&#34;)
+    if kwargs[&#39;num_nodes&#39;] != 1:
+        raise RuntimeError(&#34;You cannot specify the number of nodes, as this is provided by Dora.&#34;)
+
+    kwargs[&#39;gpus&#39;] = gpus
+    kwargs[&#39;num_nodes&#39;] = env.spec.num_nodes
+    kwargs[&#39;default_root_dir&#39;] = get_xp().folder
+
+    if add_dora_logger:
+        kwargs[&#39;callbacks&#39;].append(DoraHistoryLogger())
+
+    resume_from_checkpoint = kwargs.get(&#39;resume_from_checkpoint&#39;)
+    if auto_resume and resume_from_checkpoint is None:
+        last = get_xp().folder / &#39;last.ckpt&#39;
+        if last.is_file():
+            resume = str(last)
+        else:
+            resume = None
+        kwargs[&#39;resume_from_checkpoint&#39;] = resume
+    trainer = Trainer(**kwargs)
+
+    if no_unfinished_epochs:
+        trainer.slurm_connector = _DummySLURMConnector()
+
+    return trainer
+
+
+class _Intercept:
+    @functools.wraps(Trainer.__init__)
+    def __init__(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+
+
+def trainer_from_argparse_args(args, **kwargs):
+    intercept = from_argparse_args(_Intercept, args, **kwargs)
+    return get_trainer(*intercept.args, **intercept.kwargs)
+
+
+class PLLogProgress(ProgressBarBase):
+    &#34;&#34;&#34;`dora.log.LogProgress` support for Pytorch-Lightning.
+
+
+    &#34;&#34;&#34;
+
+    def __init__(self, logger, **kwargs):
+        super().__init__()  # don&#39;t forget this :)
+        self.logger = logger
+        self.kwargs = kwargs
+        self._pl_module: tp.Optional[LightningModule] = None
+
+    def setup(self, trainer, pl_module, stage: tp.Optional[str] = None) -&gt; None:
+        super().setup(trainer, pl_module, stage)
+        self._pl_module = pl_module
+        self._replay_history: tp.List[tp.Any] = []
+
+    def on_fit_start(self, trainer, pl_module):
+        super().on_fit_start(trainer, pl_module)
+        self._in_train = False
+        self._first_valid = True
+
+    @property
+    def pl_module(self) -&gt; LightningModule:
+        assert self._pl_module is not None
+        return self._pl_module
+
+    def format_metrics(self, metrics: tp.Dict[str, tp.Any],
+                       stage: str, epoch: bool = False):
+        &#34;&#34;&#34;Default method to format metrics for displaying in the progress bar.
+        To customize, you can define a `format_metrics()` method on your
+        Lightning module.
+
+        Args:
+            metrics: dict of metrics given by PL.
+            stage: &#34;train&#34; or &#34;valid&#34;.
+            epoch: if True, provided metrics are for the end of epoch summary.
+        &#34;&#34;&#34;
+        out = {}
+        for key, value in metrics.items():
+            if isinstance(value, float):
+                out[key] = format(value, &#39;.5f&#39;)
+        return out
+
+    @property
+    def _format_metrics(self):
+        return getattr(self.pl_module, &#39;format_metrics&#39;, self.format_metrics)
+
+    def _on_epoch_start(self, stage):
+        self.logger.info(&#34;-&#34; * 70)
+        self.logger.info(&#34;Training...&#34; if stage == &#34;train&#34; else &#34;Validating...&#34;)
+        name = stage.capitalize() + f&#34; | Epoch {self.trainer.current_epoch + 1}&#34;
+        if stage == &#34;train&#34;:
+            total = int(self.total_train_batches)
+        elif stage == &#34;valid&#34;:
+            total = int(self.total_val_batches)
+        else:
+            raise RuntimeError(f&#34;Invalid stage {stage}&#34;)
+
+        loader = range(total)
+        self.logprog = LogProgress(self.logger, loader, total=total, name=name, **self.kwargs)
+        iter(self.logprog)
+
+    def on_train_epoch_start(self, trainer, pl_module):
+        self._on_epoch_start(&#34;train&#34;)
+        self._in_train = True
+        self._first_valid = False
+        return super().on_train_epoch_start(trainer, pl_module)
+
+    def on_validation_epoch_start(self, trainer, pl_module):
+        self._on_epoch_start(&#34;valid&#34;)
+        return super().on_validation_epoch_start(trainer, pl_module)
+
+    def _on_batch_end(self, stage):
+        metrics = self.get_metrics(self.trainer, self.pl_module)
+        metrics = _filter_metrics(metrics, epoch=False)
+        formatted = self._format_metrics(metrics, stage, epoch=False)
+        self.logprog.update(**formatted)
+        next(self.logprog)
+
+    def on_train_batch_end(self, *args, **kwargs):
+        super().on_train_batch_end(*args, **kwargs)
+        self._on_batch_end(&#34;train&#34;)
+
+    def on_validation_batch_end(self, *args, **kwargs):
+        super().on_validation_batch_end(*args, **kwargs)
+        self._on_batch_end(&#34;valid&#34;)
+
+    def _on_stage_end(self, stage):
+        if stage == &#34;train&#34;:
+            # dirty hack as we might not yet be at the end of the epoch.
+            metrics = self.trainer.fit_loop.epoch_loop._results.metrics(False)[&#34;log&#34;]
+        else:
+            metrics = self.trainer.fit_loop.epoch_loop.val_loop._results.metrics(False)[&#34;log&#34;]
+        metrics = _filter_metrics(metrics, epoch=False)
+        self._show_epoch_summary(stage, self.trainer.current_epoch, metrics)
+
+    def _show_epoch_summary(self, stage, epoch, metrics):
+        self._replay_history.append((stage, epoch, metrics))
+        formatted = self._format_metrics(metrics, stage, epoch=True)
+        name = stage.capitalize()
+        summary = &#34; | &#34;.join(
+            f&#34;{key.capitalize()}={val}&#34; for key, val in formatted.items()
+        )
+        self.logger.info(bold(f&#34;{name} Summary | End of Epoch {epoch + 1} | {summary}&#34;))
+
+    def on_validation_start(self, trainer, pl_module):
+        super().on_train_end(trainer, pl_module)
+        assert self._in_train or self._first_valid
+        if not self._first_valid:
+            self._on_stage_end(&#34;train&#34;)
+            self._in_train = False
+
+    def on_epoch_end(self, trainer, pl_module):
+        super().on_epoch_end(trainer, pl_module)
+        if self._in_train:
+            self._on_stage_end(&#34;train&#34;)
+        self._in_train = False
+
+    def on_validation_end(self, trainer, pl_module):
+        super().on_validation_end(trainer, pl_module)
+        self._on_stage_end(&#34;valid&#34;)
+
+    def disable(self):
+        # we do nothing here for now. This is called by PL when using DDP,
+        # but Dora already separates the stdout and stderr from the different workers.
+        pass
+
+    def on_load_checkpoint(self, trainer, pl_module, checkpoint):
+        replay_history = checkpoint.get(&#39;dora_replay_history&#39;, [])
+        if replay_history:
+            self.logger.info(&#34;Replaying past metrics...&#34;)
+        for step in replay_history:
+            self._show_epoch_summary(*step)
+
+    def on_save_checkpoint(self, trainer, pl_module, checkpoint):
+        checkpoint[&#39;dora_replay_history&#39;] = self._replay_history
+        return checkpoint</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="dora.lightning.get_trainer"><code class="name flex">
+<span>def <span class="ident">get_trainer</span></span>(<span>*args, auto_resume=True, add_dora_logger=True, no_unfinished_epochs=True, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return a PL trainer, adding the necessary glue code to make everything works.
+The arguments are exactly the same as for <code>pytorch_lightning.trainer.Trainer</code>,
+with a few extras documented after.</p>
+<div class="admonition note">
+<p class="admonition-title">Note:&ensp;You should not pass <code>gpus=</code> or <code>num_nodes=</code> arguments as those will be filled by Dora.</p>
+</div>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>auto_resume</code></strong> :&ensp;<code>bool</code></dt>
+<dd>if True, automatically resume previous checkpoints.
+You are still responsible for creating the <code>ModelCheckpoint</code> callback,
+this only handles the <code>resume_from_checkpoint</code> part.</dd>
+<dt><strong><code>add_dora_logger</code></strong> :&ensp;<code>bool</code></dt>
+<dd>if True, adds a Dora Logger to automatically
+forward the metrics (those logged with per_epoch=True), otherwise
+pushing metrics will be up to you.</dd>
+<dt><strong><code>no_unfinished_epochs</code></strong> :&ensp;<code>bool</code></dt>
+<dd>if True, deactivates SLURM signal handling
+by PL, which can result in half finished epoch with each interruption.
+It is recommended to instead dump a checkpoint every epoch and resume
+from that one so that training is reliable.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_trainer(*args, auto_resume=True, add_dora_logger=True, no_unfinished_epochs=True,
+                **kwargs):
+    &#34;&#34;&#34;Return a PL trainer, adding the necessary glue code to make everything works.
+    The arguments are exactly the same as for `pytorch_lightning.trainer.Trainer`,
+    with a few extras documented after.
+
+    ..note:: You should not pass `gpus=` or `num_nodes=` arguments as those will be filled by Dora.
+
+    Args:
+        auto_resume (bool): if True, automatically resume previous checkpoints.
+            You are still responsible for creating the `ModelCheckpoint` callback,
+            this only handles the `resume_from_checkpoint` part.
+        add_dora_logger (bool): if True, adds a Dora Logger to automatically
+            forward the metrics (those logged with per_epoch=True), otherwise
+            pushing metrics will be up to you.
+        no_unfinished_epochs (bool): if True, deactivates SLURM signal handling
+            by PL, which can result in half finished epoch with each interruption.
+            It is recommended to instead dump a checkpoint every epoch and resume
+            from that one so that training is reliable.
+
+    &#34;&#34;&#34;
+    if not is_xp():
+        raise RuntimeError(&#34;This can only be called from inside a Dora XP.&#34;)
+
+    # Convert all to kwargs, add [None] dummy for self which is missing.
+    init = Trainer.__init__
+    while hasattr(init, &#39;__wrapped__&#39;):
+        init = init.__wrapped__
+    kwargs = inspect.getcallargs(init, [None] + list(args), **kwargs)
+    del kwargs[&#39;self&#39;]
+
+    plugins = kwargs.pop(&#34;plugins&#34;) or []
+    env = DoraEnvironment()
+    gpus = min(torch.cuda.device_count(), env.world_size())
+    if env.world_size() &gt; 1:
+        plugins += [env, &#39;ddp&#39;]
+    kwargs[&#39;plugins&#39;] = plugins
+
+    callbacks = kwargs.pop(&#34;callbacks&#34;, None) or []
+    callbacks.append(DoraCheckpointSync())
+    kwargs[&#39;callbacks&#39;] = callbacks
+
+    if kwargs[&#39;gpus&#39;] is not None:
+        raise RuntimeError(&#34;You cannot specify the number of GPUs, as this is provided by Dora.&#34;)
+    if kwargs[&#39;num_nodes&#39;] != 1:
+        raise RuntimeError(&#34;You cannot specify the number of nodes, as this is provided by Dora.&#34;)
+
+    kwargs[&#39;gpus&#39;] = gpus
+    kwargs[&#39;num_nodes&#39;] = env.spec.num_nodes
+    kwargs[&#39;default_root_dir&#39;] = get_xp().folder
+
+    if add_dora_logger:
+        kwargs[&#39;callbacks&#39;].append(DoraHistoryLogger())
+
+    resume_from_checkpoint = kwargs.get(&#39;resume_from_checkpoint&#39;)
+    if auto_resume and resume_from_checkpoint is None:
+        last = get_xp().folder / &#39;last.ckpt&#39;
+        if last.is_file():
+            resume = str(last)
+        else:
+            resume = None
+        kwargs[&#39;resume_from_checkpoint&#39;] = resume
+    trainer = Trainer(**kwargs)
+
+    if no_unfinished_epochs:
+        trainer.slurm_connector = _DummySLURMConnector()
+
+    return trainer</code></pre>
+</details>
+</dd>
+<dt id="dora.lightning.trainer_from_argparse_args"><code class="name flex">
+<span>def <span class="ident">trainer_from_argparse_args</span></span>(<span>args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def trainer_from_argparse_args(args, **kwargs):
+    intercept = from_argparse_args(_Intercept, args, **kwargs)
+    return get_trainer(*intercept.args, **intercept.kwargs)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="dora.lightning.DoraCheckpointSync"><code class="flex name class">
+<span>class <span class="ident">DoraCheckpointSync</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Make sure Dora history, and checkpoint state are in sync.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DoraCheckpointSync(Callback):
+    &#34;&#34;&#34;Make sure Dora history, and checkpoint state are in sync.
+    &#34;&#34;&#34;
+    def __init__(self):
+        self.xp = get_xp()
+
+    def on_load_checkpoint(self, trainer, pl_module, checkpoint):
+        history = checkpoint[&#39;dora_link_history&#39;]
+        self.xp.link.update_history(history)
+
+    def on_save_checkpoint(self, trainer, pl_module, checkpoint):
+        checkpoint[&#39;dora_link_history&#39;] = self.xp.link.history
+        checkpoint[&#39;dora_sig&#39;] = self.xp.sig
+        checkpoint[&#39;dora_cfg&#39;] = self.xp.cfg
+        return checkpoint</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>pytorch_lightning.callbacks.base.Callback</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="dora.lightning.DoraCheckpointSync.on_load_checkpoint"><code class="name flex">
+<span>def <span class="ident">on_load_checkpoint</span></span>(<span>self, trainer, pl_module, checkpoint)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Called when loading a model checkpoint, use to reload state.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>trainer</code></strong></dt>
+<dd>the current :class:<code>~pytorch_lightning.trainer.Trainer</code> instance.</dd>
+<dt><strong><code>pl_module</code></strong></dt>
+<dd>the current :class:<code>~pytorch_lightning.core.lightning.LightningModule</code> instance.</dd>
+<dt><strong><code>callback_state</code></strong></dt>
+<dd>the callback state returned by <code>on_save_checkpoint</code>.</dd>
+</dl>
+<h2 id="note">Note</h2>
+<p>The <code>on_load_checkpoint</code> won't be called with an undefined state.
+If your <code>on_load_checkpoint</code> hook behavior doesn't rely on a state,
+you will still need to override <code>on_save_checkpoint</code> to return a <code>dummy state</code>.</p>
+<div class="admonition deprecated">
+<p class="admonition-title">Deprecated since version:&ensp;v1.6</p>
+<p>This callback hook will change its signature and behavior in v1.8.
+If you wish to load the state of the callback, use <code>Callback.load_state_dict</code> instead.
+In v1.8 <code>Callback.on_load_checkpoint(checkpoint)</code> will receive the entire loaded
+checkpoint dictionary instead of only the callback state from the checkpoint.</p>
+</div></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def on_load_checkpoint(self, trainer, pl_module, checkpoint):
+    history = checkpoint[&#39;dora_link_history&#39;]
+    self.xp.link.update_history(history)</code></pre>
+</details>
+</dd>
+<dt id="dora.lightning.DoraCheckpointSync.on_save_checkpoint"><code class="name flex">
+<span>def <span class="ident">on_save_checkpoint</span></span>(<span>self, trainer, pl_module, checkpoint)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Called when saving a checkpoint to give you a chance to store anything else you might want to save.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>trainer</code></strong></dt>
+<dd>the current :class:<code>~pytorch_lightning.trainer.Trainer</code> instance.</dd>
+<dt><strong><code>pl_module</code></strong></dt>
+<dd>the current :class:<code>~pytorch_lightning.core.lightning.LightningModule</code> instance.</dd>
+<dt><strong><code>checkpoint</code></strong></dt>
+<dd>the checkpoint dictionary that will be saved.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>None or the callback state. Support for returning callback state will be removed in v1.8.</p>
+<div class="admonition deprecated">
+<p class="admonition-title">Deprecated since version:&ensp;v1.6</p>
+<p>Returning a value from this method was deprecated in v1.6 and will be removed in v1.8.
+Implement <code>Callback.state_dict</code> instead to return state.
+In v1.8 <code>Callback.on_save_checkpoint</code> can only return None.</p>
+</div></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def on_save_checkpoint(self, trainer, pl_module, checkpoint):
+    checkpoint[&#39;dora_link_history&#39;] = self.xp.link.history
+    checkpoint[&#39;dora_sig&#39;] = self.xp.sig
+    checkpoint[&#39;dora_cfg&#39;] = self.xp.cfg
+    return checkpoint</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="dora.lightning.DoraEnvironment"><code class="flex name class">
+<span>class <span class="ident">DoraEnvironment</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Specification of a cluster environment.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DoraEnvironment(ClusterEnvironment):
+    def __init__(self):
+        super().__init__()
+        self.spec = distrib.get_distrib_spec()
+        distrib.set_distrib_env()
+
+    def creates_children(self) -&gt; bool:
+        return True
+
+    @property
+    def creates_processes_externally(self) -&gt; bool:
+        return True
+
+    def master_address(self) -&gt; str:
+        return os.environ[&#39;MASTER_ADDR&#39;]
+
+    def master_port(self) -&gt; int:
+        return int(os.environ[&#39;MASTER_PORT&#39;])
+
+    def world_size(self) -&gt; int:
+        return self.spec.world_size
+
+    def set_world_size(self, size: int) -&gt; None:
+        pass
+
+    def global_rank(self) -&gt; int:
+        return self.spec.rank
+
+    def set_global_rank(self, rank: int) -&gt; None:
+        pass
+
+    def local_rank(self) -&gt; int:
+        return self.spec.local_rank
+
+    def node_rank(self) -&gt; int:
+        return self.spec.node_rank</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>pytorch_lightning.plugins.environments.cluster_environment.ClusterEnvironment</li>
+<li>abc.ABC</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="dora.lightning.DoraEnvironment.creates_processes_externally"><code class="name">var <span class="ident">creates_processes_externally</span> : bool</code></dt>
+<dd>
+<div class="desc"><p>Whether the environment creates the subprocesses or not.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def creates_processes_externally(self) -&gt; bool:
+    return True</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="dora.lightning.DoraEnvironment.creates_children"><code class="name flex">
+<span>def <span class="ident">creates_children</span></span>(<span>self) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def creates_children(self) -&gt; bool:
+    return True</code></pre>
+</details>
+</dd>
+<dt id="dora.lightning.DoraEnvironment.global_rank"><code class="name flex">
+<span>def <span class="ident">global_rank</span></span>(<span>self) ‑> int</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The rank (index) of the currently running process across all nodes and devices.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def global_rank(self) -&gt; int:
+    return self.spec.rank</code></pre>
+</details>
+</dd>
+<dt id="dora.lightning.DoraEnvironment.local_rank"><code class="name flex">
+<span>def <span class="ident">local_rank</span></span>(<span>self) ‑> int</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The rank (index) of the currently running process inside of the current node.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def local_rank(self) -&gt; int:
+    return self.spec.local_rank</code></pre>
+</details>
+</dd>
+<dt id="dora.lightning.DoraEnvironment.master_address"><code class="name flex">
+<span>def <span class="ident">master_address</span></span>(<span>self) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def master_address(self) -&gt; str:
+    return os.environ[&#39;MASTER_ADDR&#39;]</code></pre>
+</details>
+</dd>
+<dt id="dora.lightning.DoraEnvironment.master_port"><code class="name flex">
+<span>def <span class="ident">master_port</span></span>(<span>self) ‑> int</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def master_port(self) -&gt; int:
+    return int(os.environ[&#39;MASTER_PORT&#39;])</code></pre>
+</details>
+</dd>
+<dt id="dora.lightning.DoraEnvironment.node_rank"><code class="name flex">
+<span>def <span class="ident">node_rank</span></span>(<span>self) ‑> int</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The rank (index) of the node on which the current process runs.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def node_rank(self) -&gt; int:
+    return self.spec.node_rank</code></pre>
+</details>
+</dd>
+<dt id="dora.lightning.DoraEnvironment.set_global_rank"><code class="name flex">
+<span>def <span class="ident">set_global_rank</span></span>(<span>self, rank: int) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_global_rank(self, rank: int) -&gt; None:
+    pass</code></pre>
+</details>
+</dd>
+<dt id="dora.lightning.DoraEnvironment.set_world_size"><code class="name flex">
+<span>def <span class="ident">set_world_size</span></span>(<span>self, size: int) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_world_size(self, size: int) -&gt; None:
+    pass</code></pre>
+</details>
+</dd>
+<dt id="dora.lightning.DoraEnvironment.world_size"><code class="name flex">
+<span>def <span class="ident">world_size</span></span>(<span>self) ‑> int</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The number of processes across all devices and nodes.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def world_size(self) -&gt; int:
+    return self.spec.world_size</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="dora.lightning.DoraHistoryLogger"><code class="flex name class">
+<span>class <span class="ident">DoraHistoryLogger</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Save metrics to Dora using the XP link.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DoraHistoryLogger(Callback):
+    &#34;&#34;&#34;Save metrics to Dora using the XP link.
+    &#34;&#34;&#34;
+    def __init__(self):
+        super().__init__()
+        self.link = get_xp().link
+
+    def on_fit_start(self, trainer, pl_module):
+        self._first_valid = True
+
+    def on_train_epoch_start(self, trainer, pl_module):
+        self._first_valid = False
+
+    def on_epoch_end(self, trainer, pl_module):
+        if self._first_valid:
+            # We ignore the first fake epoch of PL that only does a few valid batches.
+            return
+        metrics = trainer.logged_metrics
+        metrics = _filter_metrics(metrics, epoch=True)
+        self.link.push_metrics(metrics)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>pytorch_lightning.callbacks.base.Callback</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="dora.lightning.DoraHistoryLogger.on_epoch_end"><code class="name flex">
+<span>def <span class="ident">on_epoch_end</span></span>(<span>self, trainer, pl_module)</span>
+</code></dt>
+<dd>
+<div class="desc"><div class="admonition deprecated">
+<p class="admonition-title">Deprecated since version:&ensp;v1.6</p>
+<p>This callback hook was deprecated in v1.6 and will be removed in v1.8. Use
+<code>on_&lt;train/validation/test&gt;_epoch_end</code> instead.</p>
+</div>
+<p>Called when either of train/val/test epoch ends.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def on_epoch_end(self, trainer, pl_module):
+    if self._first_valid:
+        # We ignore the first fake epoch of PL that only does a few valid batches.
+        return
+    metrics = trainer.logged_metrics
+    metrics = _filter_metrics(metrics, epoch=True)
+    self.link.push_metrics(metrics)</code></pre>
+</details>
+</dd>
+<dt id="dora.lightning.DoraHistoryLogger.on_fit_start"><code class="name flex">
+<span>def <span class="ident">on_fit_start</span></span>(<span>self, trainer, pl_module)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Called when fit begins.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def on_fit_start(self, trainer, pl_module):
+    self._first_valid = True</code></pre>
+</details>
+</dd>
+<dt id="dora.lightning.DoraHistoryLogger.on_train_epoch_start"><code class="name flex">
+<span>def <span class="ident">on_train_epoch_start</span></span>(<span>self, trainer, pl_module)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Called when the train epoch begins.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def on_train_epoch_start(self, trainer, pl_module):
+    self._first_valid = False</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="dora.lightning.PLLogProgress"><code class="flex name class">
+<span>class <span class="ident">PLLogProgress</span></span>
+<span>(</span><span>logger, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><code><a title="dora.log.LogProgress" href="log.html#dora.log.LogProgress">LogProgress</a></code> support for Pytorch-Lightning.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PLLogProgress(ProgressBarBase):
+    &#34;&#34;&#34;`dora.log.LogProgress` support for Pytorch-Lightning.
+
+
+    &#34;&#34;&#34;
+
+    def __init__(self, logger, **kwargs):
+        super().__init__()  # don&#39;t forget this :)
+        self.logger = logger
+        self.kwargs = kwargs
+        self._pl_module: tp.Optional[LightningModule] = None
+
+    def setup(self, trainer, pl_module, stage: tp.Optional[str] = None) -&gt; None:
+        super().setup(trainer, pl_module, stage)
+        self._pl_module = pl_module
+        self._replay_history: tp.List[tp.Any] = []
+
+    def on_fit_start(self, trainer, pl_module):
+        super().on_fit_start(trainer, pl_module)
+        self._in_train = False
+        self._first_valid = True
+
+    @property
+    def pl_module(self) -&gt; LightningModule:
+        assert self._pl_module is not None
+        return self._pl_module
+
+    def format_metrics(self, metrics: tp.Dict[str, tp.Any],
+                       stage: str, epoch: bool = False):
+        &#34;&#34;&#34;Default method to format metrics for displaying in the progress bar.
+        To customize, you can define a `format_metrics()` method on your
+        Lightning module.
+
+        Args:
+            metrics: dict of metrics given by PL.
+            stage: &#34;train&#34; or &#34;valid&#34;.
+            epoch: if True, provided metrics are for the end of epoch summary.
+        &#34;&#34;&#34;
+        out = {}
+        for key, value in metrics.items():
+            if isinstance(value, float):
+                out[key] = format(value, &#39;.5f&#39;)
+        return out
+
+    @property
+    def _format_metrics(self):
+        return getattr(self.pl_module, &#39;format_metrics&#39;, self.format_metrics)
+
+    def _on_epoch_start(self, stage):
+        self.logger.info(&#34;-&#34; * 70)
+        self.logger.info(&#34;Training...&#34; if stage == &#34;train&#34; else &#34;Validating...&#34;)
+        name = stage.capitalize() + f&#34; | Epoch {self.trainer.current_epoch + 1}&#34;
+        if stage == &#34;train&#34;:
+            total = int(self.total_train_batches)
+        elif stage == &#34;valid&#34;:
+            total = int(self.total_val_batches)
+        else:
+            raise RuntimeError(f&#34;Invalid stage {stage}&#34;)
+
+        loader = range(total)
+        self.logprog = LogProgress(self.logger, loader, total=total, name=name, **self.kwargs)
+        iter(self.logprog)
+
+    def on_train_epoch_start(self, trainer, pl_module):
+        self._on_epoch_start(&#34;train&#34;)
+        self._in_train = True
+        self._first_valid = False
+        return super().on_train_epoch_start(trainer, pl_module)
+
+    def on_validation_epoch_start(self, trainer, pl_module):
+        self._on_epoch_start(&#34;valid&#34;)
+        return super().on_validation_epoch_start(trainer, pl_module)
+
+    def _on_batch_end(self, stage):
+        metrics = self.get_metrics(self.trainer, self.pl_module)
+        metrics = _filter_metrics(metrics, epoch=False)
+        formatted = self._format_metrics(metrics, stage, epoch=False)
+        self.logprog.update(**formatted)
+        next(self.logprog)
+
+    def on_train_batch_end(self, *args, **kwargs):
+        super().on_train_batch_end(*args, **kwargs)
+        self._on_batch_end(&#34;train&#34;)
+
+    def on_validation_batch_end(self, *args, **kwargs):
+        super().on_validation_batch_end(*args, **kwargs)
+        self._on_batch_end(&#34;valid&#34;)
+
+    def _on_stage_end(self, stage):
+        if stage == &#34;train&#34;:
+            # dirty hack as we might not yet be at the end of the epoch.
+            metrics = self.trainer.fit_loop.epoch_loop._results.metrics(False)[&#34;log&#34;]
+        else:
+            metrics = self.trainer.fit_loop.epoch_loop.val_loop._results.metrics(False)[&#34;log&#34;]
+        metrics = _filter_metrics(metrics, epoch=False)
+        self._show_epoch_summary(stage, self.trainer.current_epoch, metrics)
+
+    def _show_epoch_summary(self, stage, epoch, metrics):
+        self._replay_history.append((stage, epoch, metrics))
+        formatted = self._format_metrics(metrics, stage, epoch=True)
+        name = stage.capitalize()
+        summary = &#34; | &#34;.join(
+            f&#34;{key.capitalize()}={val}&#34; for key, val in formatted.items()
+        )
+        self.logger.info(bold(f&#34;{name} Summary | End of Epoch {epoch + 1} | {summary}&#34;))
+
+    def on_validation_start(self, trainer, pl_module):
+        super().on_train_end(trainer, pl_module)
+        assert self._in_train or self._first_valid
+        if not self._first_valid:
+            self._on_stage_end(&#34;train&#34;)
+            self._in_train = False
+
+    def on_epoch_end(self, trainer, pl_module):
+        super().on_epoch_end(trainer, pl_module)
+        if self._in_train:
+            self._on_stage_end(&#34;train&#34;)
+        self._in_train = False
+
+    def on_validation_end(self, trainer, pl_module):
+        super().on_validation_end(trainer, pl_module)
+        self._on_stage_end(&#34;valid&#34;)
+
+    def disable(self):
+        # we do nothing here for now. This is called by PL when using DDP,
+        # but Dora already separates the stdout and stderr from the different workers.
+        pass
+
+    def on_load_checkpoint(self, trainer, pl_module, checkpoint):
+        replay_history = checkpoint.get(&#39;dora_replay_history&#39;, [])
+        if replay_history:
+            self.logger.info(&#34;Replaying past metrics...&#34;)
+        for step in replay_history:
+            self._show_epoch_summary(*step)
+
+    def on_save_checkpoint(self, trainer, pl_module, checkpoint):
+        checkpoint[&#39;dora_replay_history&#39;] = self._replay_history
+        return checkpoint</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>pytorch_lightning.callbacks.progress.base.ProgressBarBase</li>
+<li>pytorch_lightning.callbacks.base.Callback</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="dora.lightning.PLLogProgress.pl_module"><code class="name">var <span class="ident">pl_module</span> : pytorch_lightning.core.lightning.LightningModule</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def pl_module(self) -&gt; LightningModule:
+    assert self._pl_module is not None
+    return self._pl_module</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="dora.lightning.PLLogProgress.disable"><code class="name flex">
+<span>def <span class="ident">disable</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>You should provide a way to disable the progress bar.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def disable(self):
+    # we do nothing here for now. This is called by PL when using DDP,
+    # but Dora already separates the stdout and stderr from the different workers.
+    pass</code></pre>
+</details>
+</dd>
+<dt id="dora.lightning.PLLogProgress.format_metrics"><code class="name flex">
+<span>def <span class="ident">format_metrics</span></span>(<span>self, metrics: Dict[str, Any], stage: str, epoch: bool = False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Default method to format metrics for displaying in the progress bar.
+To customize, you can define a <code>format_metrics()</code> method on your
+Lightning module.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>metrics</code></strong></dt>
+<dd>dict of metrics given by PL.</dd>
+<dt><strong><code>stage</code></strong></dt>
+<dd>"train" or "valid".</dd>
+<dt><strong><code>epoch</code></strong></dt>
+<dd>if True, provided metrics are for the end of epoch summary.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def format_metrics(self, metrics: tp.Dict[str, tp.Any],
+                   stage: str, epoch: bool = False):
+    &#34;&#34;&#34;Default method to format metrics for displaying in the progress bar.
+    To customize, you can define a `format_metrics()` method on your
+    Lightning module.
+
+    Args:
+        metrics: dict of metrics given by PL.
+        stage: &#34;train&#34; or &#34;valid&#34;.
+        epoch: if True, provided metrics are for the end of epoch summary.
+    &#34;&#34;&#34;
+    out = {}
+    for key, value in metrics.items():
+        if isinstance(value, float):
+            out[key] = format(value, &#39;.5f&#39;)
+    return out</code></pre>
+</details>
+</dd>
+<dt id="dora.lightning.PLLogProgress.on_epoch_end"><code class="name flex">
+<span>def <span class="ident">on_epoch_end</span></span>(<span>self, trainer, pl_module)</span>
+</code></dt>
+<dd>
+<div class="desc"><div class="admonition deprecated">
+<p class="admonition-title">Deprecated since version:&ensp;v1.6</p>
+<p>This callback hook was deprecated in v1.6 and will be removed in v1.8. Use
+<code>on_&lt;train/validation/test&gt;_epoch_end</code> instead.</p>
+</div>
+<p>Called when either of train/val/test epoch ends.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def on_epoch_end(self, trainer, pl_module):
+    super().on_epoch_end(trainer, pl_module)
+    if self._in_train:
+        self._on_stage_end(&#34;train&#34;)
+    self._in_train = False</code></pre>
+</details>
+</dd>
+<dt id="dora.lightning.PLLogProgress.on_fit_start"><code class="name flex">
+<span>def <span class="ident">on_fit_start</span></span>(<span>self, trainer, pl_module)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Called when fit begins.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def on_fit_start(self, trainer, pl_module):
+    super().on_fit_start(trainer, pl_module)
+    self._in_train = False
+    self._first_valid = True</code></pre>
+</details>
+</dd>
+<dt id="dora.lightning.PLLogProgress.on_load_checkpoint"><code class="name flex">
+<span>def <span class="ident">on_load_checkpoint</span></span>(<span>self, trainer, pl_module, checkpoint)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Called when loading a model checkpoint, use to reload state.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>trainer</code></strong></dt>
+<dd>the current :class:<code>~pytorch_lightning.trainer.Trainer</code> instance.</dd>
+<dt><strong><code>pl_module</code></strong></dt>
+<dd>the current :class:<code>~pytorch_lightning.core.lightning.LightningModule</code> instance.</dd>
+<dt><strong><code>callback_state</code></strong></dt>
+<dd>the callback state returned by <code>on_save_checkpoint</code>.</dd>
+</dl>
+<h2 id="note">Note</h2>
+<p>The <code>on_load_checkpoint</code> won't be called with an undefined state.
+If your <code>on_load_checkpoint</code> hook behavior doesn't rely on a state,
+you will still need to override <code>on_save_checkpoint</code> to return a <code>dummy state</code>.</p>
+<div class="admonition deprecated">
+<p class="admonition-title">Deprecated since version:&ensp;v1.6</p>
+<p>This callback hook will change its signature and behavior in v1.8.
+If you wish to load the state of the callback, use <code>Callback.load_state_dict</code> instead.
+In v1.8 <code>Callback.on_load_checkpoint(checkpoint)</code> will receive the entire loaded
+checkpoint dictionary instead of only the callback state from the checkpoint.</p>
+</div></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def on_load_checkpoint(self, trainer, pl_module, checkpoint):
+    replay_history = checkpoint.get(&#39;dora_replay_history&#39;, [])
+    if replay_history:
+        self.logger.info(&#34;Replaying past metrics...&#34;)
+    for step in replay_history:
+        self._show_epoch_summary(*step)</code></pre>
+</details>
+</dd>
+<dt id="dora.lightning.PLLogProgress.on_save_checkpoint"><code class="name flex">
+<span>def <span class="ident">on_save_checkpoint</span></span>(<span>self, trainer, pl_module, checkpoint)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Called when saving a checkpoint to give you a chance to store anything else you might want to save.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>trainer</code></strong></dt>
+<dd>the current :class:<code>~pytorch_lightning.trainer.Trainer</code> instance.</dd>
+<dt><strong><code>pl_module</code></strong></dt>
+<dd>the current :class:<code>~pytorch_lightning.core.lightning.LightningModule</code> instance.</dd>
+<dt><strong><code>checkpoint</code></strong></dt>
+<dd>the checkpoint dictionary that will be saved.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>None or the callback state. Support for returning callback state will be removed in v1.8.</p>
+<div class="admonition deprecated">
+<p class="admonition-title">Deprecated since version:&ensp;v1.6</p>
+<p>Returning a value from this method was deprecated in v1.6 and will be removed in v1.8.
+Implement <code>Callback.state_dict</code> instead to return state.
+In v1.8 <code>Callback.on_save_checkpoint</code> can only return None.</p>
+</div></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def on_save_checkpoint(self, trainer, pl_module, checkpoint):
+    checkpoint[&#39;dora_replay_history&#39;] = self._replay_history
+    return checkpoint</code></pre>
+</details>
+</dd>
+<dt id="dora.lightning.PLLogProgress.on_train_batch_end"><code class="name flex">
+<span>def <span class="ident">on_train_batch_end</span></span>(<span>self, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Called when the train batch ends.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def on_train_batch_end(self, *args, **kwargs):
+    super().on_train_batch_end(*args, **kwargs)
+    self._on_batch_end(&#34;train&#34;)</code></pre>
+</details>
+</dd>
+<dt id="dora.lightning.PLLogProgress.on_train_epoch_start"><code class="name flex">
+<span>def <span class="ident">on_train_epoch_start</span></span>(<span>self, trainer, pl_module)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Called when the train epoch begins.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def on_train_epoch_start(self, trainer, pl_module):
+    self._on_epoch_start(&#34;train&#34;)
+    self._in_train = True
+    self._first_valid = False
+    return super().on_train_epoch_start(trainer, pl_module)</code></pre>
+</details>
+</dd>
+<dt id="dora.lightning.PLLogProgress.on_validation_batch_end"><code class="name flex">
+<span>def <span class="ident">on_validation_batch_end</span></span>(<span>self, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Called when the validation batch ends.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def on_validation_batch_end(self, *args, **kwargs):
+    super().on_validation_batch_end(*args, **kwargs)
+    self._on_batch_end(&#34;valid&#34;)</code></pre>
+</details>
+</dd>
+<dt id="dora.lightning.PLLogProgress.on_validation_end"><code class="name flex">
+<span>def <span class="ident">on_validation_end</span></span>(<span>self, trainer, pl_module)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Called when the validation loop ends.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def on_validation_end(self, trainer, pl_module):
+    super().on_validation_end(trainer, pl_module)
+    self._on_stage_end(&#34;valid&#34;)</code></pre>
+</details>
+</dd>
+<dt id="dora.lightning.PLLogProgress.on_validation_epoch_start"><code class="name flex">
+<span>def <span class="ident">on_validation_epoch_start</span></span>(<span>self, trainer, pl_module)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Called when the val epoch begins.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def on_validation_epoch_start(self, trainer, pl_module):
+    self._on_epoch_start(&#34;valid&#34;)
+    return super().on_validation_epoch_start(trainer, pl_module)</code></pre>
+</details>
+</dd>
+<dt id="dora.lightning.PLLogProgress.on_validation_start"><code class="name flex">
+<span>def <span class="ident">on_validation_start</span></span>(<span>self, trainer, pl_module)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Called when the validation loop begins.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def on_validation_start(self, trainer, pl_module):
+    super().on_train_end(trainer, pl_module)
+    assert self._in_train or self._first_valid
+    if not self._first_valid:
+        self._on_stage_end(&#34;train&#34;)
+        self._in_train = False</code></pre>
+</details>
+</dd>
+<dt id="dora.lightning.PLLogProgress.setup"><code class="name flex">
+<span>def <span class="ident">setup</span></span>(<span>self, trainer, pl_module, stage: Optional[str] = None) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Called when fit, validate, test, predict, or tune begins.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def setup(self, trainer, pl_module, stage: tp.Optional[str] = None) -&gt; None:
+    super().setup(trainer, pl_module, stage)
+    self._pl_module = pl_module
+    self._replay_history: tp.List[tp.Any] = []</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="dora" href="index.html">dora</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="dora.lightning.get_trainer" href="#dora.lightning.get_trainer">get_trainer</a></code></li>
+<li><code><a title="dora.lightning.trainer_from_argparse_args" href="#dora.lightning.trainer_from_argparse_args">trainer_from_argparse_args</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="dora.lightning.DoraCheckpointSync" href="#dora.lightning.DoraCheckpointSync">DoraCheckpointSync</a></code></h4>
+<ul class="">
+<li><code><a title="dora.lightning.DoraCheckpointSync.on_load_checkpoint" href="#dora.lightning.DoraCheckpointSync.on_load_checkpoint">on_load_checkpoint</a></code></li>
+<li><code><a title="dora.lightning.DoraCheckpointSync.on_save_checkpoint" href="#dora.lightning.DoraCheckpointSync.on_save_checkpoint">on_save_checkpoint</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="dora.lightning.DoraEnvironment" href="#dora.lightning.DoraEnvironment">DoraEnvironment</a></code></h4>
+<ul class="">
+<li><code><a title="dora.lightning.DoraEnvironment.creates_children" href="#dora.lightning.DoraEnvironment.creates_children">creates_children</a></code></li>
+<li><code><a title="dora.lightning.DoraEnvironment.creates_processes_externally" href="#dora.lightning.DoraEnvironment.creates_processes_externally">creates_processes_externally</a></code></li>
+<li><code><a title="dora.lightning.DoraEnvironment.global_rank" href="#dora.lightning.DoraEnvironment.global_rank">global_rank</a></code></li>
+<li><code><a title="dora.lightning.DoraEnvironment.local_rank" href="#dora.lightning.DoraEnvironment.local_rank">local_rank</a></code></li>
+<li><code><a title="dora.lightning.DoraEnvironment.master_address" href="#dora.lightning.DoraEnvironment.master_address">master_address</a></code></li>
+<li><code><a title="dora.lightning.DoraEnvironment.master_port" href="#dora.lightning.DoraEnvironment.master_port">master_port</a></code></li>
+<li><code><a title="dora.lightning.DoraEnvironment.node_rank" href="#dora.lightning.DoraEnvironment.node_rank">node_rank</a></code></li>
+<li><code><a title="dora.lightning.DoraEnvironment.set_global_rank" href="#dora.lightning.DoraEnvironment.set_global_rank">set_global_rank</a></code></li>
+<li><code><a title="dora.lightning.DoraEnvironment.set_world_size" href="#dora.lightning.DoraEnvironment.set_world_size">set_world_size</a></code></li>
+<li><code><a title="dora.lightning.DoraEnvironment.world_size" href="#dora.lightning.DoraEnvironment.world_size">world_size</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="dora.lightning.DoraHistoryLogger" href="#dora.lightning.DoraHistoryLogger">DoraHistoryLogger</a></code></h4>
+<ul class="">
+<li><code><a title="dora.lightning.DoraHistoryLogger.on_epoch_end" href="#dora.lightning.DoraHistoryLogger.on_epoch_end">on_epoch_end</a></code></li>
+<li><code><a title="dora.lightning.DoraHistoryLogger.on_fit_start" href="#dora.lightning.DoraHistoryLogger.on_fit_start">on_fit_start</a></code></li>
+<li><code><a title="dora.lightning.DoraHistoryLogger.on_train_epoch_start" href="#dora.lightning.DoraHistoryLogger.on_train_epoch_start">on_train_epoch_start</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="dora.lightning.PLLogProgress" href="#dora.lightning.PLLogProgress">PLLogProgress</a></code></h4>
+<ul class="">
+<li><code><a title="dora.lightning.PLLogProgress.disable" href="#dora.lightning.PLLogProgress.disable">disable</a></code></li>
+<li><code><a title="dora.lightning.PLLogProgress.format_metrics" href="#dora.lightning.PLLogProgress.format_metrics">format_metrics</a></code></li>
+<li><code><a title="dora.lightning.PLLogProgress.on_epoch_end" href="#dora.lightning.PLLogProgress.on_epoch_end">on_epoch_end</a></code></li>
+<li><code><a title="dora.lightning.PLLogProgress.on_fit_start" href="#dora.lightning.PLLogProgress.on_fit_start">on_fit_start</a></code></li>
+<li><code><a title="dora.lightning.PLLogProgress.on_load_checkpoint" href="#dora.lightning.PLLogProgress.on_load_checkpoint">on_load_checkpoint</a></code></li>
+<li><code><a title="dora.lightning.PLLogProgress.on_save_checkpoint" href="#dora.lightning.PLLogProgress.on_save_checkpoint">on_save_checkpoint</a></code></li>
+<li><code><a title="dora.lightning.PLLogProgress.on_train_batch_end" href="#dora.lightning.PLLogProgress.on_train_batch_end">on_train_batch_end</a></code></li>
+<li><code><a title="dora.lightning.PLLogProgress.on_train_epoch_start" href="#dora.lightning.PLLogProgress.on_train_epoch_start">on_train_epoch_start</a></code></li>
+<li><code><a title="dora.lightning.PLLogProgress.on_validation_batch_end" href="#dora.lightning.PLLogProgress.on_validation_batch_end">on_validation_batch_end</a></code></li>
+<li><code><a title="dora.lightning.PLLogProgress.on_validation_end" href="#dora.lightning.PLLogProgress.on_validation_end">on_validation_end</a></code></li>
+<li><code><a title="dora.lightning.PLLogProgress.on_validation_epoch_start" href="#dora.lightning.PLLogProgress.on_validation_epoch_start">on_validation_epoch_start</a></code></li>
+<li><code><a title="dora.lightning.PLLogProgress.on_validation_start" href="#dora.lightning.PLLogProgress.on_validation_start">on_validation_start</a></code></li>
+<li><code><a title="dora.lightning.PLLogProgress.pl_module" href="#dora.lightning.PLLogProgress.pl_module">pl_module</a></code></li>
+<li><code><a title="dora.lightning.PLLogProgress.setup" href="#dora.lightning.PLLogProgress.setup">setup</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,994 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>dora.grid API documentation</title>
+<meta name="description" content="This defines the `dora grid` action, and provides a `run_grid` API
+that can be used from a notebook or any other script …" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>dora.grid</code></h1>
+</header>
+<section id="section-intro">
+<p>This defines the <code><a title="dora" href="index.html">dora</a> grid</code> action, and provides a <code><a title="dora.grid.run_grid" href="#dora.grid.run_grid">run_grid()</a></code> API
+that can be used from a notebook or any other script.</p>
+<p>When using the API, you can provide the equivalent of the command line flags
+with the <code><a title="dora.grid.RunGridArgs" href="#dora.grid.RunGridArgs">RunGridArgs</a></code> dataclass.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># Copyright (c) Facebook, Inc. and its affiliates.
+# All rights reserved.
+#
+# This source code is licensed under the license found in the
+# LICENSE file in the root directory of this source tree.
+
+&#34;&#34;&#34;
+This defines the `dora grid` action, and provides a `run_grid` API
+that can be used from a notebook or any other script.
+
+When using the API, you can provide the equivalent of the command line flags
+with the `RunGridArgs` dataclass.
+&#34;&#34;&#34;
+from concurrent.futures import ProcessPoolExecutor
+from dataclasses import dataclass, field
+import fnmatch
+from functools import partial
+import os
+from pathlib import Path
+import typing as tp
+import shutil
+import sys
+import time
+
+from .conf import SlurmConfig, SubmitRules, update_from_args
+from .explore import Explorer, Launcher, Herd
+from .main import DecoratedMain
+from .log import colorize, simple_log, fatal
+from .shep import Sheep, Shepherd
+from .utils import import_or_fatal, reliable_rmtree, try_load
+
+import treetable as tt
+
+log: tp.Callable[[str], None] = partial(simple_log, &#34;Grid:&#34;)
+
+
+def no_print(*args, **kwargs):
+    pass
+
+
+@dataclass
+class RunGridArgs:
+    &#34;&#34;&#34;
+    Arguments to tune the behavior of the `run_grid` function.
+
+    Args:
+        patterns (list[str]): List of patterns used to filter by name
+            the XPs.
+        monitor (bool): if True, will monitor the advances of the XPs
+            every `interval` minutes, stopping only when all runs completed or
+            failed.
+        interval (float): interval in minutes to wait between updates.
+        trim (int or None): if provided, will trim all XP logs to the epoch of
+            the XP with the provided index. Useful to compare XP started at different
+            times.
+        trim_last (bool): if True, will trim all XP to the least advanced XP.
+        silent (bool): if True, do not print anything (e.g. API usage).
+        dry_run (bool): if True, Dora will simulate the run of the grid, without scheduling
+            or canceling any XP.
+        cancel (bool): if True, will cancel all XPs in the grid. If `patterns` is provided,
+            only XP matching the patterns will be canceled.
+        clear (bool): This will cancel any previous job, clear the XP folder,
+            and reschedule a new experiment.
+
+    &#34;&#34;&#34;
+    patterns: tp.List[str] = field(default_factory=list)
+
+    # Monitoring params
+    monitor: bool = True
+    interval: float = 5
+    trim: tp.Optional[int] = None
+    trim_last: bool = False
+    silent: bool = False
+
+    # Scheduling
+    dry_run: bool = False
+    cancel: bool = False
+    clear: bool = False
+    init: tp.Optional[bool] = False
+
+    jupyter: bool = False  # Are we in a jupyter notebook (will erase cell output content first.)
+
+    # Other flags, supported only from the command line.
+    folder: tp.Optional[int] = None
+    log: tp.Optional[int] = None
+    tail: tp.Optional[int] = None
+
+    _from_commandline: bool = False
+
+
+def _get_explore(args, main):
+    # Finds the explorer.
+    grid_package = main.dora.grid_package
+    if grid_package is None:
+        grid_package = main.package + &#34;.grids&#34;
+
+    grids = import_or_fatal(grid_package)
+
+    if args.grid is not None:
+        grid_filename = args.grid.replace(&#39;.&#39;, &#39;/&#39;) + &#39;.py&#39;
+        grid_file = Path(grids.__file__).parent / grid_filename
+    if args.grid is None or not grid_file.exists():
+        candidates = []
+        pkg_root = Path(grids.__file__).parent
+        for root, folders, files in os.walk(pkg_root):
+            for file in files:
+                fullpath = (Path(root) / file).relative_to(pkg_root)
+                if fullpath.name.endswith(&#39;.py&#39;) and not fullpath.name.startswith(&#39;_&#39;):
+                    fullpath = fullpath.parent / fullpath.stem
+                    candidates.append(str(fullpath).replace(&#39;/&#39;, &#39;.&#39;))
+        if args.grid is not None and not grid_file.exists():
+            log(f&#39;No grid file {grid_filename} in package {grid_package}. &#39;
+                &#39;Maybe you made a typo?&#39;)
+        log(f&#34;Potential grids are: {&#39;, &#39;.join(candidates)}&#34;)
+        sys.exit(0)
+
+    grid_name = grid_package + &#34;.&#34; + args.grid
+    grid = import_or_fatal(grid_name)
+
+    try:
+        explorer = grid.explorer
+    except AttributeError:
+        fatal(f&#34;{grid_name} has no exploration function `explorer`.&#34;)
+    if not isinstance(explorer, Explorer):
+        fatal(f&#34;{explorer} must be an instance of `dora.Explorer`&#34;)
+    return explorer
+
+
+def grid_action(args: tp.Any, main: DecoratedMain):
+    explorer = _get_explore(args, main)
+    slurm = main.get_slurm_config()
+    update_from_args(slurm, args)
+    rules = SubmitRules()
+    update_from_args(rules, args)
+    grid_args = RunGridArgs()
+    grid_args._from_commandline = True
+    update_from_args(grid_args, args)
+    run_grid(main, explorer, args.grid, rules, slurm, grid_args)
+
+
+def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
+             rules: SubmitRules = SubmitRules(), slurm: tp.Optional[SlurmConfig] = None,
+             args: RunGridArgs = RunGridArgs()) -&gt; tp.List[Sheep]:
+    &#34;&#34;&#34;
+    Run a grid search, this is the API underlying the `dora grid` command,
+    so that it can be used from a notebook.
+    You can also provide patterns to filter out XPs to be displayed.
+
+    Args:
+        main (DecoratedMain): main training function, decorated with Dora.
+        explorer (Explorer): explorer instance that will define the XPs to launch.
+        grid_name (str): this must be a unique name for the grid.
+        rules (SubmitRules): see `dora.conf.SubmitRules`, those defines the
+            rules for rescheduling failed XP etc.
+        slurm (SlurmConfig or None): if provided, this will override
+            the default Slurm config defined my the `main` argument.
+
+    Returns:
+        A list of `dora.shep.Sheep`.
+
+    &#34;&#34;&#34;
+    assert isinstance(explorer, Explorer)
+    if slurm is None:
+        slurm = main.get_slurm_config()
+
+    grid_folder = main.dora.dir / main.dora._grids / grid_name
+    grid_folder.mkdir(exist_ok=True, parents=True)
+
+    herd = Herd()
+    shepherd = Shepherd(main, log=log)
+    if main._slow:
+        with ProcessPoolExecutor(4) as pool:
+            launcher = Launcher(shepherd, slurm, herd, pool=pool)
+            explorer(launcher)
+            herd.complete()
+    else:
+        launcher = Launcher(shepherd, slurm, herd)
+        explorer(launcher)
+
+    shepherd.update()
+    sheeps = list(herd.sheeps.values())
+    sheeps = _filter_grid_sheeps(args.patterns, main, sheeps)
+
+    if args.clear:
+        if args.dry_run:
+            fatal(&#34;--dry_run is incompatible with --clear.&#34;)
+        log(f&#34;You are about to restart {len(sheeps)} experiments from the grid {grid_name} &#34;
+            &#34;from scratch. This cannot be reverted.&#34;)
+        if args._from_commandline:
+            repl = input(&#34;Confirm [yN]: &#34;)
+            if repl.lower() != &#34;y&#34;:
+                fatal(&#34;Abort...&#34;)
+        log(&#34;Canceling all current jobs...&#34;)
+        for sheep in sheeps:
+            if sheep.job is not None:
+                shepherd.cancel_lazy(sheep.job)
+        shepherd.commit()
+        log(&#34;Deleting XP folders...&#34;)
+        for sheep in sheeps:
+            if sheep.xp.folder.exists():
+                reliable_rmtree(sheep.xp.folder)
+            sheep.job = None
+
+    to_unlink = []
+    old_sheeps = []
+    for child in grid_folder.iterdir():
+        if child.name not in herd.sheeps:
+            to_unlink.append(child)
+            try:
+                old_sheep = shepherd.get_sheep_from_sig(child.name)
+            except Exception as error:
+                log(f&#34;Error when trying to load old sheep {child.name}: {error}&#34;)
+                # We fallback on manually loading the job file.
+                job_file = child / main.dora.shep.job_file
+                jobs = try_load(job_file)
+                if jobs is not None:
+                    job = jobs[0]
+                    log(f&#34;Canceling job {job.job_id} from unloadable sheep {child.name}.&#34;)
+                    shepherd.cancel_lazy(job)
+            else:
+                assert old_sheep is not None
+                old_sheeps.append(old_sheep)
+
+    shepherd.update()  # Update all job status
+
+    if not args.cancel:
+        sheep_map = {sheep.xp.sig: sheep for sheep in sheeps}
+        for job_array in herd.job_arrays:
+            array_sheeps = [sheep_map[sig] for sig in job_array if sig in sheep_map]
+            if not array_sheeps:
+                continue
+            first = array_sheeps[0]
+            slurm = herd.slurm_configs[first.xp.sig]
+            if len(array_sheeps) == 1:
+                shepherd.maybe_submit_lazy(first, slurm, rules)
+            else:
+                with shepherd.job_array(slurm):
+                    for sheep in array_sheeps:
+                        shepherd.maybe_submit_lazy(sheep, slurm, rules)
+
+    for old_sheep in old_sheeps:
+        if not old_sheep.is_done():
+            assert old_sheep.job is not None
+            shepherd.cancel_lazy(old_sheep.job)
+            name = main.get_name(old_sheep.xp)
+            log(f&#34;Canceling job {old_sheep.job.job_id} for no longer required &#34;
+                f&#34;sheep {old_sheep.xp.sig}/{name}&#34;)
+
+    if args.cancel:
+        for sheep in sheeps:
+            if not sheep.is_done():
+                assert sheep.job is not None
+                name = main.get_name(sheep.xp)
+                log(f&#34;Canceling job {sheep.job.job_id} for sheep {sheep.xp.sig}/{name}&#34;)
+                shepherd.cancel_lazy(sheep.job)
+
+    if not args.dry_run:
+        for sheep in sheeps:
+            link = (grid_folder / sheep.xp.sig)
+            if link.exists() or link.is_symlink():
+                assert link.is_symlink() and link.resolve() == sheep.xp.folder.resolve()
+            else:
+                link.symlink_to(sheep.xp.folder)
+
+        shepherd.commit()
+
+        for child in to_unlink:
+            child.unlink()
+    if args.init:
+        for sheep in sheeps:
+            main.init_xp(sheep.xp)
+
+    if args.cancel:
+        return sheeps
+
+    if not sheeps:
+        log(&#34;No sheep to handle.&#34;)
+        return sheeps
+
+    actions = [action for action in [args.folder, args.log, args.tail] if action is not None]
+
+    if actions:
+        if not args._from_commandline:
+            raise RuntimeError(&#34;The folder, log, and tail &#34;
+                               &#34;flags are only supported from the command line.&#34;)
+        assert len(actions) == 1
+        index = actions[0]
+        try:
+            sheep = sheeps[index]
+        except IndexError:
+            fatal(f&#34;Invalid index {args.folder}&#34;)
+        name = main.get_name(sheep.xp)
+        if args.folder is not None:
+            print(sheep.xp.folder)
+        elif args.tail is not None:
+            if not sheep.log.exists():
+                fatal(f&#34;Log {sheep.log} does not exist&#34;)
+            os.execvp(&#34;tail&#34;, [&#34;tail&#34;, &#34;-n&#34;, &#34;200&#34;, &#34;-f&#34;, sheep.log])
+        else:
+            if not sheep.log.exists():
+                fatal(f&#34;Log file does not exist for sheep {name}.&#34;)
+            try:
+                shutil.copyfileobj(open(sheep.log), sys.stdout)
+            except BrokenPipeError:
+                pass
+        return sheeps
+
+    maybe_print: tp.Callable
+    if args.silent:
+        maybe_print = no_print
+    else:
+        maybe_print = print
+    maybe_print(f&#34;Monitoring Grid {grid_name}&#34;)
+    while True:
+        if args.jupyter and not args.silent:
+            from IPython import display
+            display.clear_output(wait=True)
+        shepherd.update()
+        if monitor(args, main, explorer, sheeps, maybe_print):
+            # All jobs finished or failed, stop monitoring
+            break
+        if not args.monitor:
+            break
+        sleep = int(args.interval * 60)
+        maybe_print()
+        for ela in range(sleep):
+            out = f&#39;Next update in {sleep - ela:.0f} seconds       &#39;
+            if sleep - ela &lt; 10:
+                out = colorize(out, &#39;31&#39;)
+            maybe_print(out, end=&#39;\r&#39;)
+            time.sleep(1)
+        maybe_print(&#39; &#39; * 60)
+    return sheeps
+
+
+def _match_name(name, patterns):
+    if not patterns:
+        return True
+    for pattern in patterns:
+        neg = False
+        if pattern[:1] == &#39;!&#39;:
+            pattern = pattern[1:]
+            neg = True
+        result = fnmatch.fnmatch(name, &#39;*&#39; + pattern + &#39;*&#39;)
+        if neg:
+            if result:
+                return False
+        elif not result:
+            return False
+    return True
+
+
+def _filter_grid_sheeps(patterns: tp.List[str], main: DecoratedMain,
+                        sheeps: tp.List[Sheep]) -&gt; tp.List[Sheep]:
+    indexes = []
+    for p in list(patterns):
+        try:
+            indexes.append(int(p))
+        except ValueError:
+            continue
+        else:
+            patterns.remove(p)
+    out = []
+    for sheep in sheeps:
+        name = main.get_name(sheep.xp)
+        if _match_name(name, patterns):
+            out.append(sheep)
+    if indexes:
+        out = [out[idx] for idx in indexes]
+    return out
+
+
+def monitor(args: tp.Any, main: DecoratedMain, explorer: Explorer, herd: tp.List[Sheep],
+            maybe_print: tp.Callable) -&gt; bool:
+    &#34;&#34;&#34;Single iteration of monitoring of the jobs in a Grid.
+    Returns `True` if all jobs are done or failed, and `False` otherwise.
+    &#34;&#34;&#34;
+    names, base_name = main.get_names([sheep.xp for sheep in herd])
+    histories = [main.get_xp_history(sheep.xp) for sheep in herd]
+
+    trim = None
+    if args.trim is not None:
+        trim = len(histories[args.trim])
+    elif args.trim_last:
+        trim = min(len(metrics) for metrics in histories)
+
+    if trim is not None:
+        histories = [metrics[:trim] for metrics in histories]
+
+    lines = []
+    finished = True
+    for index, (sheep, history, name) in enumerate(zip(herd, histories, names)):
+        state = sheep.state()
+        if not sheep.is_done():
+            finished = False
+        if state is None:
+            state = &#34;N/A&#34;
+        else:
+            state = state[:3]
+        meta = {
+            &#39;name&#39;: name,
+            &#39;index&#39;: index,
+            &#39;sid&#39;: sheep.job.job_id if sheep.job else &#39;&#39;,
+            &#39;sig&#39;: sheep.xp.sig,
+            &#39;state&#39;: state,
+        }
+        line = {}
+        line[&#39;Meta&#39;] = meta
+        try:
+            other = explorer.process_sheep(sheep, history)
+        except NotImplementedError:
+            other = explorer.process_history(history)
+        line.update(other)
+        lines.append(line)
+
+    if base_name:
+        maybe_print(&#34;Base name: &#34;, base_name)
+    table = tt.table(
+        shorten=True,
+        groups=[
+            tt.group(&#34;Meta&#34;, explorer.get_grid_meta()),
+        ] + explorer.get_grid_metrics()
+    )
+    maybe_print(tt.treetable(lines, table, colors=explorer.get_colors()))
+    return finished</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="dora.grid.grid_action"><code class="name flex">
+<span>def <span class="ident">grid_action</span></span>(<span>args: Any, main: <a title="dora.main.DecoratedMain" href="main.html#dora.main.DecoratedMain">DecoratedMain</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def grid_action(args: tp.Any, main: DecoratedMain):
+    explorer = _get_explore(args, main)
+    slurm = main.get_slurm_config()
+    update_from_args(slurm, args)
+    rules = SubmitRules()
+    update_from_args(rules, args)
+    grid_args = RunGridArgs()
+    grid_args._from_commandline = True
+    update_from_args(grid_args, args)
+    run_grid(main, explorer, args.grid, rules, slurm, grid_args)</code></pre>
+</details>
+</dd>
+<dt id="dora.grid.monitor"><code class="name flex">
+<span>def <span class="ident">monitor</span></span>(<span>args: Any, main: <a title="dora.main.DecoratedMain" href="main.html#dora.main.DecoratedMain">DecoratedMain</a>, explorer: <a title="dora.explore.Explorer" href="explore.html#dora.explore.Explorer">Explorer</a>, herd: List[<a title="dora.shep.Sheep" href="shep.html#dora.shep.Sheep">Sheep</a>], maybe_print: Callable) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Single iteration of monitoring of the jobs in a Grid.
+Returns <code>True</code> if all jobs are done or failed, and <code>False</code> otherwise.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def monitor(args: tp.Any, main: DecoratedMain, explorer: Explorer, herd: tp.List[Sheep],
+            maybe_print: tp.Callable) -&gt; bool:
+    &#34;&#34;&#34;Single iteration of monitoring of the jobs in a Grid.
+    Returns `True` if all jobs are done or failed, and `False` otherwise.
+    &#34;&#34;&#34;
+    names, base_name = main.get_names([sheep.xp for sheep in herd])
+    histories = [main.get_xp_history(sheep.xp) for sheep in herd]
+
+    trim = None
+    if args.trim is not None:
+        trim = len(histories[args.trim])
+    elif args.trim_last:
+        trim = min(len(metrics) for metrics in histories)
+
+    if trim is not None:
+        histories = [metrics[:trim] for metrics in histories]
+
+    lines = []
+    finished = True
+    for index, (sheep, history, name) in enumerate(zip(herd, histories, names)):
+        state = sheep.state()
+        if not sheep.is_done():
+            finished = False
+        if state is None:
+            state = &#34;N/A&#34;
+        else:
+            state = state[:3]
+        meta = {
+            &#39;name&#39;: name,
+            &#39;index&#39;: index,
+            &#39;sid&#39;: sheep.job.job_id if sheep.job else &#39;&#39;,
+            &#39;sig&#39;: sheep.xp.sig,
+            &#39;state&#39;: state,
+        }
+        line = {}
+        line[&#39;Meta&#39;] = meta
+        try:
+            other = explorer.process_sheep(sheep, history)
+        except NotImplementedError:
+            other = explorer.process_history(history)
+        line.update(other)
+        lines.append(line)
+
+    if base_name:
+        maybe_print(&#34;Base name: &#34;, base_name)
+    table = tt.table(
+        shorten=True,
+        groups=[
+            tt.group(&#34;Meta&#34;, explorer.get_grid_meta()),
+        ] + explorer.get_grid_metrics()
+    )
+    maybe_print(tt.treetable(lines, table, colors=explorer.get_colors()))
+    return finished</code></pre>
+</details>
+</dd>
+<dt id="dora.grid.no_print"><code class="name flex">
+<span>def <span class="ident">no_print</span></span>(<span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def no_print(*args, **kwargs):
+    pass</code></pre>
+</details>
+</dd>
+<dt id="dora.grid.run_grid"><code class="name flex">
+<span>def <span class="ident">run_grid</span></span>(<span>main: <a title="dora.main.DecoratedMain" href="main.html#dora.main.DecoratedMain">DecoratedMain</a>, explorer: <a title="dora.explore.Explorer" href="explore.html#dora.explore.Explorer">Explorer</a>, grid_name: str, rules: <a title="dora.conf.SubmitRules" href="conf.html#dora.conf.SubmitRules">SubmitRules</a> = SubmitRules(retry=False, update=False, replace=False, replace_done=False), slurm: Optional[<a title="dora.conf.SlurmConfig" href="conf.html#dora.conf.SlurmConfig">SlurmConfig</a>] = None, args: <a title="dora.grid.RunGridArgs" href="#dora.grid.RunGridArgs">RunGridArgs</a> = RunGridArgs(patterns=[], monitor=True, interval=5, trim=None, trim_last=False, silent=False, dry_run=False, cancel=False, clear=False, init=False, jupyter=False, folder=None, log=None, tail=None, _from_commandline=False)) ‑> List[<a title="dora.shep.Sheep" href="shep.html#dora.shep.Sheep">Sheep</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Run a grid search, this is the API underlying the <code><a title="dora" href="index.html">dora</a> grid</code> command,
+so that it can be used from a notebook.
+You can also provide patterns to filter out XPs to be displayed.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>main</code></strong> :&ensp;<code>DecoratedMain</code></dt>
+<dd>main training function, decorated with Dora.</dd>
+<dt><strong><code>explorer</code></strong> :&ensp;<code>Explorer</code></dt>
+<dd>explorer instance that will define the XPs to launch.</dd>
+<dt><strong><code>grid_name</code></strong> :&ensp;<code>str</code></dt>
+<dd>this must be a unique name for the grid.</dd>
+<dt><strong><code>rules</code></strong> :&ensp;<code>SubmitRules</code></dt>
+<dd>see <code><a title="dora.conf.SubmitRules" href="conf.html#dora.conf.SubmitRules">SubmitRules</a></code>, those defines the
+rules for rescheduling failed XP etc.</dd>
+<dt><strong><code>slurm</code></strong> :&ensp;<code>SlurmConfig</code> or <code>None</code></dt>
+<dd>if provided, this will override
+the default Slurm config defined my the <code>main</code> argument.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>A list of <code><a title="dora.shep.Sheep" href="shep.html#dora.shep.Sheep">Sheep</a></code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
+             rules: SubmitRules = SubmitRules(), slurm: tp.Optional[SlurmConfig] = None,
+             args: RunGridArgs = RunGridArgs()) -&gt; tp.List[Sheep]:
+    &#34;&#34;&#34;
+    Run a grid search, this is the API underlying the `dora grid` command,
+    so that it can be used from a notebook.
+    You can also provide patterns to filter out XPs to be displayed.
+
+    Args:
+        main (DecoratedMain): main training function, decorated with Dora.
+        explorer (Explorer): explorer instance that will define the XPs to launch.
+        grid_name (str): this must be a unique name for the grid.
+        rules (SubmitRules): see `dora.conf.SubmitRules`, those defines the
+            rules for rescheduling failed XP etc.
+        slurm (SlurmConfig or None): if provided, this will override
+            the default Slurm config defined my the `main` argument.
+
+    Returns:
+        A list of `dora.shep.Sheep`.
+
+    &#34;&#34;&#34;
+    assert isinstance(explorer, Explorer)
+    if slurm is None:
+        slurm = main.get_slurm_config()
+
+    grid_folder = main.dora.dir / main.dora._grids / grid_name
+    grid_folder.mkdir(exist_ok=True, parents=True)
+
+    herd = Herd()
+    shepherd = Shepherd(main, log=log)
+    if main._slow:
+        with ProcessPoolExecutor(4) as pool:
+            launcher = Launcher(shepherd, slurm, herd, pool=pool)
+            explorer(launcher)
+            herd.complete()
+    else:
+        launcher = Launcher(shepherd, slurm, herd)
+        explorer(launcher)
+
+    shepherd.update()
+    sheeps = list(herd.sheeps.values())
+    sheeps = _filter_grid_sheeps(args.patterns, main, sheeps)
+
+    if args.clear:
+        if args.dry_run:
+            fatal(&#34;--dry_run is incompatible with --clear.&#34;)
+        log(f&#34;You are about to restart {len(sheeps)} experiments from the grid {grid_name} &#34;
+            &#34;from scratch. This cannot be reverted.&#34;)
+        if args._from_commandline:
+            repl = input(&#34;Confirm [yN]: &#34;)
+            if repl.lower() != &#34;y&#34;:
+                fatal(&#34;Abort...&#34;)
+        log(&#34;Canceling all current jobs...&#34;)
+        for sheep in sheeps:
+            if sheep.job is not None:
+                shepherd.cancel_lazy(sheep.job)
+        shepherd.commit()
+        log(&#34;Deleting XP folders...&#34;)
+        for sheep in sheeps:
+            if sheep.xp.folder.exists():
+                reliable_rmtree(sheep.xp.folder)
+            sheep.job = None
+
+    to_unlink = []
+    old_sheeps = []
+    for child in grid_folder.iterdir():
+        if child.name not in herd.sheeps:
+            to_unlink.append(child)
+            try:
+                old_sheep = shepherd.get_sheep_from_sig(child.name)
+            except Exception as error:
+                log(f&#34;Error when trying to load old sheep {child.name}: {error}&#34;)
+                # We fallback on manually loading the job file.
+                job_file = child / main.dora.shep.job_file
+                jobs = try_load(job_file)
+                if jobs is not None:
+                    job = jobs[0]
+                    log(f&#34;Canceling job {job.job_id} from unloadable sheep {child.name}.&#34;)
+                    shepherd.cancel_lazy(job)
+            else:
+                assert old_sheep is not None
+                old_sheeps.append(old_sheep)
+
+    shepherd.update()  # Update all job status
+
+    if not args.cancel:
+        sheep_map = {sheep.xp.sig: sheep for sheep in sheeps}
+        for job_array in herd.job_arrays:
+            array_sheeps = [sheep_map[sig] for sig in job_array if sig in sheep_map]
+            if not array_sheeps:
+                continue
+            first = array_sheeps[0]
+            slurm = herd.slurm_configs[first.xp.sig]
+            if len(array_sheeps) == 1:
+                shepherd.maybe_submit_lazy(first, slurm, rules)
+            else:
+                with shepherd.job_array(slurm):
+                    for sheep in array_sheeps:
+                        shepherd.maybe_submit_lazy(sheep, slurm, rules)
+
+    for old_sheep in old_sheeps:
+        if not old_sheep.is_done():
+            assert old_sheep.job is not None
+            shepherd.cancel_lazy(old_sheep.job)
+            name = main.get_name(old_sheep.xp)
+            log(f&#34;Canceling job {old_sheep.job.job_id} for no longer required &#34;
+                f&#34;sheep {old_sheep.xp.sig}/{name}&#34;)
+
+    if args.cancel:
+        for sheep in sheeps:
+            if not sheep.is_done():
+                assert sheep.job is not None
+                name = main.get_name(sheep.xp)
+                log(f&#34;Canceling job {sheep.job.job_id} for sheep {sheep.xp.sig}/{name}&#34;)
+                shepherd.cancel_lazy(sheep.job)
+
+    if not args.dry_run:
+        for sheep in sheeps:
+            link = (grid_folder / sheep.xp.sig)
+            if link.exists() or link.is_symlink():
+                assert link.is_symlink() and link.resolve() == sheep.xp.folder.resolve()
+            else:
+                link.symlink_to(sheep.xp.folder)
+
+        shepherd.commit()
+
+        for child in to_unlink:
+            child.unlink()
+    if args.init:
+        for sheep in sheeps:
+            main.init_xp(sheep.xp)
+
+    if args.cancel:
+        return sheeps
+
+    if not sheeps:
+        log(&#34;No sheep to handle.&#34;)
+        return sheeps
+
+    actions = [action for action in [args.folder, args.log, args.tail] if action is not None]
+
+    if actions:
+        if not args._from_commandline:
+            raise RuntimeError(&#34;The folder, log, and tail &#34;
+                               &#34;flags are only supported from the command line.&#34;)
+        assert len(actions) == 1
+        index = actions[0]
+        try:
+            sheep = sheeps[index]
+        except IndexError:
+            fatal(f&#34;Invalid index {args.folder}&#34;)
+        name = main.get_name(sheep.xp)
+        if args.folder is not None:
+            print(sheep.xp.folder)
+        elif args.tail is not None:
+            if not sheep.log.exists():
+                fatal(f&#34;Log {sheep.log} does not exist&#34;)
+            os.execvp(&#34;tail&#34;, [&#34;tail&#34;, &#34;-n&#34;, &#34;200&#34;, &#34;-f&#34;, sheep.log])
+        else:
+            if not sheep.log.exists():
+                fatal(f&#34;Log file does not exist for sheep {name}.&#34;)
+            try:
+                shutil.copyfileobj(open(sheep.log), sys.stdout)
+            except BrokenPipeError:
+                pass
+        return sheeps
+
+    maybe_print: tp.Callable
+    if args.silent:
+        maybe_print = no_print
+    else:
+        maybe_print = print
+    maybe_print(f&#34;Monitoring Grid {grid_name}&#34;)
+    while True:
+        if args.jupyter and not args.silent:
+            from IPython import display
+            display.clear_output(wait=True)
+        shepherd.update()
+        if monitor(args, main, explorer, sheeps, maybe_print):
+            # All jobs finished or failed, stop monitoring
+            break
+        if not args.monitor:
+            break
+        sleep = int(args.interval * 60)
+        maybe_print()
+        for ela in range(sleep):
+            out = f&#39;Next update in {sleep - ela:.0f} seconds       &#39;
+            if sleep - ela &lt; 10:
+                out = colorize(out, &#39;31&#39;)
+            maybe_print(out, end=&#39;\r&#39;)
+            time.sleep(1)
+        maybe_print(&#39; &#39; * 60)
+    return sheeps</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="dora.grid.RunGridArgs"><code class="flex name class">
+<span>class <span class="ident">RunGridArgs</span></span>
+<span>(</span><span>patterns: List[str] = &lt;factory&gt;, monitor: bool = True, interval: float = 5, trim: Optional[int] = None, trim_last: bool = False, silent: bool = False, dry_run: bool = False, cancel: bool = False, clear: bool = False, init: Optional[bool] = False, jupyter: bool = False, folder: Optional[int] = None, log: Optional[int] = None, tail: Optional[int] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Arguments to tune the behavior of the <code><a title="dora.grid.run_grid" href="#dora.grid.run_grid">run_grid()</a></code> function.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>patterns</code></strong> :&ensp;<code>list[str]</code></dt>
+<dd>List of patterns used to filter by name
+the XPs.</dd>
+<dt><strong><code>monitor</code></strong> :&ensp;<code>bool</code></dt>
+<dd>if True, will monitor the advances of the XPs
+every <code>interval</code> minutes, stopping only when all runs completed or
+failed.</dd>
+<dt><strong><code>interval</code></strong> :&ensp;<code>float</code></dt>
+<dd>interval in minutes to wait between updates.</dd>
+<dt><strong><code>trim</code></strong> :&ensp;<code>int</code> or <code>None</code></dt>
+<dd>if provided, will trim all XP logs to the epoch of
+the XP with the provided index. Useful to compare XP started at different
+times.</dd>
+<dt><strong><code>trim_last</code></strong> :&ensp;<code>bool</code></dt>
+<dd>if True, will trim all XP to the least advanced XP.</dd>
+<dt><strong><code>silent</code></strong> :&ensp;<code>bool</code></dt>
+<dd>if True, do not print anything (e.g. API usage).</dd>
+<dt><strong><code>dry_run</code></strong> :&ensp;<code>bool</code></dt>
+<dd>if True, Dora will simulate the run of the grid, without scheduling
+or canceling any XP.</dd>
+<dt><strong><code>cancel</code></strong> :&ensp;<code>bool</code></dt>
+<dd>if True, will cancel all XPs in the grid. If <code>patterns</code> is provided,
+only XP matching the patterns will be canceled.</dd>
+<dt><strong><code>clear</code></strong> :&ensp;<code>bool</code></dt>
+<dd>This will cancel any previous job, clear the XP folder,
+and reschedule a new experiment.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RunGridArgs:
+    &#34;&#34;&#34;
+    Arguments to tune the behavior of the `run_grid` function.
+
+    Args:
+        patterns (list[str]): List of patterns used to filter by name
+            the XPs.
+        monitor (bool): if True, will monitor the advances of the XPs
+            every `interval` minutes, stopping only when all runs completed or
+            failed.
+        interval (float): interval in minutes to wait between updates.
+        trim (int or None): if provided, will trim all XP logs to the epoch of
+            the XP with the provided index. Useful to compare XP started at different
+            times.
+        trim_last (bool): if True, will trim all XP to the least advanced XP.
+        silent (bool): if True, do not print anything (e.g. API usage).
+        dry_run (bool): if True, Dora will simulate the run of the grid, without scheduling
+            or canceling any XP.
+        cancel (bool): if True, will cancel all XPs in the grid. If `patterns` is provided,
+            only XP matching the patterns will be canceled.
+        clear (bool): This will cancel any previous job, clear the XP folder,
+            and reschedule a new experiment.
+
+    &#34;&#34;&#34;
+    patterns: tp.List[str] = field(default_factory=list)
+
+    # Monitoring params
+    monitor: bool = True
+    interval: float = 5
+    trim: tp.Optional[int] = None
+    trim_last: bool = False
+    silent: bool = False
+
+    # Scheduling
+    dry_run: bool = False
+    cancel: bool = False
+    clear: bool = False
+    init: tp.Optional[bool] = False
+
+    jupyter: bool = False  # Are we in a jupyter notebook (will erase cell output content first.)
+
+    # Other flags, supported only from the command line.
+    folder: tp.Optional[int] = None
+    log: tp.Optional[int] = None
+    tail: tp.Optional[int] = None
+
+    _from_commandline: bool = False</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="dora.grid.RunGridArgs.cancel"><code class="name">var <span class="ident">cancel</span> : bool</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="dora.grid.RunGridArgs.clear"><code class="name">var <span class="ident">clear</span> : bool</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="dora.grid.RunGridArgs.dry_run"><code class="name">var <span class="ident">dry_run</span> : bool</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="dora.grid.RunGridArgs.folder"><code class="name">var <span class="ident">folder</span> : Optional[int]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="dora.grid.RunGridArgs.init"><code class="name">var <span class="ident">init</span> : Optional[bool]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="dora.grid.RunGridArgs.interval"><code class="name">var <span class="ident">interval</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="dora.grid.RunGridArgs.jupyter"><code class="name">var <span class="ident">jupyter</span> : bool</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="dora.grid.RunGridArgs.log"><code class="name">var <span class="ident">log</span> : Optional[int]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="dora.grid.RunGridArgs.monitor"><code class="name">var <span class="ident">monitor</span> : bool</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="dora.grid.RunGridArgs.patterns"><code class="name">var <span class="ident">patterns</span> : List[str]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="dora.grid.RunGridArgs.silent"><code class="name">var <span class="ident">silent</span> : bool</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="dora.grid.RunGridArgs.tail"><code class="name">var <span class="ident">tail</span> : Optional[int]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="dora.grid.RunGridArgs.trim"><code class="name">var <span class="ident">trim</span> : Optional[int]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="dora.grid.RunGridArgs.trim_last"><code class="name">var <span class="ident">trim_last</span> : bool</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="dora" href="index.html">dora</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="dora.grid.grid_action" href="#dora.grid.grid_action">grid_action</a></code></li>
+<li><code><a title="dora.grid.monitor" href="#dora.grid.monitor">monitor</a></code></li>
+<li><code><a title="dora.grid.no_print" href="#dora.grid.no_print">no_print</a></code></li>
+<li><code><a title="dora.grid.run_grid" href="#dora.grid.run_grid">run_grid</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="dora.grid.RunGridArgs" href="#dora.grid.RunGridArgs">RunGridArgs</a></code></h4>
+<ul class="two-column">
+<li><code><a title="dora.grid.RunGridArgs.cancel" href="#dora.grid.RunGridArgs.cancel">cancel</a></code></li>
+<li><code><a title="dora.grid.RunGridArgs.clear" href="#dora.grid.RunGridArgs.clear">clear</a></code></li>
+<li><code><a title="dora.grid.RunGridArgs.dry_run" href="#dora.grid.RunGridArgs.dry_run">dry_run</a></code></li>
+<li><code><a title="dora.grid.RunGridArgs.folder" href="#dora.grid.RunGridArgs.folder">folder</a></code></li>
+<li><code><a title="dora.grid.RunGridArgs.init" href="#dora.grid.RunGridArgs.init">init</a></code></li>
+<li><code><a title="dora.grid.RunGridArgs.interval" href="#dora.grid.RunGridArgs.interval">interval</a></code></li>
+<li><code><a title="dora.grid.RunGridArgs.jupyter" href="#dora.grid.RunGridArgs.jupyter">jupyter</a></code></li>
+<li><code><a title="dora.grid.RunGridArgs.log" href="#dora.grid.RunGridArgs.log">log</a></code></li>
+<li><code><a title="dora.grid.RunGridArgs.monitor" href="#dora.grid.RunGridArgs.monitor">monitor</a></code></li>
+<li><code><a title="dora.grid.RunGridArgs.patterns" href="#dora.grid.RunGridArgs.patterns">patterns</a></code></li>
+<li><code><a title="dora.grid.RunGridArgs.silent" href="#dora.grid.RunGridArgs.silent">silent</a></code></li>
+<li><code><a title="dora.grid.RunGridArgs.tail" href="#dora.grid.RunGridArgs.tail">tail</a></code></li>
+<li><code><a title="dora.grid.RunGridArgs.trim" href="#dora.grid.RunGridArgs.trim">trim</a></code></li>
+<li><code><a title="dora.grid.RunGridArgs.trim_last" href="#dora.grid.RunGridArgs.trim_last">trim_last</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>
