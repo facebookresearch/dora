@@ -87,6 +87,7 @@ class SlurmConfig:
     constraint: str = ""
     one_task_per_node: bool = False
     array_parallelism: int = 256
+    exclude: tp.Optional[str] = None
 
 
 @dataclass
