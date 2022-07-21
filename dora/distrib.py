@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 DistribSpec = namedtuple(
-    "DistribSpec", "rank world_size local_rank node_rank num_nodes source job_id")
+    "DistribSpec", "rank world_size local_rank node_rank num_nodes source")
 
 
 def set_distrib_env():
