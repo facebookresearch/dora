@@ -64,30 +64,30 @@ def get_distrib_spec():
     This can be used even before distributed training is initialized, which is useful for
     PytorchLightning for instance.
     """
-    try:
-        env = submitit.JobEnvironment()
-    except RuntimeError:
-        if 'WORLD_SIZE' in os.environ:
-            rank = int(os.environ['RANK'])
-            world_size = int(os.environ['WORLD_SIZE'])
-            local_rank = rank
-            node_rank = 0
-            num_nodes = 1
-            source = "env"
-        else:
+    if 'WORLD_SIZE' in os.environ:
+        rank = int(os.environ['RANK'])
+        world_size = int(os.environ['WORLD_SIZE'])
+        local_rank = rank
+        node_rank = 0
+        num_nodes = 1
+        source = "env"
+    else:
+        try:
+            env = submitit.JobEnvironment()
+        except RuntimeError:
             rank = 0
             world_size = 1
             local_rank = 0
             node_rank = 0
             num_nodes = 1
             source = "empty"
-    else:
-        rank = env.global_rank
-        world_size = env.num_tasks
-        local_rank = env.local_rank
-        node_rank = env.node
-        num_nodes = env.num_nodes
-        source = "submitit"
+        else:
+            rank = env.global_rank
+            world_size = env.num_tasks
+            local_rank = env.local_rank
+            node_rank = env.node
+            num_nodes = env.num_nodes
+            source = "submitit"
     return DistribSpec(rank, world_size, local_rank, node_rank, num_nodes, source)
 
 
