@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 DistribSpec = namedtuple(
-    "DistribSpec", "rank world_size local_rank node_rank num_nodes source")
+    "DistribSpec", "rank world_size local_rank node_rank num_nodes source job_id")
 
 
 def set_distrib_env():
@@ -42,7 +42,15 @@ def set_distrib_env():
         xp = get_xp()
         # Note that running twice the same XP on the same node will crash,
         # but that shouldn't really happen
-        rng = random.Random(int(xp.sig, 16))
+        seed = xp.sig
+        # If we are in a Slurm job, let us use the Slurm job id.
+        try:
+            env = submitit.JobEnvironment()
+        except RuntimeError:
+            pass
+        else:
+            seed += env.job_id
+        rng = random.Random(seed)
         master_port = rng.randint(20000, 60000)
         os.environ['MASTER_PORT'] = str(master_port)
     if 'WORLD_SIZE' not in os.environ:
