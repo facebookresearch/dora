@@ -234,7 +234,8 @@ class HydraMain(DecoratedMain):
                 sys.argv.remove(run_dir)
 
     def _get_config_groups(self) -> tp.List[str]:
-        with initialize_config_dir(str(self.full_config_path), job_name=self._job_name):
+        with initialize_config_dir(str(self.full_config_path), job_name=self._job_name,
+                                   **self.hydra_kwargs):
             gh = GlobalHydra.instance().hydra
             assert gh is not None
             return list(gh.list_all_config_groups())
@@ -251,7 +252,8 @@ class HydraMain(DecoratedMain):
         Return base config based on composition, along with delta for the
         composition overrides.
         """
-        with initialize_config_dir(str(self.full_config_path), job_name=self._job_name):
+        with initialize_config_dir(str(self.full_config_path), job_name=self._job_name,
+                                   **self.hydra_kwargs):
             gh = GlobalHydra.instance().hydra
             assert gh is not None
             to_keep = []
@@ -274,7 +276,8 @@ class HydraMain(DecoratedMain):
         Internal method, returns the config for the given override,
         but without the dora.sig field filled.
         """
-        with initialize_config_dir(str(self.full_config_path), job_name=self._job_name):
+        with initialize_config_dir(str(self.full_config_path), job_name=self._job_name,
+                                   **self.hydra_kwargs):
             return self._get_config_noinit(overrides)
 
     def _get_config_noinit(self, overrides: tp.List[str] = []) -> DictConfig:
