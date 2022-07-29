@@ -72,7 +72,7 @@ def start_ddp_workers(main, argv, num_workers: tp.Optional[int] = None):
     log(f"Starting {world_size} worker processes for DDP.")
     with ChildrenManager() as manager:
         for rank in range(world_size):
-            kwargs = {}
+            kwargs: tp.Dict[str, tp.Any] = {}
             env = dict(os.environ)
             env['RANK'] = str(rank)
             env['WORLD_SIZE'] = str(world_size)
