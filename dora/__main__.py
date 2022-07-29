@@ -101,6 +101,8 @@ def get_parser():
     run = subparsers.add_parser("run", help="Run locally the given command.")
     run.add_argument("-f", "--from_sig", help="Signature of job to use as baseline.")
     run.add_argument("-d", "--ddp", action="store_true", help="Distributed training.")
+    run.add_argument("--ddp_workers", type=int,
+                     help="Nb of workers for distributed, default to nb of GPUs.")
     run.add_argument("--git_save", action="store_true", default=False,
                      help="Run from a clean git clone.")
     run.add_argument("--clear", action='store_true',

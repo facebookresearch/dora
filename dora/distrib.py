@@ -102,7 +102,11 @@ def init(backend='nccl'):
         logger.info("world_size is 1, skipping init.")
         return
     xp = get_xp()
-    torch.cuda.set_device(spec.local_rank)
+    if torch.cuda.is_available():
+        torch.cuda.set_device(spec.local_rank)
+    else:
+        assert backend != 'nccl'
+
     if xp.dora.use_rendezvous:
         init_method = 'file://' + os.path.abspath(xp.rendezvous_file)
     else:
