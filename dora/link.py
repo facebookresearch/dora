@@ -54,7 +54,7 @@ class Link:
         history = utils.jsonable(history)
         if not isinstance(history, list):
             raise ValueError(f"history must be a list, but got {type(history)}")
-        self.history = history
+        self.history[:] = history
         self._commit()
 
     def push_metrics(self, metrics: dict):
