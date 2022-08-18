@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 Use job id based seed to avoid systematic failures with port allocation for distributed.
 
+Remove automatic export of WORLD_SIZE and RANK inside submitit job target, which seemed irrelevant. Use `dora.distrib.set_distrib_env` if you relied on it.
+
 ## [0.1.10] - 2022-06-09
 
 Updated and simplified PyTorch Lightning distributed integration.
