@@ -34,6 +34,10 @@ logger = logging.getLogger(__name__)
 class _SubmitItTarget:
     def __call__(self, main: DecoratedMain, argv: tp.Sequence[str]):
         self.xp = main.get_xp(argv)
+        spec = get_distrib_spec()
+        # We export the RANK as it can be used to customize logging early on
+        # in the called program (e.g. using Hydra).
+        os.environ['RANK'] = str(spec.rank)
         sys.argv[1:] = argv
         main()
 
