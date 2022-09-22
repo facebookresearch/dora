@@ -4,11 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [0.1.11a] - TBD
+## [0.1.11] - 2022-09-22
 
 Use job id based seed to avoid systematic failures with port allocation for distributed.
 
-Remove automatic export of WORLD_SIZE and RANK inside submitit job target, which seemed irrelevant. Use `dora.distrib.set_distrib_env` if you relied on it.
+Remove automatic export of WORLD_SIZE inside submitit job target,
+use `dora.distrib.set_distrib_env` if you relied on it.
+
+Fixed version_base parameter support that appeared in Hydra.
 
 ## [0.1.10] - 2022-06-09
 
