@@ -85,6 +85,15 @@ class DoraEnvironment(ClusterEnvironment):
     def node_rank(self) -> int:
         return self.spec.node_rank
 
+    def detect(self) -> bool:
+        return False
+
+    def main_address(self) -> str:
+        return os.environ['MAIN_ADDR']
+
+    def main_port(self) -> int:
+        return int(os.environ['MAIN_PORT'])
+
 
 class DoraCheckpointSync(Callback):
     """Make sure Dora history, and checkpoint state are in sync.
