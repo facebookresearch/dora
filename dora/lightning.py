@@ -83,11 +83,11 @@ class DoraEnvironment(ClusterEnvironment):
     def detect() -> bool:
         return False
 
-    @staticmethod
+    @property
     def main_address(self) -> str:
         return os.environ["MAIN_ADDR"]
 
-    @staticmethod
+    @property
     def main_port(self) -> int:
         return int(os.environ["MAIN_PORT"])
 
