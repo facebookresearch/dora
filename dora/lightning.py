@@ -61,12 +61,6 @@ class DoraEnvironment(ClusterEnvironment):
     def creates_processes_externally(self) -> bool:
         return True
 
-    def master_address(self) -> str:
-        return os.environ['MASTER_ADDR']
-
-    def master_port(self) -> int:
-        return int(os.environ['MASTER_PORT'])
-
     def world_size(self) -> int:
         return self.spec.world_size
 
@@ -85,14 +79,17 @@ class DoraEnvironment(ClusterEnvironment):
     def node_rank(self) -> int:
         return self.spec.node_rank
 
-    def detect(self) -> bool:
+    @staticmethod
+    def detect() -> bool:
         return False
 
+    @staticmethod
     def main_address(self) -> str:
-        return os.environ['MAIN_ADDR']
+        return os.environ["MAIN_ADDR"]
 
+    @staticmethod
     def main_port(self) -> int:
-        return int(os.environ['MAIN_PORT'])
+        return int(os.environ["MAIN_PORT"])
 
 
 class DoraCheckpointSync(Callback):
