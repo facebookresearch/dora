@@ -226,13 +226,13 @@ class PLLogProgress(ProgressBarBase):
 
     """
 
-    def __init__(self, logger, **kwargs):
+    def __init__(self, logger, **kwargs) -> None:
         super().__init__()  # don't forget this :)
         self.logger = logger
         self.kwargs = kwargs
         self._pl_module: tp.Optional[LightningModule] = None
 
-    def setup(self, trainer, pl_module, stage: tp.Optional[str] = None) -> None:
+    def setup(self, trainer, pl_module, stage: str) -> None:
         super().setup(trainer, pl_module, stage)
         self._pl_module = pl_module
         self._replay_history: tp.List[tp.Any] = []

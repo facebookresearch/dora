@@ -54,7 +54,7 @@ class Sheep:
     A Sheep is a specific run for a given XP. Sheeps are managed
     by the Shepherd.
     """
-    def __init__(self, xp: XP, job: SlurmJob = None):
+    def __init__(self, xp: XP):
         self.xp = xp
         self.job: tp.Optional[submitit.SlurmJob] = None
         # Other jobs contain the list of other jobs in the array
