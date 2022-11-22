@@ -137,7 +137,10 @@ def load(uri: str) -> tp.Any:
                 exp.parameters_definition[sname].label_css = STYLE.params
         for key in all_columns:
             if key not in parts:
-                value = eval('xp.cfg.' + key, {'xp': xp})
+                try:
+                    value = eval('xp.cfg.' + key, {'xp': xp})
+                except AttributeError:
+                    value = None
                 sname = main.short_name_part(key, value).split('=', 1)[0]
                 values[sname] = value
         for key, value in values.items():
