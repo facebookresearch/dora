@@ -277,13 +277,12 @@ class Shepherd:
         if mem_per_gpu:
             mem = slurm_config.mem_per_gpu * gpus_per_node
             kwargs['mem'] = f"{mem}GB"
+        kwargs['gres'] = f'gpu:{gpus}'
         if slurm_config.one_task_per_node:
-            kwargs['gpus_per_task'] = gpus_per_node
             kwargs['ntasks_per_node'] = 1
             if slurm_config.cpus_per_task is None:
                 kwargs['cpus_per_task'] = gpus_per_node * slurm_config.cpus_per_gpu
         else:
-            kwargs['gpus_per_task'] = 1
             kwargs['ntasks_per_node'] = gpus_per_node
             if slurm_config.cpus_per_task is None:
                 kwargs['cpus_per_task'] = slurm_config.cpus_per_gpu
