@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 Fixed bug with PL (Thanks @kingjr).
 
+Added support for the Azure cluster (thanks @JadeCopet).
+
 ## [0.1.11] - 2022-09-22
 
 Use job id based seed to avoid systematic failures with port allocation for distributed.
