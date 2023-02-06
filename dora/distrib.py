@@ -67,7 +67,10 @@ def get_distrib_spec():
     if 'WORLD_SIZE' in os.environ:
         rank = int(os.environ['RANK'])
         world_size = int(os.environ['WORLD_SIZE'])
-        local_rank = rank
+        if 'LOCAL_RANK' in os.environ:
+            local_rank = int(os.environ['LOCAL_RANK'])
+        else:
+            local_rank = rank
         node_rank = 0
         num_nodes = 1
         source = "env"
