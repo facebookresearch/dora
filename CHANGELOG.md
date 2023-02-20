@@ -12,6 +12,8 @@ Added support for the Azure cluster (thanks @JadeCopet).
 
 Fixed local rank bug.
 
+Minor speed improvement if processing a lot of files with `to_absolute_path`.
+
 ## [0.1.11] - 2022-09-22
 
 Use job id based seed to avoid systematic failures with port allocation for distributed.

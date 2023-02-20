@@ -168,7 +168,8 @@ def to_absolute_path(path: AnyPath) -> AnyPath:
         try:
             import hydra.utils
         except ImportError:
-            _path = _path.resolve()
+            if not _path.is_absolute():
+                _path = Path(os.getcwd()) / _path
         else:
             _path = Path(hydra.utils.to_absolute_path(str(_path)))
         return klass(_path)
