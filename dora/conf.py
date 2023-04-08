@@ -70,6 +70,7 @@ class SlurmConfig:
             per node, otherwise, will schedule one task per gpu (default is False).
         array_parallelism (int): when using job arrays, how many tasks can run
             in parallel.
+        qos: (str or None): qos param for slurm.
 
     ..warning:: this assumes one task per GPU.
         Set `one_task_per_node` if you do not want that.
@@ -88,6 +89,7 @@ class SlurmConfig:
     one_task_per_node: bool = False
     array_parallelism: int = 256
     exclude: tp.Optional[str] = None
+    qos: tp.Optional[str] = None
 
 
 @dataclass
