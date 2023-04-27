@@ -91,7 +91,7 @@ class SlurmConfig:
     array_parallelism: int = 256
     exclude: tp.Optional[str] = None
     qos: tp.Optional[str] = None
-    acccount: tp.Optional[str] = None
+    account: tp.Optional[str] = None
 
 
 @dataclass
