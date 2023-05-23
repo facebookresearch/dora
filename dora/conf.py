@@ -70,8 +70,10 @@ class SlurmConfig:
             per node, otherwise, will schedule one task per gpu (default is False).
         array_parallelism (int): when using job arrays, how many tasks can run
             in parallel.
-        qos: (str or None): qos param for slurm.
-        account: (str or None): account param for slurm.
+        qos (str or None): qos param for slurm.
+        account (str or None): account param for slurm.
+        dependents (int): if > 0, start a number of dependent jobs. Requeuing
+            will be deactivated and rely on dependent jobs instead.
 
     ..warning:: this assumes one task per GPU.
         Set `one_task_per_node` if you do not want that.
@@ -92,6 +94,7 @@ class SlurmConfig:
     exclude: tp.Optional[str] = None
     qos: tp.Optional[str] = None
     account: tp.Optional[str] = None
+    dependents: int = 0
 
 
 @dataclass
