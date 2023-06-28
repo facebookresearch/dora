@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [0.1.12a] - TBD
+## [0.1.12] - 2023-05-23
 
 Fixed bug with PL (Thanks @kingjr).
 
@@ -13,6 +13,8 @@ Added support for the Azure cluster (thanks @JadeCopet).
 Fixed local rank bug.
 
 Minor speed improvement if processing a lot of files with `to_absolute_path`.
+
+Added `qos`, and `account` slurm params.
 
 ## [0.1.11] - 2022-09-22
 
