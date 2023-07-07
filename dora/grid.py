@@ -402,7 +402,7 @@ def monitor(args: tp.Any, main: DecoratedMain, explorer: Explorer, herd: tp.List
         meta = {
             'name': name,
             'index': index,
-            'sid': sheep.job.job_id if sheep.job else '',
+            'sid': sheep.current_job_id or '',  # i know 0 is a valid sid, but who cares.
             'sig': sheep.xp.sig,
             'state': state,
         }

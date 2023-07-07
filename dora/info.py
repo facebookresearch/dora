@@ -47,7 +47,8 @@ def info_action(args, main: DecoratedMain):
         elif sheep.is_done():
             log("Job is not running")
         else:
-            sheep.job.cancel()
+            shepherd.cancel_lazy(sheep=sheep)
+            shepherd.commit()
     if args.log:
         if sheep.log is None:
             fatal("No log, sheep hasn't been scheduled yet.")

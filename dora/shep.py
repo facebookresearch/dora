@@ -109,7 +109,7 @@ class Sheep:
         return state
 
     @staticmethod
-    def _is_done(self, job, mode="standard"):
+    def _is_done(job, mode="standard"):
         """Return True if the job is no longer running on the cluster.
         """
         if job is None:
@@ -122,8 +122,8 @@ class Sheep:
         if self.job is None:
             return True
         if self._dependent_jobs:
-            assert len(self._other_jobs) == 0
-            chain = self.job + [self._dependent_jobs]
+            assert len(self._other_jobs) <= 1
+            chain = [self.job] + self._dependent_jobs
             for job in chain:
                 if not job.watcher.is_done(job.job_id, mode):
                     return False
@@ -133,8 +133,9 @@ class Sheep:
 
     def state(self, mode="standard"):
         if self._dependent_jobs:
-            assert len(self._other_jobs) == 0
-            chain = self.job + [self._dependent_jobs]
+            assert self.job is not None
+            assert len(self._other_jobs) <= 1
+            chain = [self.job] + self._dependent_jobs
             for job in chain:
                 state = Sheep._get_state(job, [], mode)
                 if state == 'COMPLETED' or not Sheep._is_done(job, mode):
@@ -143,26 +144,34 @@ class Sheep:
         else:
             return self._get_state(self.job, self._other_jobs, mode)
 
+    def _log(self, job_id: str) -> Path:
+        return self.xp.submitit / f"{job_id}_0_log.out"
+
+    @property
+    def current_job_id(self) -> tp.Optional[str]:
+        """Return the current job id, especially useful when using dependent jobs.
+        """
+        if self.job is None:
+            return None
+        job_id = self.job.job_id
+        # We use the logs to be low tech and not require SLURM.
+        for job in self._dependent_jobs:
+            if self._log(job.job_id).exists():
+                job_id = job.job_id
+        return job_id
+
     @property
     def log(self):
         """Return the path to the main log.
         """
         if self.job is None:
             return None
-        path = self.xp.submitit / f"{self.job.job_id}_0_log.out"
-        for job in self._dependent_jobs:
-            new_path = self.xp.submitit / f"{job.job_id}_0_log.out"
-            if new_path.exists():
-                path = new_path
-        return path
+        return self._log(self.current_job_id)
 
     def __repr__(self):
         out = f"Sheep({self.xp.sig}, state={self.state()}, "
         if self.job is not None:
-            out += f"sid={self.job.job_id}, "
-        if self._dependent_jobs is not None:
-            deps = ",".join(job.job_id for job in self._dependent_jobs)
-            out += f"deps={deps}, "
+            out += f"sid={self.current_job_id}, "
         out += f"argv={self.xp.argv})"
         return out
 
@@ -357,6 +366,7 @@ class Shepherd:
         del kwargs['mem_per_gpu']
         del kwargs['cpus_per_gpu']
         del kwargs['one_task_per_node']
+        del kwargs['dependents']
         logger.debug("Slurm parameters %r", kwargs)
 
         executor.update_parameters(
@@ -449,15 +459,14 @@ class Shepherd:
                         for dep_index in range(slurm_config.dependents):
                             requeue = dep_index == slurm_config.dependents - 1
                             last_job_id = jobs[-1].job_id
-                            executor.update_parameters(dependency=f"afternotok:{last_job_id}")
+                            executor.update_parameters(
+                                additional_parameters={'dependency': f"afternotok:{last_job_id}"})
                             jobs.append(executor.submit(
                                 _SubmitItTarget(), self.main, sheep.xp.argv, requeue))
             dependent_jobs = []
-            other_jobs = jobs
             if slurm_config.dependents:
                 dependent_jobs = jobs[1:]
                 jobs = jobs[:1]
-                other_jobs = []
 
             # Now we can access jobs
             for sheep, job in zip(sheeps, jobs):
@@ -465,7 +474,7 @@ class Shepherd:
                 pickle.dump((job, jobs, dependent_jobs), open(sheep._job_file, "wb"))
                 logger.debug("Created job with id %s", job.job_id)
                 sheep.job = job  # type: ignore
-                sheep._other_jobs = other_jobs  # type: ignore
+                sheep._other_jobs = jobs  # type: ignore
                 sheep._dependent_jobs = dependent_jobs  # type: ignore
                 link = self._by_id / job.job_id
                 link = link
