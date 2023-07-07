@@ -11,6 +11,7 @@ from functools import partial
 import os
 import subprocess as sp
 import sys
+import typing as tp
 
 from .log import simple_log, fatal
 
@@ -55,10 +56,10 @@ class ChildrenManager:
             log("All workers completed successfully")
 
 
-def start_ddp_workers(main, argv):
+def start_ddp_workers(main, argv, num_workers: tp.Optional[int] = None):
     import torch as th
 
-    world_size = th.cuda.device_count()
+    world_size = num_workers or th.cuda.device_count()
     if not world_size:
         fatal(
             "DDP is only available on GPU. Make sure GPUs are properly configured with cuda.")
@@ -71,7 +72,7 @@ def start_ddp_workers(main, argv):
     log(f"Starting {world_size} worker processes for DDP.")
     with ChildrenManager() as manager:
         for rank in range(world_size):
-            kwargs = {}
+            kwargs: tp.Dict[str, tp.Any] = {}
             env = dict(os.environ)
             env['RANK'] = str(rank)
             env['WORLD_SIZE'] = str(world_size)

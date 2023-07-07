@@ -58,7 +58,7 @@ def run_action(args, main: DecoratedMain):
             os.execv(sys.executable, [sys.executable, "-m", "dora"] + sys.argv[1:])
         if args.ddp and not os.environ.get('RANK'):
             check_job_and_clear(args.argv, main, args.clear)
-            start_ddp_workers(main, args.argv)
+            start_ddp_workers(main, args.argv, args.ddp_workers)
         else:
             if 'WORLD_SIZE' not in os.environ:
                 check_job_and_clear(args.argv, main, args.clear)

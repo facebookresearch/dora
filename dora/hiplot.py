@@ -77,19 +77,22 @@ def load(uri: str) -> tp.Any:
     explorer_module: tp.Optional[str] = None
     explorer_name = "HiPlotExplorer"
     value: tp.Any
+    grids_name = main.dora.grid_package
+    if grids_name is None:
+        grids_name = main.package + ".grids"
     for token in shlex.split(uri):
         if '=' in token:
             key, value = token.split('=', 1)
             if key == 'explorer':
                 explorer_name = value
                 if explorer_module is None:
-                    explorer_module = main.package + '.grids._hiplot'
+                    explorer_module = grids_name + '._hiplot'
             elif key == 'explorer_module':
                 explorer_module = value
             else:
                 raise ValueError(f"Invalid param {key}")
             continue
-        grid_folder = main.dora.dir / main.dora.grids / token
+        grid_folder = main.dora.dir / main.dora._grids / token
         if grid_folder.exists():
             for child in grid_folder.iterdir():
                 sigs.add(child.name)
@@ -134,14 +137,17 @@ def load(uri: str) -> tp.Any:
                 exp.parameters_definition[sname].label_css = STYLE.params
         for key in all_columns:
             if key not in parts:
-                value = eval('xp.cfg.' + key, {'xp': xp})
+                try:
+                    value = eval('xp.cfg.' + key, {'xp': xp})
+                except AttributeError:
+                    value = None
                 sname = main.short_name_part(key, value).split('=', 1)[0]
                 values[sname] = value
         for key, value in values.items():
             if isinstance(value, BaseContainer):
                 value = OmegaConf.to_container(value, resolve=True)
             if isinstance(value, list):
-                value = ', '.join(value)
+                value = ', '.join(map(str, value))
             values[key] = value
         values['sig'] = xp.sig
         from_uid: tp.Optional[str] = None

@@ -42,7 +42,7 @@ pip install -U dora-search
 
 See [the changelog](CHANGELOG.md) for details on releases.
 
-- TBD: version 0.1.10: adding HiPlot support ! Updated PL support.
+- 2022-06-09: version 0.1.10: adding HiPlot support ! Updated PL support, many small fixes.
 - 2022-02-28: version 0.1.9
 - 2021-12-10: version 0.1.8: see changelog, many of small changes.
 - 2021-11-08: version 0.1.7: support for job arrays added.
@@ -412,6 +412,41 @@ This will do 3 thing:
 - A table containing job status and metadata as well as the latest metrics will
     be printed every 5 minutes.
 
+### The Launcher API
+
+Here is a more comprehensive description of what `Launcher` object can do.
+
+- `launcher.bind_(...)`: remember the given parameters (command line option for argparse based
+project, or overrides for Hydra based ones) for future scheduling, i.e. all experiments
+later scheduled with that launcher will have those parameters set.
+- `sub = launcher.bind(...)`: same as bind, but returns a new "sub" launcher, i.e. the object
+`launcher` is not changed, only experiments scheduled with `sub` will use the given params.
+`sub` also inherits from all the params already bound to its parent launcher (i.e. previous call to `launcher.bind_`).
+Creating a sub-launcher is especially recommended inside loops, to avoid leaking params to the next loop iteration.
+- `launcher(...)`: schedules an experiment with the given params, plus all the ones that have
+been aggregated through the various calls to `bind_` and to `bind`. This is equivalent to
+`launcher.bind(...)()`.
+- `launcher.slurm_(key=value, ...)` and `launcher.slurm(key=value, ...)`: same as `bind_` and `bind`
+but for the slurm config (nb of GPUs etc). For a list of possible options, checkout
+[SlurmConf](https://facebookresearch.github.io/dora/dora/conf.html#dora.conf.SlurmConfig).
+
+
+Now let us describe the format for passing parameters overrides or command line flags to
+`launcher.bind_()`, `launcher.bind()` or `launcher()`:
+
+- Simple parameters (i.e. not nested) can be passed as kwargs, for instance if you have a `--batch_size` flag, you can
+do `launcher.bind(batch_size=64)`.
+- Command line flags can be explicitely passed as a list of strings, for instance `launcher.bind(['--lr=1e-4'])`.
+- A dictionary of overrides can be passed, for instance `launcher.bind({'batch_size': 64})`. Note that this
+also allows for nested keys in Hydra: `launcher.bind({'model.channels': 256})`. With Hydra, you can
+also define new keys with `{'+model.activation': 'relu'}`. You must not remove keys though.
+- Finally you can combine all of those (for a Hydra project here):
+
+```python
+launcher.bind(['optim.lr=1e-4'], {'model.channels': 256, 'seed': 42}, {'+model.activation': 'relu'}, batch_size=64)
+```
+
+
 ### Flags
 
 The `dora grid` command supports the following flags:
@@ -544,9 +579,13 @@ rules = dora.conf.SubmitRules(retry=True)  # Should we reschedule failed jobs?
 # each sheep as 2 attributues: sheep.xp and sheep.job_id.
 sheeps = dora.grid.run_grid(main, explorer, grid_name='jupy', rules=rules, args=args)
 args.monitor = True
+args.jupyter = True
 # The jupyter flag will make the grid API use the display API to clear the cell
 # output and update it regularly. This one will not return until all jobs
 # are done or failed.
+# In the following, `grid_name` should be unique. It will be used
+# to determine which experiments were previously scheduled with that grid
+# and should potentially be cancelled if no longer needed.
 dora.grid.run_grid(main, explorer, grid_name='jupy', rules=rules, args=args)
 # You can retrieve the short names by using `main.get_names()`
 short_names, ref_name = main.get_names([sheep.xp for sheep in sheeps])

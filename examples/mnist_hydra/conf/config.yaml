@@ -11,6 +11,8 @@ dry_run: false
 seed: 1234
 log_interval: 100
 save_model: false
+model:
+  hidden_dim: 512
 
 dora:
   exclude: ["save_model", "no_cuda", "dry_run", "log_interval", "data_root"]
@@ -21,6 +23,8 @@ slurm:
   cpus_per_gpu: 10
 
 hydra:
+  job:
+    chdir: true
   job_logging:
     handlers:
       file:

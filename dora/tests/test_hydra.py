@@ -98,8 +98,8 @@ def test_hydra(tmpdir):
     assert name == "opt.loss=l1"
 
     argv = ["+k=youpi"]
-    with pytest.raises(AssertionError):
-        xp2 = call(main, argv)
+    xp2 = call(main, argv)
+    assert xp2.cfg.k == 'youpi'
 
     with pytest.raises(ValueError):
         main.value_to_argv(0.5)
@@ -117,3 +117,21 @@ def test_hydra(tmpdir):
     argv = ["group=lapin", "plop.b=5"]
     with pytest.raises(Exception):
         xp2 = call(main, argv)
+
+
+def test_complex_types(tmpdir):
+    # Test complex types parsing (e.g. lists and dict)
+    _main.__module__ = __name__
+    main = get_main(tmpdir)
+    xp = call(main, [])
+    print(xp.cfg.complex)
+    assert xp.cfg.complex.a == [1, 2, 3]
+    xp = call(main, ['complex.a=[0]'])
+    assert xp.cfg.complex.a == [0]
+    xp = call(main, ['complex.b.a=50'])
+    assert xp.cfg.complex.b == {"a": 50, "b": 2}
+    xp = call(main, ['complex.b={a:21}'])
+    assert xp.cfg.complex.b == {"a": 21, "b": 2}
+    argv = main.value_to_argv({"complex.b": {"a": 21, "b": 52}})
+    xp = call(main, argv)
+    assert xp.cfg.complex.b == {"a": 21, "b": 52}

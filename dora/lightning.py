@@ -61,12 +61,6 @@ class DoraEnvironment(ClusterEnvironment):
     def creates_processes_externally(self) -> bool:
         return True
 
-    def master_address(self) -> str:
-        return os.environ['MASTER_ADDR']
-
-    def master_port(self) -> int:
-        return int(os.environ['MASTER_PORT'])
-
     def world_size(self) -> int:
         return self.spec.world_size
 
@@ -84,6 +78,18 @@ class DoraEnvironment(ClusterEnvironment):
 
     def node_rank(self) -> int:
         return self.spec.node_rank
+
+    @staticmethod
+    def detect() -> bool:
+        return False
+
+    @property
+    def main_address(self) -> str:
+        return os.environ["MAIN_ADDR"]
+
+    @property
+    def main_port(self) -> int:
+        return int(os.environ["MAIN_PORT"])
 
 
 class DoraCheckpointSync(Callback):
@@ -170,7 +176,7 @@ def get_trainer(*args, auto_resume=True, add_dora_logger=True, no_unfinished_epo
         plugins += [env, 'ddp']
     kwargs['plugins'] = plugins
 
-    callbacks = kwargs.pop("callbacks", [])
+    callbacks = kwargs.pop("callbacks", None) or []
     callbacks.append(DoraCheckpointSync())
     kwargs['callbacks'] = callbacks
 
@@ -220,13 +226,13 @@ class PLLogProgress(ProgressBarBase):
 
     """
 
-    def __init__(self, logger, **kwargs):
+    def __init__(self, logger, **kwargs) -> None:
         super().__init__()  # don't forget this :)
         self.logger = logger
         self.kwargs = kwargs
         self._pl_module: tp.Optional[LightningModule] = None
 
-    def setup(self, trainer, pl_module, stage: tp.Optional[str] = None) -> None:
+    def setup(self, trainer, pl_module, stage: str) -> None:
         super().setup(trainer, pl_module, stage)
         self._pl_module = pl_module
         self._replay_history: tp.List[tp.Any] = []

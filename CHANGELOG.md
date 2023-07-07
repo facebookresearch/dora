@@ -4,7 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [0.1.10a] - ...
+## [0.1.12] - 2023-05-23
+
+Fixed bug with PL (Thanks @kingjr).
+
+Added support for the Azure cluster (thanks @JadeCopet).
+
+Fixed local rank bug.
+
+Minor speed improvement if processing a lot of files with `to_absolute_path`.
+
+Added `qos`, and `account` slurm params.
+
+## [0.1.11] - 2022-09-22
+
+Use job id based seed to avoid systematic failures with port allocation for distributed.
+
+Remove automatic export of WORLD_SIZE inside submitit job target,
+use `dora.distrib.set_distrib_env` if you relied on it.
+
+Fixed version_base parameter support that appeared in Hydra.
+
+## [0.1.10] - 2022-06-09
 
 Updated and simplified PyTorch Lightning distributed integration.
 Improved overall integration with PL, in particular with PLLogProgress and simplified
@@ -19,6 +40,16 @@ Set `use_rendezvous=False` by default.
 More reliable passing of arguments of Hydra (before, setting None would actually fail). I hope this wont break any existing XP sig...
 
 Allow for empty `mem` constraint in Slurm.
+
+Fixing `callbacks` default value in PL.
+
+Extra "keys" in Hydra config files are now allowed (i.e. overrides with `+something=12`).
+
+The package where Dora looks for grids can be customized, in Hydra with `dora.grid_package` in the base config or passing `grid_package='...'` to `argparse_main`.
+
+Better doc for launcher API.
+
+Fix dict support with Hydra. Okay it is time that I release a new version now...
 
 ## [0.1.9] - 2022-02-28
 

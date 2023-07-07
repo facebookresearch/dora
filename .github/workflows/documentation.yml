@@ -18,6 +18,7 @@ jobs:
         pip install '.[dev]'
         git config --global user.email "defossez@fb.com"
         git config --global user.name "Alexandre Défossez (autodoc)"
+        export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
 
 
     - name: Reset branch

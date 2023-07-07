@@ -46,6 +46,13 @@ def _no_copy(self: tp.Any, memo: tp.Any):
 _Difference = namedtuple("_Difference", "path key ref other ref_value other_value")
 
 
+class _NotThere:
+    pass
+
+
+NotThere = _NotThere()
+
+
 def _compare_config(ref, other, path=[]):
     """
     Given two configs, gives an iterator over all the differences. For each difference,
@@ -58,7 +65,7 @@ def _compare_config(ref, other, path=[]):
     for key in keys:
         path[-1] = key
         ref_value = ref[key]
-        assert key in other, f"Structure of config should be identical between XPs. Extra key {key}"
+        assert key in other, f"XP config shouldn't be missing any key. Missing key {key}"
         other_value = other[key]
 
         if isinstance(ref_value, DictConfig):
@@ -68,8 +75,11 @@ def _compare_config(ref, other, path=[]):
             yield from _compare_config(ref_value, other_value, path)
         elif other_value != ref_value:
             yield _Difference(list(path), key, ref, other, ref_value, other_value)
-    assert len(remaining) == 0, "Structure of config should be identical between XPs. "\
-                                f"Missing keys: {remaining}"
+
+    for key in remaining:
+        path[-1] = key
+        other_value = other[key]
+        yield _Difference(list(path), key, ref, other, NotThere, other_value)
     path.pop(-1)
     return delta
 
@@ -89,12 +99,43 @@ def _simplify_argv(argv: tp.Sequence[str]) -> tp.List[str]:
     return simplified[::-1]
 
 
+def _dump_key(key):
+    if key is None:
+        return "null"
+    elif isinstance(key, (bool, int, float)):
+        return str(key)
+    elif isinstance(key, str):
+        assert ":" not in key
+        return key
+    else:
+        raise TypeError(f"Unsupported dict key type {type(key)} for key {key}")
+
+
+def _hydra_value_as_override(value):
+    # hydra doesn't support parsing dict with the json format, so for now
+    # we have to use a custom function to dump a value.
+    if value is None:
+        return "null"
+    elif isinstance(value, (bool, int, float, str)):
+        return json.dumps(value)
+    elif isinstance(value, dict):
+        return "{" + ", ".join(
+            f"{_dump_key(key)}: {_hydra_value_as_override(val)}"
+            for key, val in value.items()
+        ) + "}"
+    elif isinstance(value, (list, tuple)):
+        return "[" + ", ".join(_hydra_value_as_override(val) for val in value) + "]"
+    else:
+        raise TypeError(f"Unsupported value type {type(value)} for value {value}")
+
+
 class HydraMain(DecoratedMain):
     _slow = True
 
-    def __init__(self, main: MainFun, config_name: str, config_path: str):
+    def __init__(self, main: MainFun, config_name: str, config_path: str, **kwargs):
         self.config_name = config_name
         self.config_path = config_path
+        self.hydra_kwargs = kwargs
 
         module = main.__module__
         if module == "__main__":
@@ -151,13 +192,19 @@ class HydraMain(DecoratedMain):
         return xp
 
     def value_to_argv(self, arg: tp.Any) -> tp.List[str]:
+        # Here we get the raw stuff from what is passed to the grid launcher.
+        # arg is either a str (in which case it is a raw override)
+        # or a dict, in which case each entry is an override,
+        # or a list of dict or a list of str.
         argv = []
         if isinstance(arg, str):
             argv.append(arg)
         elif isinstance(arg, dict):
             for key, value in arg.items():
                 if key not in self._config_groups:
-                    value = json.dumps(value)
+                    # We need to convert the value using a custom function
+                    # to respect how Hydra parses overrides.
+                    value = _hydra_value_as_override(value)
                 argv.append(f"{key}={value}")
         elif isinstance(arg, (list, tuple)):
             for part in arg:
@@ -180,13 +227,15 @@ class HydraMain(DecoratedMain):
         try:
             return hydra.main(
                 config_name=self.config_name,
-                config_path=self.config_path)(self.main)()
+                config_path=self.config_path,
+                **self.hydra_kwargs)(self.main)()
         finally:
             if is_xp():
                 sys.argv.remove(run_dir)
 
     def _get_config_groups(self) -> tp.List[str]:
-        with initialize_config_dir(str(self.full_config_path), job_name=self._job_name):
+        with initialize_config_dir(str(self.full_config_path), job_name=self._job_name,
+                                   **self.hydra_kwargs):
             gh = GlobalHydra.instance().hydra
             assert gh is not None
             return list(gh.list_all_config_groups())
@@ -203,7 +252,8 @@ class HydraMain(DecoratedMain):
         Return base config based on composition, along with delta for the
         composition overrides.
         """
-        with initialize_config_dir(str(self.full_config_path), job_name=self._job_name):
+        with initialize_config_dir(str(self.full_config_path), job_name=self._job_name,
+                                   **self.hydra_kwargs):
             gh = GlobalHydra.instance().hydra
             assert gh is not None
             to_keep = []
@@ -226,7 +276,8 @@ class HydraMain(DecoratedMain):
         Internal method, returns the config for the given override,
         but without the dora.sig field filled.
         """
-        with initialize_config_dir(str(self.full_config_path), job_name=self._job_name):
+        with initialize_config_dir(str(self.full_config_path), job_name=self._job_name,
+                                   **self.hydra_kwargs):
             return self._get_config_noinit(overrides)
 
     def _get_config_noinit(self, overrides: tp.List[str] = []) -> DictConfig:
@@ -249,7 +300,11 @@ class HydraMain(DecoratedMain):
         return delta
 
 
-def hydra_main(config_name: str, config_path: str):
+def hydra_main(config_name: str, config_path: str, **kwargs):
+    """Wrap your main function with this.
+    You can pass extra kwargs, e.g. `version_base` introduced in 1.2.
+    """
     def _decorator(main: MainFun):
-        return HydraMain(main, config_name=config_name, config_path=config_path)
+        return HydraMain(main, config_name=config_name, config_path=config_path,
+                         **kwargs)
     return _decorator

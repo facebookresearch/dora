@@ -33,10 +33,11 @@ logger = logging.getLogger(__name__)
 
 class _SubmitItTarget:
     def __call__(self, main: DecoratedMain, argv: tp.Sequence[str]):
-        spec = get_distrib_spec()
-        os.environ['RANK'] = str(spec.rank)
-        os.environ['WORLD_SIZE'] = str(spec.world_size)
         self.xp = main.get_xp(argv)
+        spec = get_distrib_spec()
+        # We export the RANK as it can be used to customize logging early on
+        # in the called program (e.g. using Hydra).
+        os.environ['RANK'] = str(spec.rank)
         sys.argv[1:] = argv
         main()
 
@@ -53,7 +54,7 @@ class Sheep:
     A Sheep is a specific run for a given XP. Sheeps are managed
     by the Shepherd.
     """
-    def __init__(self, xp: XP, job: SlurmJob = None):
+    def __init__(self, xp: XP):
         self.xp = xp
         self.job: tp.Optional[submitit.SlurmJob] = None
         # Other jobs contain the list of other jobs in the array
@@ -203,7 +204,8 @@ class Shepherd:
                 if rules.replace_done:
                     logger.debug(f"Ignoring previously completed job {sheep.job.job_id}")
                     sheep.job = None
-            elif state in ["FAILED", "CANCELLED", "OUT_OF_MEMORY", "TIMEOUT", "MISSING"]:
+            elif state in ["FAILED", "CANCELLED", "OUT_OF_MEMORY", "TIMEOUT", "MISSING",
+                           "NODE_FAIL"]:
                 logger.debug(f"Previous job {sheep.job.job_id} failed or was canceled")
                 if rules.retry:
                     sheep.job = None
@@ -275,13 +277,12 @@ class Shepherd:
         if mem_per_gpu:
             mem = slurm_config.mem_per_gpu * gpus_per_node
             kwargs['mem'] = f"{mem}GB"
+        kwargs['gres'] = f'gpu:{gpus_per_node}'
         if slurm_config.one_task_per_node:
-            kwargs['gpus_per_task'] = gpus_per_node
             kwargs['ntasks_per_node'] = 1
             if slurm_config.cpus_per_task is None:
                 kwargs['cpus_per_task'] = gpus_per_node * slurm_config.cpus_per_gpu
         else:
-            kwargs['gpus_per_task'] = 1
             kwargs['ntasks_per_node'] = gpus_per_node
             if slurm_config.cpus_per_task is None:
                 kwargs['cpus_per_task'] = slurm_config.cpus_per_gpu

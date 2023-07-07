@@ -40,7 +40,9 @@ def check_repo_clean(root: Path, main: DecoratedMain):
     # Here we try to detect the grids package and allow uncommitted changes
     # only to that folder. The rational is that as we edit the grid file, it is a pain
     # to constantly be commiting change to it and it should not impact the actual run code.
-    grid_name = main.name + ".grids"
+    grid_name = main.dora.grid_package
+    if grid_name is None:
+        grid_name = main.package + ".grids"
     spec = importlib.util.find_spec(grid_name)
     grid_path: tp.Optional[Path] = None
     if spec is not None:
@@ -102,7 +104,7 @@ def get_new_clone(main: DecoratedMain) -> Path:
     source = get_git_root()
     commit = get_git_commit()
     check_repo_clean(source, main)
-    codes = main.dora.dir / main.dora.codes
+    codes = main.dora.dir / main.dora._codes
     codes.mkdir(parents=True, exist_ok=True)
     target = codes / commit
     if not target.exists():
@@ -166,7 +168,8 @@ def to_absolute_path(path: AnyPath) -> AnyPath:
         try:
             import hydra.utils
         except ImportError:
-            _path = _path.resolve()
+            if not _path.is_absolute():
+                _path = Path(os.getcwd()) / _path
         else:
             _path = Path(hydra.utils.to_absolute_path(str(_path)))
         return klass(_path)

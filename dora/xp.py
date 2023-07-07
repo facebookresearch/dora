@@ -120,7 +120,7 @@ class XP:
 class _Context:
     # Used to keep track of a running XP and be able to provide
     # it on demand with `get_xp`.
-    def __init__(self):
+    def __init__(self) -> None:
         self._xps: tp.List[XP] = []
 
     @contextmanager
