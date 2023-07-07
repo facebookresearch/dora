@@ -42,7 +42,7 @@ def launch_action(args, main: DecoratedMain):
     if args.clear:
         log("Canceling current job...")
         if sheep.job is not None:
-            shepherd.cancel_lazy(sheep.job)
+            shepherd.cancel_lazy(sheep=sheep)
         shepherd.commit()
         log("Deleting XP folder...")
         if sheep.xp.folder.exists():

@@ -73,3 +73,19 @@ def test_shep(tmpdir):
         shepherd.commit()
         assert sheep.xp.code_folder.name == 'code'
         assert sheep.xp.code_folder.exists()
+
+
+def test_dependent(tmpdir):
+    with mock_shep():
+        main = get_main(tmpdir)
+        shepherd = Shepherd(main)
+        slurm = main.get_slurm_config()
+
+        sheep = shepherd.get_sheep_from_argv([])
+        slurm.dependents = 2
+        shepherd._submit(_JobArray(slurm, [sheep]))
+        assert sheep.job is not None
+        assert sheep.job.job_id == "0"
+        assert len(sheep._dependent_jobs) == 2
+        assert sheep._dependent_jobs[0].job_id == "1"
+        assert sheep._dependent_jobs[1].job_id == "2"

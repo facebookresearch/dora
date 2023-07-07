@@ -16,7 +16,10 @@ import typing as tp
 
 from pytorch_lightning import LightningModule
 from pytorch_lightning.callbacks import Callback
-from pytorch_lightning.callbacks.progress import ProgressBarBase
+try:
+    from pytorch_lightning.callbacks.progress import ProgressBarBase
+except ImportError:
+    raise ImportError("Only pytorch_lightning <= 1.8 is supported.")
 from pytorch_lightning.plugins.environments import ClusterEnvironment
 from pytorch_lightning.trainer import Trainer
 from pytorch_lightning.utilities.argparse import from_argparse_args

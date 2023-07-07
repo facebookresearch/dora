@@ -31,9 +31,18 @@ from .xp import XP, _get_sig
 logger = logging.getLogger(__name__)
 
 
+PreemptionCallback = tp.Callable[[], None]
+_preemption_callbacks: tp.List[PreemptionCallback] = []
+
+
+def register_preemption_callaback(callback: PreemptionCallback):
+    _preemption_callbacks.append(callback)
+
+
 class _SubmitItTarget:
-    def __call__(self, main: DecoratedMain, argv: tp.Sequence[str]):
+    def __call__(self, main: DecoratedMain, argv: tp.Sequence[str], requeue: bool = True):
         self.xp = main.get_xp(argv)
+        self.requeue = requeue
         spec = get_distrib_spec()
         # We export the RANK as it can be used to customize logging early on
         # in the called program (e.g. using Hydra).
@@ -42,6 +51,12 @@ class _SubmitItTarget:
         main()
 
     def checkpoint(self, *args, **kwargs):
+        for callback in _preemption_callbacks:
+            callback()
+
+        if not self.requeue:
+            sys.exit(1)  # let's exit early!
+
         if get_distrib_spec().rank == 0:
             # cleanup rendezvous file on requeue, otherwise things will fail.
             if self.xp.rendezvous_file.exists():
@@ -58,11 +73,17 @@ class Sheep:
         self.xp = xp
         self.job: tp.Optional[submitit.SlurmJob] = None
         # Other jobs contain the list of other jobs in the array
-        self._other_jobs: tp.Optional[tp.List[submitit.SlurmJob]] = None
+        self._other_jobs: tp.List[submitit.SlurmJob] = []
+        self._dependent_jobs: tp.List[submitit.SlurmJob] = []
         if self._job_file.exists():
             content = try_load(self._job_file)
             if isinstance(content, tuple):
-                self.job, self._other_jobs = content
+                if len(content) == 2:
+                    self.job, self._other_jobs = content
+                elif len(content) == 3:
+                    self.job, self._other_jobs, self._dependent_jobs = content
+                else:
+                    raise RuntimeError("Invalid content for job file.")
             else:
                 self.job = content
 
@@ -70,14 +91,15 @@ class Sheep:
     def _job_file(self) -> Path:
         return self.xp.folder / self.xp.dora.shep.job_file
 
-    def state(self, mode="standard"):
+    @staticmethod
+    def _get_state(job, other_jobs=[], mode="standard"):
         """Return the current state of the `Sheep`.
         """
-        if self.job is None:
+        if job is None:
             return None
-        state = self.job.watcher.get_state(self.job.job_id, mode)
-        if state == 'UNKNOWN' and self._other_jobs:
-            if any(job.state != 'UNKNOWN' for job in self._other_jobs):
+        state = job.watcher.get_state(job.job_id, mode)
+        if state == 'UNKNOWN' and other_jobs:
+            if any(job.state != 'UNKNOWN' for job in other_jobs):
                 # When cancelling single entries in a job array,
                 # sacct will just completely forget about it insted of marking
                 # it as cancelled. So we use a specific 'MISSING' status to handle that.
@@ -86,26 +108,70 @@ class Sheep:
             return 'CANCELLED'
         return state
 
+    @staticmethod
+    def _is_done(job, mode="standard"):
+        """Return True if the job is no longer running on the cluster.
+        """
+        if job is None:
+            return True
+        return job.watcher.is_done(job.job_id, mode)
+
     def is_done(self, mode="standard"):
         """Return True if the job is no longer running on the cluster.
         """
         if self.job is None:
             return True
-        return self.job.watcher.is_done(self.job.job_id, mode)
+        if self._dependent_jobs:
+            assert len(self._other_jobs) <= 1
+            chain = [self.job] + self._dependent_jobs
+            for job in chain:
+                if not job.watcher.is_done(job.job_id, mode):
+                    return False
+            return True
+        else:
+            return self.job.watcher.is_done(self.job.job_id, mode)
+
+    def state(self, mode="standard"):
+        if self._dependent_jobs:
+            assert self.job is not None
+            assert len(self._other_jobs) <= 1
+            chain = [self.job] + self._dependent_jobs
+            for job in chain:
+                state = Sheep._get_state(job, [], mode)
+                if state == 'COMPLETED' or not Sheep._is_done(job, mode):
+                    return state
+            return state
+        else:
+            return self._get_state(self.job, self._other_jobs, mode)
+
+    def _log(self, job_id: str) -> Path:
+        return self.xp.submitit / f"{job_id}_0_log.out"
+
+    @property
+    def current_job_id(self) -> tp.Optional[str]:
+        """Return the current job id, especially useful when using dependent jobs.
+        """
+        if self.job is None:
+            return None
+        job_id = self.job.job_id
+        # We use the logs to be low tech and not require SLURM.
+        for job in self._dependent_jobs:
+            if self._log(job.job_id).exists():
+                job_id = job.job_id
+        return job_id
 
     @property
     def log(self):
         """Return the path to the main log.
         """
-        if self.job is not None:
-            return self.xp.submitit / f"{self.job.job_id}_0_log.out"
-        return None
+        if self.job is None:
+            return None
+        return self._log(self.current_job_id)
 
     def __repr__(self):
         out = f"Sheep({self.xp.sig}, state={self.state()}, "
         if self.job is not None:
-            out += f"sid={self.job.job_id}, "
-
+            out += f"sid={self.current_job_id}, "
         out += f"argv={self.xp.argv})"
         return out
 
@@ -212,7 +278,7 @@ class Shepherd:
             else:
                 if rules.replace:
                     logger.debug(f"Cancelling previous job {sheep.job.job_id} with status {state}")
-                    self.cancel_lazy(sheep.job)
+                    self.cancel_lazy(sheep=sheep)
                     sheep.job = None
 
         if sheep.job is None:
@@ -221,11 +287,21 @@ class Shepherd:
             assert slurm_config == self._to_submit[-1].slurm_config
             self._to_submit[-1].sheeps.append(sheep)
 
-    def cancel_lazy(self, job: submitit.SlurmJob):
+    def cancel_lazy(self, job: tp.Optional[submitit.SlurmJob] = None,
+                    dependent_jobs: tp.Sequence[submitit.SlurmJob] = [],
+                    sheep: tp.Optional[Sheep] = None):
         """
         Cancel a job. The job is actually cancelled only when `commit()` is called.
+        You can either provide manually both a job and its dependents, or a sheep that
+        will be automatically processed.
         """
-        self._to_cancel.append(job)
+        if job is None:
+            assert sheep is not None
+            if sheep.job is not None:
+                self._to_cancel += [sheep.job] + list(sheep._dependent_jobs)
+        else:
+            assert sheep is None
+            self._to_cancel += [job] + list(dependent_jobs)
 
     def commit(self):
         """
@@ -290,6 +366,7 @@ class Shepherd:
         del kwargs['mem_per_gpu']
         del kwargs['cpus_per_gpu']
         del kwargs['one_task_per_node']
+        del kwargs['dependents']
         logger.debug("Slurm parameters %r", kwargs)
 
         executor.update_parameters(
@@ -335,6 +412,10 @@ class Shepherd:
         assert all(other.xp.dora.git_save == use_git_save for other in sheeps), \
             "All jobs inside an array must have the same value for git_save."""
 
+        requeue = True
+        if slurm_config.dependents:
+            assert not is_array, "Cannot use dependent jobs and job arrays"
+            requeue = False
         if is_array:
             name_sig = _get_sig(sorted([sheep.xp.sig for sheep in sheeps]))
         else:
@@ -371,14 +452,30 @@ class Shepherd:
                     if use_git_save:
                         assert self._existing_git_clone is not None
                         git_save.assign_clone(sheep.xp, self._existing_git_clone)
-                    jobs.append(executor.submit(_SubmitItTarget(), self.main, sheep.xp.argv))
+                    jobs.append(executor.submit(
+                        _SubmitItTarget(), self.main, sheep.xp.argv, requeue))
+                    if slurm_config.dependents:
+                        assert len(job_array.sheeps) == 1
+                        for dep_index in range(slurm_config.dependents):
+                            requeue = dep_index == slurm_config.dependents - 1
+                            last_job_id = jobs[-1].job_id
+                            executor.update_parameters(
+                                additional_parameters={'dependency': f"afternotok:{last_job_id}"})
+                            jobs.append(executor.submit(
+                                _SubmitItTarget(), self.main, sheep.xp.argv, requeue))
+            dependent_jobs = []
+            if slurm_config.dependents:
+                dependent_jobs = jobs[1:]
+                jobs = jobs[:1]
+
             # Now we can access jobs
             for sheep, job in zip(sheeps, jobs):
                 # See commment in `Sheep.state` function above for storing all jobs in the array.
-                pickle.dump((job, jobs), open(sheep._job_file, "wb"))
+                pickle.dump((job, jobs, dependent_jobs), open(sheep._job_file, "wb"))
                 logger.debug("Created job with id %s", job.job_id)
                 sheep.job = job  # type: ignore
                 sheep._other_jobs = jobs  # type: ignore
+                sheep._dependent_jobs = dependent_jobs  # type: ignore
                 link = self._by_id / job.job_id
                 link = link
                 link.symlink_to(sheep.xp.folder.resolve())
