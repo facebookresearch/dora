@@ -131,15 +131,22 @@ class Sheep:
     def log(self):
         """Return the path to the main log.
         """
-        if self.job is not None:
-            return self.xp.submitit / f"{self.job.job_id}_0_log.out"
-        return None
+        if self.job is None:
+            return None
+        path = self.xp.submitit / f"{self.job.job_id}_0_log.out"
+        for job in self._dependent_jobs:
+            new_path = self.xp.submitit / f"{job.job_id}_0_log.out"
+            if new_path.exists():
+                path = new_path
+        return path
 
     def __repr__(self):
         out = f"Sheep({self.xp.sig}, state={self.state()}, "
         if self.job is not None:
             out += f"sid={self.job.job_id}, "
-
+        if self._dependent_jobs is not None:
+            deps = ",".join(job.job_id for job in self._dependent_jobs)
+            out += f"deps={deps}, "
         out += f"argv={self.xp.argv})"
         return out
 
@@ -246,7 +253,7 @@ class Shepherd:
             else:
                 if rules.replace:
                     logger.debug(f"Cancelling previous job {sheep.job.job_id} with status {state}")
-                    self.cancel_lazy(sheep.job)
+                    self.cancel_lazy(sheep=sheep)
                     sheep.job = None
 
         if sheep.job is None:
@@ -255,11 +262,18 @@ class Shepherd:
             assert slurm_config == self._to_submit[-1].slurm_config
             self._to_submit[-1].sheeps.append(sheep)
 
-    def cancel_lazy(self, job: submitit.SlurmJob):
+    def cancel_lazy(self, job: tp.Optional[submitit.SlurmJob] = None,
+                    dependent_jobs: tp.Sequential[submitit.SlurmJob] = [],
+                    sheep: Sheep = None):
         """
         Cancel a job. The job is actually cancelled only when `commit()` is called.
         """
-        self._to_cancel.append(job)
+        if job is None:
+            assert sheep is not None
+            self._to_cancel += [sheep.job] + list(sheep._dependent_jobs)
+        else:
+            assert sheep is None
+            self._to_cancel += [job] + list(dependent_jobs)
 
     def commit(self):
         """
@@ -369,8 +383,10 @@ class Shepherd:
         assert all(other.xp.dora.git_save == use_git_save for other in sheeps), \
             "All jobs inside an array must have the same value for git_save."""
 
+        requeue = True
         if slurm_config.dependents:
             assert not slurm_config.is_array, "Cannot use dependent jobs and job arrays"
+            requeue = False
         if is_array:
             name_sig = _get_sig(sorted([sheep.xp.sig for sheep in sheeps]))
         else:
@@ -407,14 +423,29 @@ class Shepherd:
                     if use_git_save:
                         assert self._existing_git_clone is not None
                         git_save.assign_clone(sheep.xp, self._existing_git_clone)
-                    jobs.append(executor.submit(_SubmitItTarget(), self.main, sheep.xp.argv))
+                    jobs.append(executor.submit(
+                        _SubmitItTarget(), self.main, sheep.xp.argv, requeue))
+                    if slurm_config.dependents:
+                        assert len(job_array.sheeps) == 1
+                        for dep_index in range(slurm_config.dependents):
+                            requeue = dep_index == slurm_config.dependents - 1
+                            last_job_id = jobs[-1].job_id
+                            executor.update_parameters(dependency=f"afternotok:{last_job_id}")
+                            jobs.append(executor.submit(
+                                _SubmitItTarget(), self.main, sheep.xp.argv, requeue))
+            dependent_jobs = []
+            if slurm_config.dependents:
+                dependent_jobs = jobs[1:]
+                jobs = jobs[:1]
+
             # Now we can access jobs
             for sheep, job in zip(sheeps, jobs):
                 # See commment in `Sheep.state` function above for storing all jobs in the array.
-                pickle.dump((job, jobs), open(sheep._job_file, "wb"))
+                pickle.dump((job, jobs, dependent_jobs), open(sheep._job_file, "wb"))
                 logger.debug("Created job with id %s", job.job_id)
                 sheep.job = job  # type: ignore
                 sheep._other_jobs = jobs  # type: ignore
+                sheep._dependent_jobs = dependent_jobs  # type: ignore
                 link = self._by_id / job.job_id
                 link = link
                 link.symlink_to(sheep.xp.folder.resolve())

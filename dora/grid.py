@@ -193,7 +193,7 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
         log("Canceling all current jobs...")
         for sheep in sheeps:
             if sheep.job is not None:
-                shepherd.cancel_lazy(sheep.job)
+                shepherd.cancel_lazy(sheep=sheep)
         shepherd.commit()
         log("Deleting XP folders...")
         for sheep in sheeps:
@@ -215,8 +215,10 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
                 jobs = try_load(job_file)
                 if jobs is not None:
                     job = jobs[0]
+                    if len(jobs) == 3:
+                        dependent_jobs = jobs[2]
                     log(f"Canceling job {job.job_id} from unloadable sheep {child.name}.")
-                    shepherd.cancel_lazy(job)
+                    shepherd.cancel_lazy(job, dependent_jobs)
             else:
                 assert old_sheep is not None
                 old_sheeps.append(old_sheep)
@@ -241,7 +243,7 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
     for old_sheep in old_sheeps:
         if not old_sheep.is_done():
             assert old_sheep.job is not None
-            shepherd.cancel_lazy(old_sheep.job)
+            shepherd.cancel_lazy(sheep=old_sheep)
             name = main.get_name(old_sheep.xp)
             log(f"Canceling job {old_sheep.job.job_id} for no longer required "
                 f"sheep {old_sheep.xp.sig}/{name}")
@@ -252,7 +254,7 @@ def run_grid(main: DecoratedMain, explorer: Explorer, grid_name: str,
                 assert sheep.job is not None
                 name = main.get_name(sheep.xp)
                 log(f"Canceling job {sheep.job.job_id} for sheep {sheep.xp.sig}/{name}")
-                shepherd.cancel_lazy(sheep.job)
+                shepherd.cancel_lazy(sheep=sheep)
 
     if not args.dry_run:
         for sheep in sheeps:

@@ -34,7 +34,7 @@ def check_job_and_clear(argv: tp.List[str], main: DecoratedMain, clear: bool = F
             log(red(f"Found existing slurm job {job.job_id} with status {job.state}."))
             if clear:
                 log("Cancelling the existing job.")
-                shepherd.cancel_lazy(sheep.job)
+                shepherd.cancel_lazy(sheep=sheep)
                 shepherd.commit()
                 time.sleep(3)
             else:
