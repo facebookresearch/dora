@@ -55,7 +55,7 @@ class _SubmitItTarget:
             callback()
 
         if not self.requeue:
-            return
+            sys.exit(1)  # let's exit early!
 
         if get_distrib_spec().rank == 0:
             # cleanup rendezvous file on requeue, otherwise things will fail.
@@ -73,7 +73,7 @@ class Sheep:
         self.xp = xp
         self.job: tp.Optional[submitit.SlurmJob] = None
         # Other jobs contain the list of other jobs in the array
-        self._other_jobs: tp.Optional[tp.List[submitit.SlurmJob]] = None
+        self._other_jobs: tp.List[submitit.SlurmJob] = []
         self._dependent_jobs: tp.List[submitit.SlurmJob] = []
         if self._job_file.exists():
             content = try_load(self._job_file)
@@ -116,8 +116,24 @@ class Sheep:
             return True
         return job.watcher.is_done(job.job_id, mode)
 
+    def is_done(self, mode="standard"):
+        """Return True if the job is no longer running on the cluster.
+        """
+        if self.job is None:
+            return True
+        if self._dependent_jobs:
+            assert len(self._other_jobs) == 0
+            chain = self.job + [self._dependent_jobs]
+            for job in chain:
+                if not job.watcher.is_done(job.job_id, mode):
+                    return False
+            return True
+        else:
+            return self.job.watcher.is_done(self.job.job_id, mode)
+
     def state(self, mode="standard"):
         if self._dependent_jobs:
+            assert len(self._other_jobs) == 0
             chain = self.job + [self._dependent_jobs]
             for job in chain:
                 state = Sheep._get_state(job, [], mode)
@@ -263,14 +279,17 @@ class Shepherd:
             self._to_submit[-1].sheeps.append(sheep)
 
     def cancel_lazy(self, job: tp.Optional[submitit.SlurmJob] = None,
-                    dependent_jobs: tp.Sequential[submitit.SlurmJob] = [],
-                    sheep: Sheep = None):
+                    dependent_jobs: tp.Sequence[submitit.SlurmJob] = [],
+                    sheep: tp.Optional[Sheep] = None):
         """
         Cancel a job. The job is actually cancelled only when `commit()` is called.
+        You can either provide manually both a job and its dependents, or a sheep that
+        will be automatically processed.
         """
         if job is None:
             assert sheep is not None
-            self._to_cancel += [sheep.job] + list(sheep._dependent_jobs)
+            if sheep.job is not None:
+                self._to_cancel += [sheep.job] + list(sheep._dependent_jobs)
         else:
             assert sheep is None
             self._to_cancel += [job] + list(dependent_jobs)
@@ -385,7 +404,7 @@ class Shepherd:
 
         requeue = True
         if slurm_config.dependents:
-            assert not slurm_config.is_array, "Cannot use dependent jobs and job arrays"
+            assert not is_array, "Cannot use dependent jobs and job arrays"
             requeue = False
         if is_array:
             name_sig = _get_sig(sorted([sheep.xp.sig for sheep in sheeps]))
@@ -434,9 +453,11 @@ class Shepherd:
                             jobs.append(executor.submit(
                                 _SubmitItTarget(), self.main, sheep.xp.argv, requeue))
             dependent_jobs = []
+            other_jobs = jobs
             if slurm_config.dependents:
                 dependent_jobs = jobs[1:]
                 jobs = jobs[:1]
+                other_jobs = []
 
             # Now we can access jobs
             for sheep, job in zip(sheeps, jobs):
@@ -444,7 +465,7 @@ class Shepherd:
                 pickle.dump((job, jobs, dependent_jobs), open(sheep._job_file, "wb"))
                 logger.debug("Created job with id %s", job.job_id)
                 sheep.job = job  # type: ignore
-                sheep._other_jobs = jobs  # type: ignore
+                sheep._other_jobs = other_jobs  # type: ignore
                 sheep._dependent_jobs = dependent_jobs  # type: ignore
                 link = self._by_id / job.job_id
                 link = link

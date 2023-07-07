@@ -87,5 +87,5 @@ def test_dependent(tmpdir):
         assert sheep.job is not None
         assert sheep.job.job_id == "0"
         assert len(sheep._dependent_jobs) == 2
-        assert sheep._dependent_jobs[1].job_id == "1"
-        assert sheep._dependent_jobs[2].job_id == "1"
+        assert sheep._dependent_jobs[0].job_id == "1"
+        assert sheep._dependent_jobs[1].job_id == "2"
