@@ -22,7 +22,6 @@ import submitit
 
 from . import git_save
 from .conf import SlurmConfig, SubmitRules
-from .distrib import get_distrib_spec
 from .main import DecoratedMain
 from .utils import try_load
 from .xp import XP, _get_sig
@@ -41,6 +40,7 @@ def register_preemption_callaback(callback: PreemptionCallback):
 
 class _SubmitItTarget:
     def __call__(self, main: DecoratedMain, argv: tp.Sequence[str], requeue: bool = True):
+        from .distrib import get_distrib_spec  # this will import torch which can be quite slow.
         self.xp = main.get_xp(argv)
         self.requeue = requeue
         spec = get_distrib_spec()
@@ -51,6 +51,7 @@ class _SubmitItTarget:
         main()
 
     def checkpoint(self, *args, **kwargs):
+        from .distrib import get_distrib_spec  # this will import torch which can be quite slow.
         for callback in _preemption_callbacks:
             callback()
 
