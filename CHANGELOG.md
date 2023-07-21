@@ -9,6 +9,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Adding dependent jobs. E.g., use `launcher.slurm_(dependents=5`). Incompatible with
 job arrays.
 
+Adding possiblity to force the initialization of distributed even when world size=1 by setting
+the `DORA_FORCE_DISTRIB=1` env variable.
+
 ## [0.1.12] - 2023-05-23
 
 Fixed bug with PL (Thanks @kingjr).

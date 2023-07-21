@@ -29,7 +29,7 @@ def set_distrib_env():
     some other framework handle the distributed initialization.
     """
     spec = get_distrib_spec()
-    if spec.world_size == 1:
+    if spec.world_size == 1 and not os.environ.get('DORA_FORCE_DISTRIB'):
         return
     if 'MASTER_ADDR' not in os.environ:
         assert 'SLURM_JOB_NODELIST' in os.environ, "case not handled"
@@ -101,7 +101,7 @@ def init(backend='nccl'):
     if torch.distributed.is_initialized():
         return
     spec = get_distrib_spec()
-    if spec.world_size == 1:
+    if spec.world_size == 1 and not os.environ.get('DORA_FORCE_DISTRIB'):
         logger.info("world_size is 1, skipping init.")
         return
     xp = get_xp()
