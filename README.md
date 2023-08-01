@@ -451,6 +451,7 @@ launcher.bind(['optim.lr=1e-4'], {'model.channels': 256, 'seed': 42}, {'+model.a
 
 The `dora grid` command supports the following flags:
 
+- `--init`: init the given XPs so that their signature can be referenced. `launch`ing or `run`ning an XP whose sig was not initialised will fail with `FATAL: Could not find an existing run with sig yoursig`.
 - `-r, --retry`: failed or cancelled XP within one grid file will
     be rescheduled.
 - `-R, --replace`: any running XP will be replaced by a new job.
