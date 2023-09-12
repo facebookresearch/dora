@@ -25,6 +25,7 @@ width="1000px"></p>
 - [The Dora API](#the-dora-api)
 - [Sharing XPs](#sharing-xps)
 - [Advanced configuration](#advanced-configuration)
+- [FAQ](#faq)
 - [Contributing](#contributing)
 
 ## Installation
@@ -185,6 +186,8 @@ dora:
 
 ### PyTorch Lightning support
 
+**Deprecated:** Due to a lack of internal use for PL, this only works with fairly old versions of PL. We are not planning on updating the support for PL.
+
 Dora supports PyTorch Lightning (PL) out of the box. Dora will automatically
 capture logged metrics (make sure to use `per_epoch=True`), and handles distribution
 (you should not pass `gpus=...` or `num_nodes=...` to PL).
@@ -303,7 +306,25 @@ dora run -- [TRAINING_ARGS ...]
 - `--git_save`: clone the repo inside the XP folder and execute from there. This is mostly for debugging,
     and in general is not needed.
 
+### Multi node training without Slurm
+
+If you do not have a Slurm cluster but still want to do multi node training, you can adapt the following example for two nodes (do not include the `-d` flag
+here, as `torchrun` will be responsible for launching the processes):
+
+```
+torchrun --master-addr NODE_1_ADDR --master-port MASTER_PORT --node_rank 0 --nnodes 2 --nproc-per-node 8 -m dora run [DORA RUN ARGS]
+torchrun --master-addr NODE_1_ADDR --master-port MASTER_PORT --node_rank 1 --nnodes 2 --nproc-per-node 8 -m dora run [DORA RUN ARGS]
+```
+
+If you have a Slurm cluster available, you should usually prefer using the `dora launch` or `dora grid` command for managing multi node jobs.
+
+
+
 ## `dora launch`: Launching XP remotely
+
+**Warning:** This command is not recommended for serious workflows. First it doesn't allow for advanced tuning of the Slurm config, 
+and in almost all cases, it is preferable to use the `dora grid` command, even for a single job, as the grid system allows for a better tracking and book keeping
+of the experiments you launch on the cluster.
 
 Dora supports scheduling experiments on Slurm. If you need to schedule many of them, then a grid file is properly better.
 
