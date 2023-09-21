@@ -18,7 +18,7 @@ from .main import DecoratedMain
 from .log import disable_logging, simple_log, red
 from .shep import Shepherd
 
-log = partial(simple_log, "Launch:")
+log = partial(simple_log, "Run:")
 
 
 def check_job_and_clear(argv: tp.List[str], main: DecoratedMain, clear: bool = False):
@@ -62,6 +62,7 @@ def run_action(args, main: DecoratedMain):
         else:
             if 'WORLD_SIZE' not in os.environ:
                 check_job_and_clear(args.argv, main, args.clear)
+                os.environ['LOCAL_RANK'] = '0'
                 os.environ['RANK'] = '0'
                 os.environ['WORLD_SIZE'] = '1'
             sys.argv[1:] = args.argv

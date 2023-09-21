@@ -10,7 +10,7 @@ Adding dependent jobs. E.g., use `launcher.slurm_(dependents=5`). Incompatible w
 job arrays.
 
 Adding possiblity to force the initialization of distributed even when world size=1 by setting
-the `DORA_FORCE_DISTRIB=1` env variable.
+the `DORA_FORCE_DISTRIB=1` env variable. Always export LOCAL_RANK when running with `dora run`.
 
 ## [0.1.12] - 2023-05-23
 
