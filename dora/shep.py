@@ -24,7 +24,7 @@ from . import git_save
 from .conf import SlurmConfig, SubmitRules
 from .main import DecoratedMain
 from .utils import try_load
-from .xp import XP, _get_sig
+from .xp import XP, _get_sig, get_xp
 
 
 logger = logging.getLogger(__name__)
@@ -41,7 +41,7 @@ def register_preemption_callaback(callback: PreemptionCallback):
 class _SubmitItTarget:
     def __call__(self, main: DecoratedMain, argv: tp.Sequence[str], requeue: bool = True):
         from .distrib import get_distrib_spec  # this will import torch which can be quite slow.
-        self.xp = main.get_xp(argv)
+        xp = main.get_xp(argv)
         self.requeue = requeue
         spec = get_distrib_spec()
         # We export the RANK as it can be used to customize logging early on
@@ -60,8 +60,9 @@ class _SubmitItTarget:
 
         if get_distrib_spec().rank == 0:
             # cleanup rendezvous file on requeue, otherwise things will fail.
-            if self.xp.rendezvous_file.exists():
-                self.xp.rendezvous_file.unlink()
+            xp = get_xp()
+            if xp.rendezvous_file.exists():
+                xp.rendezvous_file.unlink()
         return submitit.helpers.DelayedSubmission(self, *args, **kwargs)
 
 

@@ -12,6 +12,8 @@ job arrays.
 Adding possiblity to force the initialization of distributed even when world size=1 by setting
 the `DORA_FORCE_DISTRIB=1` env variable. Always export LOCAL_RANK when running with `dora run`.
 
+Not longer store the XP in the _SubmitItTarget in order to avoid potential pickling errors.
+
 ## [0.1.12] - 2023-05-23
 
 Fixed bug with PL (Thanks @kingjr).
