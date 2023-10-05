@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>dora.git_save API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>dora.git_save</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># Copyright (c) Facebook, Inc. and its affiliates.
+# All rights reserved.
+#
+# This source code is licensed under the license found in the
+# LICENSE file in the root directory of this source tree.
+
+from contextlib import contextmanager
+import importlib.util
+import logging
+import os
+import shlex
+import subprocess as sp
+import typing as tp
+from pathlib import Path
+
+from .main import DecoratedMain
+from .log import fatal
+from .xp import XP
+
+
+logger = logging.getLogger(__name__)
+
+
+class CommandError(Exception):
+    pass
+
+
+def run_command(command, **kwargs):
+    proc = sp.run(command, stdout=sp.PIPE, stderr=sp.STDOUT, **kwargs)
+    if proc.returncode:
+        command_str = &#34; &#34;.join(shlex.quote(c) for c in command)
+        raise CommandError(
+            f&#34;Command {command_str} failed ({proc.returncode}): \n&#34; + proc.stdout.decode())
+    return proc.stdout.decode().strip()
+
+
+def check_repo_clean(root: Path, main: DecoratedMain):
+    out = run_command([&#39;git&#39;, &#39;status&#39;, &#39;--porcelain&#39;])
+    filtered = []
+    # Here we try to detect the grids package and allow uncommitted changes
+    # only to that folder. The rational is that as we edit the grid file, it is a pain
+    # to constantly be commiting change to it and it should not impact the actual run code.
+    grid_name = main.dora.grid_package
+    if grid_name is None:
+        grid_name = main.package + &#34;.grids&#34;
+    spec = importlib.util.find_spec(grid_name)
+    grid_path: tp.Optional[Path] = None
+    if spec is not None:
+        assert spec.origin is not None
+        grid_path = Path(spec.origin).resolve().parent
+    for line in out.split(&#34;\n&#34;):
+        if not line:
+            continue
+        parts = shlex.split(line)
+        paths: tp.List[str] = []
+        if len(parts) == 2:
+            paths.append(parts[1])
+        elif len(parts) == 4:
+            assert parts[3] == &#34;-&gt;&#34;
+            paths += [parts[1], parts[2]]
+        else:
+            assert &#34;Invalid parts&#34;, parts
+        line_clean = True
+        for path in paths:
+            if grid_path is None:
+                line_clean = False
+                break
+            rpath = (root / path).resolve()
+            try:
+                rpath.relative_to(grid_path)
+            except ValueError:
+                line_clean = False
+        if not line_clean:
+            filtered.append(line)
+    if filtered:
+        files = &#39;\n&#39;.join(filtered)
+        fatal(&#34;Repository is not clean! The following files should be commited &#34;
+              f&#34;or git ignored: \n {files}&#34;)
+
+
+def get_git_root():
+    return Path(run_command([&#39;git&#39;, &#39;rev-parse&#39;, &#39;--show-toplevel&#39;])).resolve()
+
+
+def get_git_commit(repo: Path = Path(&#39;.&#39;)):
+    return run_command([&#39;git&#39;, &#39;log&#39;, &#39;-1&#39;, &#39;--format=%H&#39;], cwd=repo)
+
+
+def shallow_clone(source: Path, target: Path):
+    tmp_target = target.parent / (target.name + &#34;.tmp&#34;)
+    run_command([&#39;git&#39;, &#39;clone&#39;, &#39;--depth=1&#39;, &#39;file://&#39; + str(source), str(tmp_target)])
+    # We are not sure that there wasn&#39;t a new commit in between, so to make
+    # sure the folder name is correct, we clone to a temporary name, then rename to the
+    # actual commit in there. It seems there is no easy way to directly make a shallow
+    # clone to a specific commit (only specific branch or tag).
+    actual_commit = get_git_commit(tmp_target)
+    actual_target = target.parent / actual_commit
+    tmp_target.rename(actual_target)
+    return actual_target
+
+
+def get_new_clone(main: DecoratedMain) -&gt; Path:
+    &#34;&#34;&#34;Return a fresh clone in side the given path.&#34;&#34;&#34;
+    source = get_git_root()
+    commit = get_git_commit()
+    check_repo_clean(source, main)
+    codes = main.dora.dir / main.dora._codes
+    codes.mkdir(parents=True, exist_ok=True)
+    target = codes / commit
+    if not target.exists():
+        target = shallow_clone(source, target)
+    assert target.exists()
+    return target
+
+
+@contextmanager
+def enter_clone(clone: Path):
+    &#34;&#34;&#34;Context manager that temporarily relocates to a clean clone of the
+    current git repository.
+    &#34;&#34;&#34;
+    cwd = Path(&#39;.&#39;).resolve()
+    root = get_git_root()
+    relative_path = cwd.relative_to(root)
+
+    os.environ[&#39;_DORA_ORIGINAL_DIR&#39;] = str(cwd)
+    os.chdir(clone / relative_path)
+    try:
+        yield
+    finally:
+        os.chdir(cwd)
+        del os.environ[&#39;_DORA_ORIGINAL_DIR&#39;]
+
+
+def assign_clone(xp: XP, clone: Path):
+    assert xp.dora.git_save
+    code = xp.code_folder
+    if code.exists():
+        if code.is_symlink():
+            code.unlink()
+        elif code.is_dir():
+            code.rename(code.parent / &#39;old_code&#39;)
+        else:
+            assert &#34;code folder should be symlink or folder&#34;, code
+    code.symlink_to(clone)
+
+
+AnyPath = tp.TypeVar(&#34;AnyPath&#34;, str, Path)
+
+
+def to_absolute_path(path: AnyPath) -&gt; AnyPath:
+    &#34;&#34;&#34;When using `git_save`, this takes a potentially relative path
+    with respect to the original execution folder and return an absolute path.
+    This is required if you use relative path with respect to this original folder.
+
+    When using both `git_save` and Hydra, two change of directory happens:
+    - Dora moves to git clone
+    - Hydra moves to XP folder
+
+    Hydra provides a `to_absolute_path()` function. In order to simplify your code,
+    if `git_save` was not used, and Hydra is in use, this will fallback to calling
+    Hydra version, so that you only need to ever call this function to cover all cases.
+    &#34;&#34;&#34;
+    klass = type(path)
+    _path = Path(path)
+    if &#39;_DORA_ORIGINAL_DIR&#39; not in os.environ:
+        # We did not use git_save, we check first if Hydra is used,
+        # in which case we use it to convert to an absolute Path.
+        try:
+            import hydra.utils
+        except ImportError:
+            if not _path.is_absolute():
+                _path = Path(os.getcwd()) / _path
+        else:
+            _path = Path(hydra.utils.to_absolute_path(str(_path)))
+        return klass(_path)
+    else:
+        # We used git_save, in which case we used the original dir saved by Dora.
+        original_cwd = Path(os.environ[&#39;_DORA_ORIGINAL_DIR&#39;])
+        if _path.is_absolute():
+            return klass(_path)
+        else:
+            return klass(original_cwd / _path)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="dora.git_save.assign_clone"><code class="name flex">
+<span>def <span class="ident">assign_clone</span></span>(<span>xp: <a title="dora.xp.XP" href="xp.html#dora.xp.XP">XP</a>, clone: pathlib.Path)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def assign_clone(xp: XP, clone: Path):
+    assert xp.dora.git_save
+    code = xp.code_folder
+    if code.exists():
+        if code.is_symlink():
+            code.unlink()
+        elif code.is_dir():
+            code.rename(code.parent / &#39;old_code&#39;)
+        else:
+            assert &#34;code folder should be symlink or folder&#34;, code
+    code.symlink_to(clone)</code></pre>
+</details>
+</dd>
+<dt id="dora.git_save.check_repo_clean"><code class="name flex">
+<span>def <span class="ident">check_repo_clean</span></span>(<span>root: pathlib.Path, main: <a title="dora.main.DecoratedMain" href="main.html#dora.main.DecoratedMain">DecoratedMain</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def check_repo_clean(root: Path, main: DecoratedMain):
+    out = run_command([&#39;git&#39;, &#39;status&#39;, &#39;--porcelain&#39;])
+    filtered = []
+    # Here we try to detect the grids package and allow uncommitted changes
+    # only to that folder. The rational is that as we edit the grid file, it is a pain
+    # to constantly be commiting change to it and it should not impact the actual run code.
+    grid_name = main.dora.grid_package
+    if grid_name is None:
+        grid_name = main.package + &#34;.grids&#34;
+    spec = importlib.util.find_spec(grid_name)
+    grid_path: tp.Optional[Path] = None
+    if spec is not None:
+        assert spec.origin is not None
+        grid_path = Path(spec.origin).resolve().parent
+    for line in out.split(&#34;\n&#34;):
+        if not line:
+            continue
+        parts = shlex.split(line)
+        paths: tp.List[str] = []
+        if len(parts) == 2:
+            paths.append(parts[1])
+        elif len(parts) == 4:
+            assert parts[3] == &#34;-&gt;&#34;
+            paths += [parts[1], parts[2]]
+        else:
+            assert &#34;Invalid parts&#34;, parts
+        line_clean = True
+        for path in paths:
+            if grid_path is None:
+                line_clean = False
+                break
+            rpath = (root / path).resolve()
+            try:
+                rpath.relative_to(grid_path)
+            except ValueError:
+                line_clean = False
+        if not line_clean:
+            filtered.append(line)
+    if filtered:
+        files = &#39;\n&#39;.join(filtered)
+        fatal(&#34;Repository is not clean! The following files should be commited &#34;
+              f&#34;or git ignored: \n {files}&#34;)</code></pre>
+</details>
+</dd>
+<dt id="dora.git_save.enter_clone"><code class="name flex">
+<span>def <span class="ident">enter_clone</span></span>(<span>clone: pathlib.Path)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Context manager that temporarily relocates to a clean clone of the
+current git repository.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@contextmanager
+def enter_clone(clone: Path):
+    &#34;&#34;&#34;Context manager that temporarily relocates to a clean clone of the
+    current git repository.
+    &#34;&#34;&#34;
+    cwd = Path(&#39;.&#39;).resolve()
+    root = get_git_root()
+    relative_path = cwd.relative_to(root)
+
+    os.environ[&#39;_DORA_ORIGINAL_DIR&#39;] = str(cwd)
+    os.chdir(clone / relative_path)
+    try:
+        yield
+    finally:
+        os.chdir(cwd)
+        del os.environ[&#39;_DORA_ORIGINAL_DIR&#39;]</code></pre>
+</details>
+</dd>
+<dt id="dora.git_save.get_git_commit"><code class="name flex">
+<span>def <span class="ident">get_git_commit</span></span>(<span>repo: pathlib.Path = PosixPath('.'))</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_git_commit(repo: Path = Path(&#39;.&#39;)):
+    return run_command([&#39;git&#39;, &#39;log&#39;, &#39;-1&#39;, &#39;--format=%H&#39;], cwd=repo)</code></pre>
+</details>
+</dd>
+<dt id="dora.git_save.get_git_root"><code class="name flex">
+<span>def <span class="ident">get_git_root</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_git_root():
+    return Path(run_command([&#39;git&#39;, &#39;rev-parse&#39;, &#39;--show-toplevel&#39;])).resolve()</code></pre>
+</details>
+</dd>
+<dt id="dora.git_save.get_new_clone"><code class="name flex">
+<span>def <span class="ident">get_new_clone</span></span>(<span>main: <a title="dora.main.DecoratedMain" href="main.html#dora.main.DecoratedMain">DecoratedMain</a>) ‑> pathlib.Path</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return a fresh clone in side the given path.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_new_clone(main: DecoratedMain) -&gt; Path:
+    &#34;&#34;&#34;Return a fresh clone in side the given path.&#34;&#34;&#34;
+    source = get_git_root()
+    commit = get_git_commit()
+    check_repo_clean(source, main)
+    codes = main.dora.dir / main.dora._codes
+    codes.mkdir(parents=True, exist_ok=True)
+    target = codes / commit
+    if not target.exists():
+        target = shallow_clone(source, target)
+    assert target.exists()
+    return target</code></pre>
+</details>
+</dd>
+<dt id="dora.git_save.run_command"><code class="name flex">
+<span>def <span class="ident">run_command</span></span>(<span>command, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def run_command(command, **kwargs):
+    proc = sp.run(command, stdout=sp.PIPE, stderr=sp.STDOUT, **kwargs)
+    if proc.returncode:
+        command_str = &#34; &#34;.join(shlex.quote(c) for c in command)
+        raise CommandError(
+            f&#34;Command {command_str} failed ({proc.returncode}): \n&#34; + proc.stdout.decode())
+    return proc.stdout.decode().strip()</code></pre>
+</details>
+</dd>
+<dt id="dora.git_save.shallow_clone"><code class="name flex">
+<span>def <span class="ident">shallow_clone</span></span>(<span>source: pathlib.Path, target: pathlib.Path)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def shallow_clone(source: Path, target: Path):
+    tmp_target = target.parent / (target.name + &#34;.tmp&#34;)
+    run_command([&#39;git&#39;, &#39;clone&#39;, &#39;--depth=1&#39;, &#39;file://&#39; + str(source), str(tmp_target)])
+    # We are not sure that there wasn&#39;t a new commit in between, so to make
+    # sure the folder name is correct, we clone to a temporary name, then rename to the
+    # actual commit in there. It seems there is no easy way to directly make a shallow
+    # clone to a specific commit (only specific branch or tag).
+    actual_commit = get_git_commit(tmp_target)
+    actual_target = target.parent / actual_commit
+    tmp_target.rename(actual_target)
+    return actual_target</code></pre>
+</details>
+</dd>
+<dt id="dora.git_save.to_absolute_path"><code class="name flex">
+<span>def <span class="ident">to_absolute_path</span></span>(<span>path: ~AnyPath) ‑> ~AnyPath</span>
+</code></dt>
+<dd>
+<div class="desc"><p>When using <code>git_save</code>, this takes a potentially relative path
+with respect to the original execution folder and return an absolute path.
+This is required if you use relative path with respect to this original folder.</p>
+<p>When using both <code>git_save</code> and Hydra, two change of directory happens:
+- Dora moves to git clone
+- Hydra moves to XP folder</p>
+<p>Hydra provides a <code><a title="dora.git_save.to_absolute_path" href="#dora.git_save.to_absolute_path">to_absolute_path()</a></code> function. In order to simplify your code,
+if <code>git_save</code> was not used, and Hydra is in use, this will fallback to calling
+Hydra version, so that you only need to ever call this function to cover all cases.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_absolute_path(path: AnyPath) -&gt; AnyPath:
+    &#34;&#34;&#34;When using `git_save`, this takes a potentially relative path
+    with respect to the original execution folder and return an absolute path.
+    This is required if you use relative path with respect to this original folder.
+
+    When using both `git_save` and Hydra, two change of directory happens:
+    - Dora moves to git clone
+    - Hydra moves to XP folder
+
+    Hydra provides a `to_absolute_path()` function. In order to simplify your code,
+    if `git_save` was not used, and Hydra is in use, this will fallback to calling
+    Hydra version, so that you only need to ever call this function to cover all cases.
+    &#34;&#34;&#34;
+    klass = type(path)
+    _path = Path(path)
+    if &#39;_DORA_ORIGINAL_DIR&#39; not in os.environ:
+        # We did not use git_save, we check first if Hydra is used,
+        # in which case we use it to convert to an absolute Path.
+        try:
+            import hydra.utils
+        except ImportError:
+            if not _path.is_absolute():
+                _path = Path(os.getcwd()) / _path
+        else:
+            _path = Path(hydra.utils.to_absolute_path(str(_path)))
+        return klass(_path)
+    else:
+        # We used git_save, in which case we used the original dir saved by Dora.
+        original_cwd = Path(os.environ[&#39;_DORA_ORIGINAL_DIR&#39;])
+        if _path.is_absolute():
+            return klass(_path)
+        else:
+            return klass(original_cwd / _path)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="dora.git_save.CommandError"><code class="flex name class">
+<span>class <span class="ident">CommandError</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Common base class for all non-exit exceptions.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CommandError(Exception):
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="dora" href="index.html">dora</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="two-column">
+<li><code><a title="dora.git_save.assign_clone" href="#dora.git_save.assign_clone">assign_clone</a></code></li>
+<li><code><a title="dora.git_save.check_repo_clean" href="#dora.git_save.check_repo_clean">check_repo_clean</a></code></li>
+<li><code><a title="dora.git_save.enter_clone" href="#dora.git_save.enter_clone">enter_clone</a></code></li>
+<li><code><a title="dora.git_save.get_git_commit" href="#dora.git_save.get_git_commit">get_git_commit</a></code></li>
+<li><code><a title="dora.git_save.get_git_root" href="#dora.git_save.get_git_root">get_git_root</a></code></li>
+<li><code><a title="dora.git_save.get_new_clone" href="#dora.git_save.get_new_clone">get_new_clone</a></code></li>
+<li><code><a title="dora.git_save.run_command" href="#dora.git_save.run_command">run_command</a></code></li>
+<li><code><a title="dora.git_save.shallow_clone" href="#dora.git_save.shallow_clone">shallow_clone</a></code></li>
+<li><code><a title="dora.git_save.to_absolute_path" href="#dora.git_save.to_absolute_path">to_absolute_path</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="dora.git_save.CommandError" href="#dora.git_save.CommandError">CommandError</a></code></h4>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>
