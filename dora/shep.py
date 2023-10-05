@@ -41,7 +41,6 @@ def register_preemption_callaback(callback: PreemptionCallback):
 class _SubmitItTarget:
     def __call__(self, main: DecoratedMain, argv: tp.Sequence[str], requeue: bool = True):
         from .distrib import get_distrib_spec  # this will import torch which can be quite slow.
-        xp = main.get_xp(argv)
         self.requeue = requeue
         spec = get_distrib_spec()
         # We export the RANK as it can be used to customize logging early on
